@@ -5,52 +5,50 @@ const ErrorResponse = require('../response/ErrorResponse')
 const ApiResponse = require('../response/ApiResponse')
 const { env } = require('../config/env')
 const { Op } = require('sequelize')
+const Address = require('../models/Address')
 
 class UserController {
     async getAll(req, res, next) {
         try {
-            const { id: userId, role } = req.user
-
-            let users = []
-
-            if (role === 'customer') {
-                users = await User.findAll({
-                    where: {
-                        role: {
-                            [Op.notIn]: ['customer', 'admin']
-                        }
+            let users = await User.findAll({
+                where: {
+                    role: {
+                        [Op.not]: 'admin'
                     }
-                })
+                }
             }
+            );
 
             return ApiResponse.success(res, {
                 status: 200,
                 data: {
                     users
                 }
-            })
+            });
         } catch (error) {
-            next(error)
+            next(error);
         }
     }
-
     async getMe(req, res, next) {
         try {
-            const { id: userId } = req.user
+            const { id: userId } = req.user;
             const user = await User.findByPk(userId, {
                 attributes: {
                     exclude: ['password']
                 },
+                include: [{
+                    model: Address
+                }]
+            });
 
-            })
             return ApiResponse.success(res, {
                 success: true,
                 data: {
                     profile: user
                 }
-            })
+            });
         } catch (err) {
-            next(err)
+            next(err);
         }
     }
     async getUser(req, res, next) {

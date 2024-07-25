@@ -9,6 +9,9 @@ const colorRouter = require('./colorRouter')
 const productRouter = require('./productRouter')
 const productImageRouter = require('./productImageRouter')
 const cartRouter = require('./cartRouter')
+const addressRouter = require('./addressRouter')
+const paymentRouter = require('./paymentRouter')
+
 const handleRouters = (app) => {
     app.use('/api/v1/carts', cartRouter)
     app.use('/api/v1/auth', authRouter)
@@ -20,6 +23,8 @@ const handleRouters = (app) => {
     app.use('/api/v1/colors', colorRouter)
     app.use('/api/v1/products', productRouter)
     app.use('/api/v1/productsImage', productImageRouter)
+    app.use('/api/v1/payments', paymentRouter)
+    app.use('/api/v1/address', addressRouter)
 }
 
 module.exports = handleRouters

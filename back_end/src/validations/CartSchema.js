@@ -7,7 +7,7 @@ class CartSchema {
                 'string.empty': 'Số lượng không được để trống',
                 'any.required': 'Số lượng trường bắt buộc'
             }),
-            productId: Joi.number().required().messages({
+            productItemId: Joi.number().required().messages({
                 'number.base': 'Mã sản phẩm phải là số nguyên',
                 'any.required': 'Mã sản phẩm trường bắt buộc'
             })
@@ -15,7 +15,7 @@ class CartSchema {
     }
     get deleteProductInCart() {
         return Joi.object({
-            productId: Joi.number().required().messages({
+            productItemId: Joi.number().required().messages({
                 'number.base': 'Mã sản phẩm phải là số nguyên',
                 'any.required': 'Mã sản phẩm trường bắt buộc'
             })

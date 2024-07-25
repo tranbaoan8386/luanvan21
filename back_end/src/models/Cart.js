@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize')
 const sequelize = require('../database/connectMysql')
 const User = require('./User')
 const Coupon = require('./Coupon')
+const ProductItem = require('./ProductItem')
 
 const Cart = sequelize.define(
     'Cart',
@@ -19,7 +20,6 @@ const Cart = sequelize.define(
                 key: 'id'
             }
         },
-
         isPaid: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
@@ -29,14 +29,6 @@ const Cart = sequelize.define(
             type: DataTypes.FLOAT,
             allowNull: false,
             defaultValue: 0
-        },
-        couponId: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            references: {
-                model: Coupon,
-                key: 'id'
-            }
         }
     },
     {

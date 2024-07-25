@@ -1,10 +1,11 @@
 const { Op, Sequelize } = require('sequelize')
 const Category = require('../models/Category')
 const Product = require('../models/Product')
-
+const ProductImage = require('../models/ProductImages')
 const ProductItem = require('../models/ProductItem')
 const ApiResponse = require('../response/ApiResponse')
 const Color = require('../models/Color')
+const Coupon = require('../models/Coupon')
 class ProductController {
     async getAllProduct(req, res, next) {
         try {
@@ -96,6 +97,17 @@ class ProductController {
                         model: Category,
                         as: 'category',
                         attributes: ['name']
+                    },
+
+                    {
+                        model: Coupon,
+                        as: 'productCoupon', // Make sure this alias matches the association in your models
+                        attributes: ['price']
+                    }
+                    ,
+                    {
+                        model: ProductItem,
+                        as: 'productsDetail'
                     }
                 ]
             });
@@ -139,18 +151,41 @@ class ProductController {
             next(err);
         }
     }
+    async getProductWithImages(req, res, next) {
+        try {
+            const { id } = req.params;
+            console.log('id:', id); // Kiểm tra giá trị productId
+
+            const product = await Product.findByPk(id, {
+                include: [
+                    {
+                        model: ProductImage,
+                        as: 'images'
+                    }
+                ]
+            });
+
+            if (!product) {
+                return res.status(404).json({ message: 'Product not found' });
+            }
+
+            return res.status(200).json(product);
+        } catch (err) {
+            next(err);
+        }
+    }
 
 
 
     async createProduct(req, res, next) {
         try {
-            const { id, name, description, price, sold, categoryId, productCouponId, colorId, unitlnStock } = req.body
+            let { id, name, description, price, categoryId, productCouponId, colors } = req.body;
+            colors = JSON.parse(colors)
+            let image = '';
 
-            let image = ''
             if (req.file) {
-                image = req.file.filename
+                image = req.file.filename;
             }
-
 
             const product = await Product.create({
                 id,
@@ -158,57 +193,67 @@ class ProductController {
                 description,
                 price,
                 image,
-                sold,
                 categoryId,
-                productCouponId
-            })
+                productCouponId: productCouponId || null
+            });
 
-            let productColor = []
-            if (product) {
-                // lặp qua màu, sau đó tạo ProductItem tương ứng với màu
-                for (let i = 0; i < colorId.length; i++) {
-                    const product_item = await ProductItem.create({
-                        productId: product.id,
-                        colorId: colorId[i],
-                        unitlnStock: unitlnStock
-                    })
-                    productColor.push(product_item)
-                }
+            const productItems = [];
+            // Lặp qua từng màu và tạo ProductItem tương ứng
+            for (let i = 0; i < colors.length; i++) {
+                const { colorId, unitlnStock } = colors[i];
+                const productItem = await ProductItem.create({
+                    productId: product.id,
+                    colorId,
+                    unitlnStock
+                });
+                productItems.push(productItem);
             }
-
 
             const info_product = {
                 ...product.dataValues,
-                product_item: productColor
-            }
+                productItems
+            };
+
             return ApiResponse.success(res, {
                 status: 201,
                 data: {
                     product: info_product,
                     message: 'Thêm sản phẩm thành công'
                 }
-            })
+            });
         } catch (err) {
-            console.log(err)
-            next(err)
+            console.log(err);
+            next(err);
         }
     }
+
+
+
     async updateProduct(req, res, next) {
         try {
-            const { name, description, price, sold, categoryId, productCouponId, colorId, unitlnStock } = req.body;
+            const { name, description, price, categoryId, productCouponId, colors } = req.body;
             const { id: productId } = req.params;
+
+            // Kiểm tra và phân tích cú pháp dữ liệu colors nếu nó là chuỗi
+            let parsedColors;
+            if (typeof colors === 'string') {
+                parsedColors = JSON.parse(colors);
+            } else {
+                parsedColors = colors;
+            }
+
+            // Tìm sản phẩm cần cập nhật
             const product = await Product.findByPk(productId);
 
             if (!product) {
-                return ApiResponse.success(res, {
+                return ApiResponse.error(res, {
                     status: 404,
-                    data: {
-                        message: 'Không tìm thấy sản phẩm'
-                    }
+                    message: 'Không tìm thấy sản phẩm'
                 });
             }
 
-            let image = product.image; // giữ lại ảnh cũ nếu không có ảnh mới
+            // Lưu lại ảnh cũ hoặc cập nhật ảnh mới nếu có
+            let image = product.image;
             if (req.file) {
                 image = req.file.filename;
             }
@@ -217,67 +262,61 @@ class ProductController {
             product.name = name;
             product.description = description;
             product.price = price;
-            product.sold = sold;
             product.image = image;
             product.categoryId = categoryId;
             product.productCouponId = productCouponId;
+
+            // Lưu thông tin sản phẩm đã cập nhật
             await product.save();
 
-            // Mảng để lưu các product items
-            const productColor = [];
+            // Lấy các ProductItem hiện có của sản phẩm
+            const existingProductItems = await ProductItem.findAll({ where: { productId: productId } });
 
-            // Xóa các ProductItem hiện có của sản phẩm để cập nhật mới
-            await ProductItem.destroy({ where: { productId: product.id } });
+            // Lấy danh sách các colorId hiện có
+            const existingColorIds = existingProductItems.map(item => item.colorId);
 
-            // Kiểm tra xem unitInStock có giá trị hợp lệ
-            if (!unitlnStock && unitlnStock !== 0) {
-                return ApiResponse.success(res, {
-                    status: 400,
-                    data: {
-                        message: 'unitlnStock không hợp lệ'
-                    }
-                });
+            // Lấy danh sách các colorId mới
+            const newColorIds = parsedColors.map(color => color.colorId);
+
+            // Xóa các màu không còn trong danh sách mới
+            const colorIdsToRemove = existingColorIds.filter(colorId => !newColorIds.includes(colorId));
+            await ProductItem.destroy({
+                where: {
+                    productId: productId,
+                    colorId: colorIdsToRemove
+                }
+            });
+
+            // Thêm hoặc cập nhật các ProductItem cho từng màu sắc
+            for (const color of parsedColors) {
+                const { colorId, unitlnStock } = color;
+
+                // Kiểm tra xem ProductItem đã tồn tại hay chưa
+                const existingProductItem = existingProductItems.find(item => item.colorId === colorId);
+
+                if (existingProductItem) {
+                    // Nếu tồn tại, cập nhật số lượng tồn kho
+                    existingProductItem.unitlnStock = unitlnStock;
+                    await existingProductItem.save();
+                } else {
+                    // Nếu không tồn tại, tạo mới ProductItem
+                    await ProductItem.create({
+                        productId: product.id,
+                        colorId,
+                        unitlnStock
+                    });
+                }
             }
 
-            // Lặp qua các colorId để tạo các ProductItem tương ứng
-            for (let i = 0; i < colorId.length; i++) {
-                const product_item = await ProductItem.create({
-                    productId: product.id,
-                    colorId: colorId[i],
-                    unitlnStock: unitlnStock // đảm bảo unitInStock không null
-                });
-                productColor.push(product_item);
-            }
-
-            const info_product = {
-                ...product.dataValues,
-                product_item: productColor
-            };
-
-            // Xóa các ảnh cũ của sản phẩm
-            // await ProductImages.destroy({
-            //     where: {
-            //         productId: productId
-            //     }
-            // });
-
-            // Thêm ảnh mới nếu có
-            // if (req.files) {
-            //     const imagePromises = req.files.map((file) => {
-            //         return ProductImages.create({
-            //             productId: product.id,
-            //             url: file.filename
-            //         });
-            //     });
-
-            //     // Chờ cho tất cả các promise hoàn thành
-            //     await Promise.all(imagePromises);
-            // }
+            // Lấy thông tin sản phẩm sau khi đã cập nhật
+            const updatedProduct = await Product.findByPk(productId, {
+                include: [{ model: ProductItem, as: 'productsDetail' }]
+            });
 
             return ApiResponse.success(res, {
                 status: 200,
                 data: {
-                    product: info_product,
+                    product: updatedProduct,
                     message: 'Cập nhật sản phẩm thành công'
                 }
             });
@@ -285,6 +324,9 @@ class ProductController {
             next(err);
         }
     }
+
+
+
 
 
 

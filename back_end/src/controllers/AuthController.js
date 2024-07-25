@@ -111,7 +111,8 @@ class AuthController {
                 name: user.name,
                 email: user.email,
                 avatar: user.avatar,
-                role: user.role
+                role: user.role,
+                id: user.id
             }
             return ApiResponse.success(res, {
                 status: 200,

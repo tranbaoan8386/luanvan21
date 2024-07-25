@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../database/connectMysql')
 const Order = require('./Order')
-const ProductItem = require('./ProductItem')
+const products_item = require('./ProductItem')
 
 const OrderItem = sequelize.define(
     'OrderItem',
@@ -23,7 +23,7 @@ const OrderItem = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: ProductItem,
+                model: products_item,
                 key: 'id'
             }
         },

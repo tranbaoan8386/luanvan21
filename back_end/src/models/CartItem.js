@@ -3,6 +3,7 @@ const sequelize = require('../database/connectMysql')
 const Cart = require('./Cart')
 const Product = require('./Product')
 const Color = require('./Color.js')
+const ProductItem = require('./ProductItem')
 const CartItem = sequelize.define(
     'CartItem',
     {
@@ -19,11 +20,11 @@ const CartItem = sequelize.define(
                 key: 'id'
             }
         },
-        productId: {
+        ProductItemId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: Product,
+                model: ProductItem,
                 key: 'id'
             }
         },

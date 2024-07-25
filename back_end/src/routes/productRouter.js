@@ -24,6 +24,8 @@ productRouter.patch(
     authorizedMiddleware('admin'),
     ProductController.updateProduct
 )
+
+productRouter.get('/products/:id', ProductController.getProductWithImages);
 productRouter.delete(
     '/:id',
     jwtAuthMiddleware,

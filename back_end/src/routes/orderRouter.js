@@ -5,7 +5,12 @@ const authorizedMiddleware = require('../middlewares/authorizedMiddleware')
 const validatorMiddleware = require('../middlewares/validatorMiddleware')
 const OrderSchema = require('../validations/OrderSchema')
 const orderRouter = Router()
-
+orderRouter.get('/sale',
+    OrderController.getSale)
+orderRouter.get('/salemonth',
+    OrderController.getMonthlyRevenue)
+orderRouter.get('/saleannual',
+    OrderController.getAnnualRevenue)
 orderRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('customer', 'admin'), OrderController.getAllOrder)
 orderRouter.get('/:id', jwtAuthMiddleware, authorizedMiddleware('customer', 'admin'), OrderController.getOrderById)
 orderRouter.post(

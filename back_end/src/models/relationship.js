@@ -1,15 +1,17 @@
-// const Color = require('./Color.js')
-// const Coupon = require('./Coupon.js')
-// const Role = require('./Role')
-// const User = require('./User')
-
+const Coupon = require('./Coupon')
+const Review = require('./Review')
+const ProductImage = require('./ProductImages')
+const User = require('./User')
+const Order = require('./Order')
 const Cart = require('./Cart')
 const CartItem = require('./CartItem')
-
+const OrderItem = require('./OrderItem')
 const Product = require('./Product')
 const Category = require('./Category')
 const ProductItem = require('./ProductItem')
 const Color = require('./Color')
+const Address = require('./Address')
+Review
 // Category-Product
 Category.hasMany(Product, {
     foreignKey: 'categoryId'
@@ -19,7 +21,10 @@ Product.belongsTo(Category, {
     foreignKey: 'categoryId',
     as: 'category'
 })
-
+Product.belongsTo(Coupon, {
+    foreignKey: 'productCouponId',
+    as: 'productCoupon'
+})
 Product.belongsToMany(Color, { through: ProductItem });
 Color.belongsToMany(Product, { through: ProductItem });
 
@@ -33,12 +38,38 @@ Product.hasMany(ProductItem, {
     as: 'productsDetail',
     sourceKey: 'id'
 })
+Product.hasMany(ProductItem, {
+    foreignKey: 'productId',
+    as: 'details',
+
+})
+// Product has many ProductItems
+Product.hasMany(ProductItem, {
+    foreignKey: 'productId',
+    as: 'productItems'
+});
+User.hasOne(Address, { foreignKey: 'userId' });
+Address.belongsTo(User, { foreignKey: 'userId' });
+// ProductItem belongs to Product
+ProductItem.belongsTo(Product, {
+    foreignKey: 'productId',
+    as: 'product'
+});
+
+ProductItem.belongsTo(Color, {
+    foreignKey: 'colorId',
+    as: 'color'
+})
+
 ProductItem.belongsTo(Color, {
     foreignKey: 'colorId',
     as: 'colorInfo',
     sourceKey: 'id'
 
 })
+// Association to get replies
+Review.hasMany(Review, { as: 'replies', foreignKey: 'parentId' });
+Review.belongsTo(Review, { as: 'parent', foreignKey: 'parentId' });
 // CustomerAddress.hasMany(CustomerAddressToObject, {
 //     as: 'contact_persons',
 //     foreignKey: 'customer_address_id',
@@ -63,22 +94,46 @@ CartItem.belongsTo(Cart, {
     foreignKey: 'cartId'
 })
 
-// CartItem-Product
-CartItem.belongsTo(Product, {
-    foreignKey: 'productId',
-    as: 'products'
+
+CartItem.belongsTo(ProductItem, { as: 'productItem', foreignKey: 'productItemId' });
+
+
+Order.belongsToMany(ProductItem, {
+    through: OrderItem,
+    foreignKey: 'orderId',
+    as: 'productitems'
+})
+OrderItem.belongsTo(ProductItem, { foreignKey: 'productItemId', as: 'productItem' });
+
+OrderItem.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+
+ProductItem.hasMany(OrderItem, { foreignKey: 'productItemId', as: 'orderItems' });
+Order.hasMany(OrderItem, { as: 'items', foreignKey: 'orderId' });
+ProductItem.belongsToMany(Order, {
+    through: OrderItem,
+    foreignKey: 'productItemId',
+    as: 'ordersItem'
 })
 
-Product.hasMany(CartItem, {
-    foreignKey: 'productId'
+// Order - User
+User.hasMany(Order, {
+    foreignKey: 'userId'
 })
 
-// CartItem-Product
-CartItem.belongsTo(Color, {
-    foreignKey: 'colorId',
-    as: 'colors'
+Order.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'users'
 })
+ProductImage.belongsTo(Product,
+    {
+        foreignKey: 'productId', as: 'product'
 
-Color.hasMany(CartItem, {
-    foreignKey: 'colorId'
-})
+
+    });
+User.hasMany(Review, { foreignKey: 'userId', as: 'reviews' });
+Review.belongsTo(User, { foreignKey: 'userId', as: 'users' });
+
+// Color.hasMany(CartItem, {
+//     foreignKey: 'colorId'
+// })
+Product.hasMany(ProductImage, { as: 'images', foreignKey: 'productId' });

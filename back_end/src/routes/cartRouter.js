@@ -16,6 +16,13 @@ cartRouter.delete(
     validatorMiddleware(CartSchema.deleteProductInCart),
     CartController.deleteProductFromCart
 )
+cartRouter.delete(
+    '/carts',
+
+    jwtAuthMiddleware, authorizedMiddleware('customer'),
+    validatorMiddleware(CartSchema.deleteProductInCart),
+    CartController.deleteProductCart
+)
 cartRouter.patch(
     '/',
     jwtAuthMiddleware,

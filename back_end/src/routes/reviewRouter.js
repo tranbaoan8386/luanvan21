@@ -7,23 +7,25 @@ const ReviewSchema = require('../validations/ReviewSchema')
 
 const reviewRouter = Router()
 
-reviewRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('owner'), ReviewController.getAllReview)
-reviewRouter.get('/product/:id', ReviewController.getAllReviewProduct)
+reviewRouter.get('/', ReviewController.getAllReview)
+reviewRouter.get('/product/:id', ReviewController.getAllReviewProduct),
+    reviewRouter.post('/',
+        jwtAuthMiddleware,
+
+        validatorMiddleware(ReviewSchema.createReview), ReviewController.createReview)
 reviewRouter.post(
-    '/',
+    '/reply',
     jwtAuthMiddleware,
-    authorizedMiddleware('customer'),
-    validatorMiddleware(ReviewSchema.createReview),
-    ReviewController.createReview
+    authorizedMiddleware('admin'),
+    ReviewController.createReply
 )
 reviewRouter.patch(
     '/:id',
-    jwtAuthMiddleware,
-    authorizedMiddleware('customer'),
+
     validatorMiddleware(ReviewSchema.updateReview),
     ReviewController.updateReview
 )
 
-reviewRouter.patch('/hidden/:id', jwtAuthMiddleware, authorizedMiddleware('owner'), ReviewController.hiddenReview)
-reviewRouter.delete('/:id', jwtAuthMiddleware, authorizedMiddleware('owner'), ReviewController.deleteReview)
+reviewRouter.patch('/hidden/:id', ReviewController.hiddenReview)
+reviewRouter.delete('/:id', ReviewController.deleteReview)
 module.exports = reviewRouter

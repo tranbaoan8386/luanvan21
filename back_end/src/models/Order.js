@@ -1,6 +1,6 @@
-const { DataTypes } = require('sequelize')
-const sequelize = require('../database/connectMysql')
-const User = require('./User')
+const { DataTypes } = require('sequelize');
+const sequelize = require('../database/connectMysql');
+const User = require('./User');
 
 const Order = sequelize.define(
     'Order',
@@ -8,52 +8,58 @@ const Order = sequelize.define(
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
-            autoIncrement: true
+            autoIncrement: true,
         },
-        // pending, shipped, delivered, cancelled
         statusPayment: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: 'pending'
+
         },
         status: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: 'pending'
+
         },
         total: {
-            type: DataTypes.INTEGER,
-
+            type: DataTypes.DECIMAL(10, 2), // Use DECIMAL for monetary values
+            allowNull: false,
         },
         phone: {
             type: DataTypes.STRING,
-            allowNull: true
-        }, email: {
+            allowNull: true,
+        },
+        email: {
             type: DataTypes.STRING,
-            allowNull: true
+            allowNull: true,
         },
         fullname: {
             type: DataTypes.STRING,
-            allowNull: true
+            allowNull: true,
         },
         address: {
             type: DataTypes.STRING,
-            allowNull: true
+            allowNull: true,
+        },
+
+        createDate: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
         },
         userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: User,
-                key: 'id'
-            }
+                key: 'id',
+            },
         },
     },
     {
-        timestamps: false,
+        timestamps: false, // Enable timestamps
+        paranoid: true, // Enable paranoid (soft delete)
         tableName: 'orders',
-        paranoid: true
     }
-)
+);
 
-module.exports = Order
+module.exports = Order;
