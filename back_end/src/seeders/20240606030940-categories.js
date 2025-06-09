@@ -14,16 +14,12 @@ module.exports = {
          */
         await queryInterface.bulkInsert('categories', [
             {
-                name: 'Cây thông noel',
+                name: 'Thời trang nam',
               
             },
             {
-                name: 'Hoa',
+                name: 'Thời trang nữ',
             
-            },
-            {
-                name: 'Đèn',
-               
             }
         ])
     },

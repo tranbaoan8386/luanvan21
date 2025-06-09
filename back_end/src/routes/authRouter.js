@@ -6,7 +6,7 @@ const AuthSchema = require('../validations/AuthSchema')
 const authRouter = Router()
 
 authRouter.post('/register', AuthController.register)
-authRouter.post('/login',validatorMiddleware(AuthSchema.login), AuthController.login)
+authRouter.post('/login', AuthController.login)
 authRouter.post('/forgot-password', validatorMiddleware(AuthSchema.forgotPassword), AuthController.forgotPassword)
-authRouter.post('/reset-password', validatorMiddleware(AuthSchema.resetPassword), AuthController.resetPassword)
+authRouter.post('/reset-passwords', AuthController.resetPasswords)
 module.exports = authRouter

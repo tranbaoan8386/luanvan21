@@ -9,7 +9,7 @@ class AxiosClient {
     constructor() {
         this.accessToken = getAccessToken()
         this.instance = axios.create({
-            baseURL: 'http://localhost:3009/api/v1/',
+            baseURL: 'http://localhost:8000/api/v1/',
             timeout: 10000,
             headers: {
                 'Content-Type': 'application/json'

@@ -38,13 +38,32 @@ class CategoryController {
     }
     async createCategory(req, res, next) {
         try {
+
+            const { name } = req.body;
+
+            // Kiểm tra xem tên danh mục đã tồn tại chưa
+            const existingCategory = await Category.findOne({
+                where: { name }
+            });
+
+            if (existingCategory) {
+                return ApiResponse.error(res, {
+                    status: 400,
+                    data: {
+                        field: 'name', // Tên trường gây lỗi
+                        message: 'Tên danh mục đã bị trùng'
+                    }
+                });
+            }
+
+            // Nếu không trùng, tiến hành tạo mới
             const category = await Category.create(req.body)
 
             return ApiResponse.success(res, {
                 status: 201,
                 data: {
                     category,
-                    message: 'Tạo loại sản phẩm thành công'
+                    message: 'Tạo danh mục sản phẩm thành công'
                 }
             })
         } catch (err) {
@@ -67,6 +86,22 @@ class CategoryController {
                     message: 'Không tìm thấy danh mục'
                 })
             }
+
+            // Kiểm tra xem tên danh mục đã tồn tại chưa
+            const existingCategory = await Category.findOne({
+                where: { name }
+            });
+
+            if (existingCategory) {
+                return ApiResponse.error(res, {
+                    status: 400,
+                    data: {
+                        field: 'name', // Tên trường gây lỗi
+                        message: 'Tên danh mục đã bị trùng'
+                    }
+                });
+            }
+            
             category.name = name
             await category.save()
 
@@ -74,7 +109,7 @@ class CategoryController {
                 status: 200,
                 data: {
                     category,
-                    message: 'Cập nhật loại sản phẩm thành công'
+                    message: 'Cập nhật danh mục sản phẩm thành công'
                 }
             })
         } catch (err) {
@@ -104,7 +139,7 @@ class CategoryController {
                 status: 200,
                 data: {
                     category,
-                    message: 'Xóa sản phẩm thành công'
+                    message: 'Xóa danh mục thành công'
                 }
             })
         } catch (err) {

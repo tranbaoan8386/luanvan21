@@ -6,7 +6,7 @@ const ProductImageController = require('../controllers/ProductImageController')
 const productImageRouter = Router()
 productImageRouter.post(
     '/',
-    uploadMiddleware.single('url'),
+    uploadMiddleware.any('url'),
     ProductImageController.createProductImage
 )
 

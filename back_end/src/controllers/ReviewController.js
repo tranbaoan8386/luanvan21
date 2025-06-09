@@ -1,6 +1,9 @@
 const Review = require('../models/Review')
 const ApiResponse = require('../response/ApiResponse')
 const User = require('../models/User')
+const Order = require('../models/Order')
+const OrderItem = require('../models/OrderItem')
+const ProductItem = require('../models/ProductItem')
 
 class ReviewController {
     async getAllReview(req, res, next) {
@@ -29,7 +32,13 @@ class ReviewController {
                     {
                         model: Review,
                         as: 'replies',
-
+                        include: [
+                            {
+                              model: User,
+                              as: 'users',
+                              attributes: ['id', 'name'], // Bao gồm thông tin người dùng trong phản hồi
+                            },
+                        ],
                     },
                     { model: User, as: 'users', attributes: ['id', 'name'] } // Bao gồm thông tin người dùng của đánh giá gốc
                 ]
@@ -55,33 +64,78 @@ class ReviewController {
     // reviewController.js
     async createReview(req, res, next) {
         try {
-            console.log("req.user", req.user)
-            const { id: userId } = req.user; // Lấy userId từ req.user
+            const { id: userId } = req.user;
             const { comment, rating, productId } = req.body;
 
-            console.log("Received data:", { userId, comment, rating, productId });
-
+            // Kiểm tra các trường bắt buộc
             if (!userId || !comment || !rating || !productId) {
-                return res.status(400).json({ message: "Thiếu thông tin bắt buộc." });
+                return ApiResponse.error(res, {
+                    status: 400,
+                    message: "Thiếu thông tin bắt buộc."
+                });
             }
 
+            // Kiểm tra xem người dùng đã mua sản phẩm này chưa
+            const hasPurchased = await Order.findOne({
+                where: {
+                    userId,
+                    status: 'delivered'
+                },
+                include: [{
+                    model: OrderItem,
+                    as: 'items',
+                    include: [{
+                        model: ProductItem,
+                        as: 'productItem',
+                        where: {
+                            productId: productId
+                        }
+                    }]
+                }]
+            });
+
+            if (!hasPurchased) {
+                return ApiResponse.error(res, {
+                    status: 403,
+                    message: "Bạn cần mua sản phẩm này trước khi đánh giá"
+                });
+            }
+
+            // Kiểm tra xem người dùng đã đánh giá sản phẩm này chưa
+            const existingReview = await Review.findOne({
+                where: {
+                    userId,
+                    productId,
+                    parentId: null
+                }
+            });
+
+            if (existingReview) {
+                return ApiResponse.error(res, {
+                    status: 400,
+                    message: "Bạn đã đánh giá sản phẩm này rồi"
+                });
+            }
+
+            // Tạo đánh giá mới
             const review = await Review.create({
                 comment,
                 rating,
                 productId,
                 userId,
-                parentId: null// Sử dụng userId từ req.user
+                parentId: null
             });
 
-            return res.status(201).json({
-                status: "success",
-                data: {
-                    review
-                }
+            return ApiResponse.success(res, {
+                status: 201,
+                message: "Đánh giá sản phẩm thành công",
+                data: review
             });
         } catch (err) {
-            console.error(err); // Log lỗi chi tiết
-            next(err);
+            return ApiResponse.error(res, {
+                status: 500,
+                message: "Có lỗi xảy ra khi tạo đánh giá"
+            });
         }
     }
 

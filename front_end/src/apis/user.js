@@ -3,7 +3,9 @@ import axiosClient from '../services/AxiosClient'
 const userApi = {
     logout: () => axiosClient.post('/users/logout'),
     getMe: () => axiosClient.get('/users/me'),
+    getAll: () => axiosClient.get('/users'),
     getUser: (id) => axiosClient.get(`/users/${id}`),
+    deleteUser: (id) => axiosClient.delete(`/users/delete/${id}`),
     update: (body) =>
         axiosClient.patch('/users/update', body, {
             headers: {
@@ -11,7 +13,8 @@ const userApi = {
             }
         }),
     updatePassword: (body) => axiosClient.patch('/users/update-password', body),
-    getAll: () => axiosClient.get('/users')
+    getAllOrder: () => axiosClient.get('/users'),
+    toggleActive: (id) => axiosClient.patch(`/users/toggle-active/${id}`)
 }
 
 export default userApi

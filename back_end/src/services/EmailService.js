@@ -1,35 +1,28 @@
-const { env } = require('../config/env')
-const generateOAuthAccessToken = require('../utils/generateOAuthAccessToken')
 const nodemailer = require('nodemailer')
-class EmailService {
-    constructor() {
-        this.initTransport()
-    }
+const maiConfig = require('../config/mail.config');
+const mailConfig = require('../config/mail.config');
+require('dotenv').config();
+exports.sendMail = (to, subject, htmlContent) => {
 
-    initTransport() {
-        this.transport = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                type: 'OAuth2',
-                clientId: env.GOOGLE_CLIENT_ID,
-                clientSecret: env.GOOGLE_CLIENT_SECRET
-            }
-        })
+    const transport = nodemailer.createTransport({
+
+        host: mailConfig.HOST,
+        port: mailConfig.PORT,
+        secure: mailConfig.SECURITY === true,
+        auth: {
+            user: mailConfig.USERNAME,
+            pass: mailConfig.PASSWORD
+        }
+    })
+
+
+    const options = {
+
+        from: mailConfig.FROM_ADDRESS,
+        to: to,
+        subject: subject,
+        html: htmlContent
+
     }
-    async sendMail({ to, subject, html }) {
-        const accessToken = await generateOAuthAccessToken()
-        this.transport.sendMail({
-            from: `Phone Store <${env.GOOGLE_TEST_EMAIL}>`,
-            to,
-            subject,
-            html,
-            auth: {
-                user: env.GOOGLE_TEST_EMAIL,
-                refreshToken: env.GOOGLE_REFRESH_TOKEN,
-                accessToken
-            }
-        })
-    }
+    return transport.sendMail(options)
 }
-
-module.exports = new EmailService()

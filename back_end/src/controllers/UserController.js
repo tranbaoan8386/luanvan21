@@ -225,6 +225,63 @@ class UserController {
             next(err)
         }
     }
+    async deleteUser(req, res, next) {
+        try {
+            const { id: userId } = req.params;
+
+            // Find the user by ID
+            const user = await User.findByPk(userId);
+
+            // If user is not found, return an error response
+            if (!user) {
+                return ApiResponse.error(res, {
+                    status: 404,
+                    message: 'User not found'
+                });
+            }
+
+            // Delete the user
+            await user.destroy();
+
+            // Return success response
+            return ApiResponse.success(res, {
+                status: 200,
+                message: 'User deleted successfully'
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    async toggleUserActive(req, res, next) {
+        try {
+            const { id: userId } = req.params;
+            const user = await User.findByPk(userId);
+
+            if (!user) {
+                return ApiResponse.error(res, {
+                    status: 404,
+                    data: {
+                        message: 'Không tìm thấy người dùng'
+                    }
+                });
+            }
+
+            // Toggle trạng thái isActive
+            user.isActive = !user.isActive;
+            await user.save();
+
+            return ApiResponse.success(res, {
+                status: 200,
+                data: {
+                    message: `Đã ${user.isActive ? 'kích hoạt' : 'vô hiệu hóa'} người dùng thành công`
+                }
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+
 }
 
 module.exports = new UserController()

@@ -12,16 +12,16 @@ module.exports = {
          *   isBetaMember: false
          * }], {});
          */
-        const roles = await queryInterface.sequelize.query('SELECT slug FROM roles;')
+        const roles = await queryInterface.sequelize.query('SELECT name FROM roles;')
         const rolesRows = roles[0]
         await queryInterface.bulkInsert(
             'users',
             [
                 {
                     name: 'Admin',
-                    email: 'admin@example.com',
+                    email: 'admin@gmail.com',
                     password: bcrypt.hashSync('123456'),
-                    role: rolesRows.find((role) => role.slug === 'admin').slug,
+                    role: rolesRows.find((role) => role.name === 'Admin').name,
                     verified: true,
                     createdAt: new Date(),
                     updatedAt: new Date()
@@ -29,9 +29,9 @@ module.exports = {
                 
                 {
                     name: 'Customer',
-                    email: 'customer@example.com',
+                    email: 'customer@gmail.com',
                     password: bcrypt.hashSync('123456'),
-                    role: rolesRows.find((role) => role.slug === 'customer').slug,
+                    role: rolesRows.find((role) => role.name === 'Customer').name,
                     verified: true,
                     createdAt: new Date(),
                     updatedAt: new Date()

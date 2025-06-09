@@ -7,23 +7,23 @@ const CouponSchema = require('../validations/CouponSchema')
 
 const couponRouter = Router()
 
-couponRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('customer', 'admin'), CouponController.getAllCoupon)
-couponRouter.get('/:id', jwtAuthMiddleware, authorizedMiddleware('customer', 'admin'), CouponController.getCoupon)
+couponRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('Customer', 'Admin'), CouponController.getAllCoupon)
+couponRouter.get('/:id', jwtAuthMiddleware, authorizedMiddleware('Customer', 'Admin'), CouponController.getCoupon)
 couponRouter.post(
     '/',
     jwtAuthMiddleware,
-    authorizedMiddleware('admin'),
+    authorizedMiddleware('Admin'),
     validatorMiddleware(CouponSchema.createCoupon),
     CouponController.createCoupon
 )
 couponRouter.patch(
     '/:id',
     jwtAuthMiddleware,
-    authorizedMiddleware('admin'),
+    authorizedMiddleware('Admin'),
     validatorMiddleware(CouponSchema.updateCoupon),
     CouponController.updateCoupon
 )
 
-couponRouter.delete('/:id', jwtAuthMiddleware, authorizedMiddleware('admin'), CouponController.deleteCoupon)
+couponRouter.delete('/:id', jwtAuthMiddleware, authorizedMiddleware('Admin'), CouponController.deleteCoupon)
 
 module.exports = couponRouter

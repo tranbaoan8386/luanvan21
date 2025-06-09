@@ -73,7 +73,7 @@ function Register() {
                 </ButtonCustom>
                 <Typography mt={3}>
                     Bạn đã có tài khoản?
-                    <Link to='/login'> Đăng Nhập Ngay</Link>
+                    <Link style={{color: 'rgb(13, 92, 182)'}} to='/login'>&nbsp; Đăng nhập ngay</Link>
                 </Typography>
             </Box>
         </FormAuth>

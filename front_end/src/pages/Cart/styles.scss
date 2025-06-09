@@ -72,6 +72,8 @@
     }
 
     &-name {
+        font-size: 15px;
+        font-weight: 500;
         display: -webkit-box;
         -webkit-box-orient: vertical;
         overflow: hidden;
@@ -80,7 +82,14 @@
 
     &-color {
         margin-top: 4px;
-        font-size: 12px;
+        font-size: 13px;
+        font-weight: 500;
+        display: flex;
+        
+    }
+    &-size {
+        margin-top: 4px;
+        font-size: 13px;
         font-weight: 500;
         color: #c50e0e;
     }

@@ -8,6 +8,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { searchSchema } from '../../../validation/product'
 import { createSearchParams, useNavigate } from 'react-router-dom'
 import { omit } from 'lodash'
+
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
@@ -43,7 +44,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
         transition: theme.transitions.create('width'),
         width: '100%',
         [theme.breakpoints.up('md')]: {
-            width: '20ch'
+            width: '30ch'
         }
     }
 }))
@@ -51,7 +52,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 export default function SearchResult() {
     const navigate = useNavigate()
     const queryConfig = useQuertConfig()
-    const { register, handleSubmit, setValue } = useForm({
+    const { register, handleSubmit, setValue, watch } = useForm({
         defaultValues: {
             name: ''
         },
@@ -82,14 +83,25 @@ export default function SearchResult() {
         })
     })
 
+    // Watch for changes in the input and trigger search
+    const searchValue = watch('name')
+    useEffect(() => {
+        if (searchValue !== undefined) {
+            handleSearch({ name: searchValue })
+        }
+    }, [searchValue])
+
     return (
-        <Box onSubmit={handleSearch} component='form'>
-            <Search>
+        <Box component='form'>
+            <Search style={{background: '#fff', color: '#000'}}>
                 <SearchIconWrapper>
                     <SearchIcon />
                 </SearchIconWrapper>
-                {/* Use defaultValue instead of value */}
-                <StyledInputBase {...register('name')} placeholder='Tìm kiếm...' />
+                <StyledInputBase
+                    {...register('name')}
+                    placeholder='Tìm kiếm...'
+                    onChange={(e) => setValue('name', e.target.value)}                    
+                />
             </Search>
         </Box>
     )

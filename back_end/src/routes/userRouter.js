@@ -9,8 +9,8 @@ const authorizedMiddleware = require('../middlewares/authorizedMiddleware')
 const userRouter = Router()
 
 userRouter.get('/me', jwtAuthMiddleware, UserController.getMe)
-userRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('admin'), UserController.getAll)
-userRouter.get('/:id', jwtAuthMiddleware, authorizedMiddleware('admin'), UserController.getMe)
+userRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('Admin'), UserController.getAll)
+userRouter.get('/:id', UserController.getMe)
 userRouter.patch(
     '/update',
     // form-data không validation được
@@ -27,5 +27,12 @@ userRouter.patch(
     UserController.updatePassword
 )
 userRouter.post('/logout', jwtAuthMiddleware, UserController.logout)
+userRouter.delete('/delete/:id', jwtAuthMiddleware, UserController.deleteUser)
+userRouter.patch(
+    '/toggle-active/:id', 
+    jwtAuthMiddleware, 
+    authorizedMiddleware('Admin'), 
+    UserController.toggleUserActive
+)
 
 module.exports = userRouter

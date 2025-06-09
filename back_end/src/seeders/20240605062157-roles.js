@@ -17,14 +17,10 @@ module.exports = {
             [
                 {
                     name: 'Admin',
-                    slug: 'admin',
-
                 },
 
                 {
-                    name: 'Customer',
-                    slug: 'customer',
-                   
+                    name: 'Customer', 
                 }
             ],
             {}

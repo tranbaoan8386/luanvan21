@@ -1,103 +1,97 @@
-import React from 'react'
-import { Grid, Typography } from '@mui/material'
-import { Box } from '@mui/system'
-import { useQuery } from '@tanstack/react-query'
-import productApi from '../../../../apis/product'
-import GridProduct from '../../../../components/GridProduct'
-import ProductItem from '../../../../components/ProductItem/ProductItem'
-import Pagination from './modules/Panigation'
-import SortProduct from './modules/SortProduct'
-import colorApi from '../../../../apis/color'
-import categoryApi from '../../../../apis/category'
-import useQuertConfig from '../../../../hooks/useQuertConfig'
-import Aside from './modules/Aside'
-import './styles.scss'
+import React from "react";
+import { Grid, Typography } from "@mui/material";
+import { Box } from "@mui/system";
+import { useQuery } from "@tanstack/react-query";
+import productApi from "../../../../apis/product";
+import GridProduct from "../../../../components/GridProduct";
+import ProductItem from "../../../../components/ProductItem/ProductItem";
+import Pagination from "./modules/Panigation";
+import SortProduct from "./modules/SortProduct";
+import categoryApi from "../../../../apis/category";
+import brandApi from "../../../../apis/brand";
+import useQuertConfig from "../../../../hooks/useQuertConfig";
+import Aside from "./modules/Aside";
+import "./styles.scss";
+
+const BASE_API_URL = "http://localhost:8000";
 
 export default function ProductList() {
-    const queryConfig = useQuertConfig()
+  const queryConfig = useQuertConfig();
 
-    // Get products
-    const { data: producstData } = useQuery({
-        queryKey: ['products', queryConfig],
-        queryFn: () => {
-            return productApi.getAllProduct(queryConfig)
-        },
-        keepPreviousData: true
-    })
+  const { data: producstData } = useQuery({
+    queryKey: ["products", queryConfig],
+    queryFn: () => productApi.getAllProduct(queryConfig),
+    keepPreviousData: true,
+  });
 
+  const pageSize = producstData?.data.pagination.page_size;
 
-    console.log(producstData)
+  const { data: categoriesData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => categoryApi.getAllCategory(),
+  });
+  const categories = categoriesData?.data || [];
 
-    const pageSize = producstData?.data.pagination.page_size
+  const { data: brandsData } = useQuery({
+    queryKey: ["brands"],
+    queryFn: () => brandApi.getAllBrand(),
+  });
+  const brands = brandsData?.data || [];
 
-    // Get categories
-    const { data: categoriesData } = useQuery({
-        queryKey: ['categories'],
-        queryFn: () => {
-            return categoryApi.getAllCategory()
-        }
-    })
-    const categories = categoriesData?.data || []
+  const productItems = producstData?.data.products?.map((product) => {
+    const firstItem = product.productItems?.[0];
 
-    // Get brands
-    const { data: brandsData } = useQuery({
-        queryKey: ['brands'],
-        /**
-         * Fetches all brands from the API.
-         *
-         * @return {Promise<Object>} The response object containing the brand data.
-         */
-        queryFn: () => {
-            // Fetch all brands from the API
-            return brandApi.getAllBrand()
-        }
-    })
-    const brands = brandsData?.data || []
+    const avatarPath = product.avatar
+      ? product.avatar.startsWith("/uploads")
+        ? product.avatar
+        : `/uploads/${product.avatar}`
+      : "/fallback.jpg";
 
-    // Tách ra trước khi render
-    const productItems =
-        producstData && producstData.data.products
-            ? producstData.data.products.map((product) => {
-                // const numberOfReviews = product.total_star.map((item) => item.total_reviewer)
-                // const totalRating = product.total_star.map((item) => item.total_star)
-                console.log(product)
-                return {
-                    id: product.id,
-                    name: product.name,
-                    img: product.image,
-                    price: product.price,
-                    productCouponId: product.productCouponId,
-                    description: product.description,
-                    sold: product.sold,
-                    weight: product.weight
-                    // numberOfReviews: numberOfReviews
-                }
+    return {
+      id: product.id ?? "",
+      name: product.name ?? "Sản phẩm không tên",
+      img: `${BASE_API_URL}${avatarPath}`,
+      price: firstItem?.price ?? null,
+      promotionPrice: null,
+      rating: product.rating ?? 0,
+      sold: firstItem?.sold ?? 0,
+      weight: product.weight ?? null,
+    };
+  }) ?? [];
 
-            })
-            : []
-    return (
-        <Grid alignItems='flex-start' container spacing={2}>
-            <Grid sx={{ backgroundColor: '#F5F5F5', mt: 2, pb: 3, borderRadius: '8px' }} item md={12} lg={2.2}>
-                <Typography mb={4} fontSize='18px' textTransform='uppercase' fontWeight='600' component='p'>
-                    Bộ lọc tìm kiếm
-                </Typography>
-                <div className='filter'>
-                    <Aside queryConfig={queryConfig} categories={categories} brands={brands} />
-                </div>
-            </Grid>
-            <Grid item md={12} lg={9.8}>
-                <Box>
-                    <SortProduct queryConfig={queryConfig} />
-                    <GridProduct>
-                        {productItems.map((item) => (
-                            <ProductItem key={item.id} {...item} />
-                        ))}
-                    </GridProduct>
+  return (
+    <Grid alignItems="flex-start" container spacing={2}>
+      <Grid
+        sx={{ backgroundColor: "#F5F5F5", mt: 2, pb: 3, borderRadius: "8px" }}
+        item
+        md={12}
+        lg={2.2}
+      >
+        <Typography
+          mb={4}
+          fontSize="18px"
+          textTransform="uppercase"
+          fontWeight="600"
+          component="p"
+        >
+          Bộ lọc tìm kiếm
+        </Typography>
+        <div className="filter">
+          <Aside queryConfig={queryConfig} categories={categories} brands={brands} />
+        </div>
+      </Grid>
 
-                    <Pagination pageSize={pageSize} queryConfig={queryConfig} />
-                </Box>
-            </Grid>
-        </Grid>
-
-    )
+      <Grid item md={12} lg={9.8}>
+        <Box>
+          <SortProduct queryConfig={queryConfig} />
+          <GridProduct>
+            {productItems.map((item) => (
+              <ProductItem key={item.id} {...item} />
+            ))}
+          </GridProduct>
+          <Pagination pageSize={pageSize} queryConfig={queryConfig} />
+        </Box>
+      </Grid>
+    </Grid>
+  );
 }

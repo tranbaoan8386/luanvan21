@@ -1,39 +1,33 @@
-const { DataTypes } = require('sequelize')
-const sequelize = require('../database/connectMysql')
-const User = require('./User')
-const Coupon = require('./Coupon')
-const ProductItem = require('./ProductItem')
+const { DataTypes } = require('sequelize');
+const sequelize = require('../database/connectMysql');
+const User = require('./User');
 
 const Cart = sequelize.define(
-    'Cart',
-    {
-        id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true
-        },
-        userId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: User,
-                key: 'id'
-            }
-        },
-        isPaid: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: false
-        },
-        total: {
-            type: DataTypes.FLOAT,
-            allowNull: false,
-            defaultValue: 0
-        }
+  'Cart',
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
-    {
-        tableName: 'carts'
+    users_id: { // ✅ Đổi tên cho khớp bảng
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: User,
+        key: 'id'
+      }
+    },
+    isPaid: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true, // ✅ Bảng cho phép null
+      defaultValue: false
     }
-)
+  },
+  {
+    tableName: 'carts',
+    timestamps: true // ✅ Vì bảng có createdAt, updatedAt
+  }
+);
 
-module.exports = Cart
+module.exports = Cart;

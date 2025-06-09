@@ -4,12 +4,11 @@ import TitleManager from '../../../../../../components/Admin/TitleManager'
 import Input from '../../../../../../components/Input'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { createCategory } from '../../../../../../validation/category'
+import { createBrand } from '../../../../../../validation/brand'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import categoryApi from '../../../../../../apis/category'
+import brandApi from '../../../../../../apis/brand'
 import { useNavigate, useParams } from 'react-router-dom'
-import { createBrandSchema } from '../../../../../../validation/brand'
-import colorApi from '../../../../../../apis/color'
+import { toast } from "react-toastify";
 
 export default function UpdateBrand() {
     const navigate = useNavigate()
@@ -23,21 +22,23 @@ export default function UpdateBrand() {
         defaultValues: {
             name: ''
         },
-        resolver: yupResolver(createBrandSchema)
+        resolver: yupResolver(createBrand)
     })
 
-    const { data: colorData } = useQuery({
-        query: ['color'],
-        queryFn: () => colorApi.getColor(id)
+    const { data: brandData } = useQuery({
+        query: ['brand'],
+        queryFn: () => brandApi.getBrand(id)
     })
-    const color = colorData?.data
+    const brand = brandData?.data
     useEffect(() => {
-        setValue('name', color?.name)
-    }, [color])
+        setValue('name', brand?.name)
+    }, [brand])
     const updateBrandMutation = useMutation({
-        mutationFn: (mutationPayload) => colorApi.update(mutationPayload.id, mutationPayload.body),
+        mutationFn: (mutationPayload) => brandApi.update(mutationPayload.id, mutationPayload.body),
         onSuccess: (data) => {
-            navigate('/admin/color')
+            navigate('/admin/brand')
+        }, onError: () => {
+            toast.error('Tên thương hiệu đã bị trùng')
         }
     })
 
@@ -46,7 +47,7 @@ export default function UpdateBrand() {
     })
     return (
         <Box>
-            <TitleManager>Sửa màu</TitleManager>
+            <TitleManager>Cập nhật thương hiệu</TitleManager>
             <Box
                 onSubmit={onSubmit}
                 component='form'
@@ -56,14 +57,14 @@ export default function UpdateBrand() {
                     <Grid item md={6} xs={12}>
                         <Box>
                             <Typography sx={{ fontSize: '15px', color: '#555555CC', mb: '5px' }} component='p'>
-                                Tên màu
+                                Tên thương hiệu
                             </Typography>
                             <Input name='name' register={register} errors={errors} fullWidth size='small' />
                         </Box>
                     </Grid>
                 </Grid>
                 <Button type='submit' sx={{ mt: 2 }} variant='contained'>
-                    Cập nhật màu
+                    Cập nhật thương hiệu
                 </Button>
             </Box>
         </Box>

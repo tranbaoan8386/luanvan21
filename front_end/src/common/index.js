@@ -73,3 +73,12 @@ export const convertUpdateStatusOrder = (status) => {
             return 'Hủy đơn hàng'
     }
 }
+export const convertUpdateStatuspayment = (statusPayment) => {
+    switch (statusPayment) {
+        case "paid":
+            return "Đã thanh toán";
+        default:
+            return statusPayment;
+    }
+};
+

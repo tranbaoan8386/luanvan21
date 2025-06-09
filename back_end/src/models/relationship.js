@@ -1,139 +1,99 @@
-const Coupon = require('./Coupon')
-const Review = require('./Review')
-const ProductImage = require('./ProductImages')
-const User = require('./User')
-const Order = require('./Order')
-const Cart = require('./Cart')
-const CartItem = require('./CartItem')
-const OrderItem = require('./OrderItem')
-const Product = require('./Product')
-const Category = require('./Category')
-const ProductItem = require('./ProductItem')
-const Color = require('./Color')
-const Address = require('./Address')
-Review
-// Category-Product
-Category.hasMany(Product, {
-    foreignKey: 'categoryId'
-})
-
-Product.belongsTo(Category, {
-    foreignKey: 'categoryId',
-    as: 'category'
-})
-Product.belongsTo(Coupon, {
-    foreignKey: 'productCouponId',
-    as: 'productCoupon'
-})
-Product.belongsToMany(Color, { through: ProductItem });
-Color.belongsToMany(Product, { through: ProductItem });
-
-Product.belongsTo(ProductItem, {
-    foreignKey: 'id',
-    as: 'Products_item'
-})
-
-Product.hasMany(ProductItem, {
-    foreignKey: 'productId',
-    as: 'productsDetail',
-    sourceKey: 'id'
-})
-Product.hasMany(ProductItem, {
-    foreignKey: 'productId',
-    as: 'details',
-
-})
-// Product has many ProductItems
-Product.hasMany(ProductItem, {
-    foreignKey: 'productId',
-    as: 'productItems'
-});
-User.hasOne(Address, { foreignKey: 'userId' });
-Address.belongsTo(User, { foreignKey: 'userId' });
-// ProductItem belongs to Product
-ProductItem.belongsTo(Product, {
-    foreignKey: 'productId',
-    as: 'product'
-});
-
-ProductItem.belongsTo(Color, {
-    foreignKey: 'colorId',
-    as: 'color'
-})
-
-ProductItem.belongsTo(Color, {
-    foreignKey: 'colorId',
-    as: 'colorInfo',
-    sourceKey: 'id'
-
-})
-// Association to get replies
-Review.hasMany(Review, { as: 'replies', foreignKey: 'parentId' });
-Review.belongsTo(Review, { as: 'parent', foreignKey: 'parentId' });
-// CustomerAddress.hasMany(CustomerAddressToObject, {
-//     as: 'contact_persons',
-//     foreignKey: 'customer_address_id',
-//     sourceKey: 'id',
-//     scope: {
-//         status: CustomerAddressToObject.STATUS_ACTIVE,
-//         type: CustomerAddressToObject.TYPE_PHONE
-//     }
-// });
-// CustomerAddress.belongsTo(Customer, {
-//     as: 'customer_info',
-//     foreignKey: 'customer_id',
-//     sourceKey: 'id',
-// });
-
-// Cart-CartItem
-Cart.hasMany(CartItem, {
-    foreignKey: 'cartId',
-    as: 'cartItems'
-})
-CartItem.belongsTo(Cart, {
-    foreignKey: 'cartId'
-})
+const Product = require('./Product');
+const ProductItem = require('./ProductItem');
+const ProductImage = require('./ProductImages');
+const Category = require('./Category');
+const Brand = require('./Brand');
+const Material = require('./Material');
+const Color = require('./Color');
+const Size = require('./Size');
+const Coupon = require('./Coupon');
+const User = require('./User');
+const Order = require('./Order');
+const OrderItem = require('./OrderItem');
+const Cart = require('./Cart');
+const CartItem = require('./CartItem');
+const Review = require('./Review');
+const Role = require('./Role');
 
 
-CartItem.belongsTo(ProductItem, { as: 'productItem', foreignKey: 'productItemId' });
+// ===== CATEGORY - PRODUCT =====
+Category.hasMany(Product, { foreignKey: 'categories_id' });
+Product.belongsTo(Category, { foreignKey: 'categories_id', as: 'category' });
 
+// ===== BRAND - PRODUCT =====
+Brand.hasMany(Product, { foreignKey: 'brands_id' });
+Product.belongsTo(Brand, { foreignKey: 'brands_id', as: 'brand' });
 
-Order.belongsToMany(ProductItem, {
-    through: OrderItem,
-    foreignKey: 'orderId',
-    as: 'productitems'
-})
-OrderItem.belongsTo(ProductItem, { foreignKey: 'productItemId', as: 'productItem' });
+// ===== PRODUCT - PRODUCT ITEM =====
+Product.hasMany(ProductItem, { foreignKey: 'products_id', as: 'productItems' });
+ProductItem.belongsTo(Product, { foreignKey: 'products_id', as: 'product' });
 
+// ===== PRODUCT ITEM - PRODUCT IMAGE ===== ✅ Sửa đúng theo thiết kế mới
+ProductItem.hasMany(ProductImage, { foreignKey: 'products_item_id', as: 'images' });
+ProductImage.belongsTo(ProductItem, { foreignKey: 'products_item_id', as: 'productItem' });
+
+// ===== PRODUCT ITEM - COLOR =====
+Color.hasMany(ProductItem, { foreignKey: 'color_id', as: 'productItems' });
+ProductItem.belongsTo(Color, { foreignKey: 'color_id', as: 'color' });
+
+// ===== PRODUCT ITEM - SIZE =====
+Size.hasMany(ProductItem, { foreignKey: 'size_id', as: 'productItems' });
+ProductItem.belongsTo(Size, { foreignKey: 'size_id', as: 'size' });
+
+// ===== PRODUCT ITEM - MATERIAL =====
+Material.hasMany(ProductItem, { foreignKey: 'materials_id', as: 'productItems' });
+ProductItem.belongsTo(Material, { foreignKey: 'materials_id', as: 'material' });
+
+// ===== PRODUCT ITEM - COUPON =====
+Coupon.hasMany(ProductItem, { foreignKey: 'coupons_id', as: 'productItems' });
+ProductItem.belongsTo(Coupon, { foreignKey: 'coupons_id', as: 'coupon' });
+
+// ===== USER - ORDER =====
+User.hasMany(Order, { foreignKey: 'userId' });
+Order.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// ===== ORDER - ORDER ITEM - PRODUCT ITEM =====
+Order.hasMany(OrderItem, { foreignKey: 'orderId', as: 'items' });
 OrderItem.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
 
+OrderItem.belongsTo(ProductItem, { foreignKey: 'productItemId', as: 'productItem' });
 ProductItem.hasMany(OrderItem, { foreignKey: 'productItemId', as: 'orderItems' });
-Order.hasMany(OrderItem, { as: 'items', foreignKey: 'orderId' });
+
+Order.belongsToMany(ProductItem, {
+  through: OrderItem,
+  foreignKey: 'orderId',
+  as: 'productItems'
+});
 ProductItem.belongsToMany(Order, {
-    through: OrderItem,
-    foreignKey: 'productItemId',
-    as: 'ordersItem'
-})
+  through: OrderItem,
+  foreignKey: 'productItemId',
+  as: 'orders'
+});
 
-// Order - User
-User.hasMany(Order, {
-    foreignKey: 'userId'
-})
+// ===== USER - CART - CART ITEM - PRODUCT ITEM =====
+User.hasOne(Cart, { foreignKey: 'userId', as: 'cart' });
+Cart.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-Order.belongsTo(User, {
-    foreignKey: 'userId',
-    as: 'users'
-})
-ProductImage.belongsTo(Product,
-    {
-        foreignKey: 'productId', as: 'product'
+Cart.hasMany(CartItem, { foreignKey: 'cartId', as: 'cartItems' });
+CartItem.belongsTo(Cart, { foreignKey: 'cartId', as: 'cart' });
 
+CartItem.belongsTo(ProductItem, { foreignKey: 'productItemId', as: 'productItem' });
 
-    });
+// (Optional) Size in CartItem
+CartItem.belongsTo(Size, { foreignKey: 'sizeId', as: 'size' });
+Size.hasMany(CartItem, { foreignKey: 'sizeId', as: 'cartItems' });
+
+// ===== USER - REVIEW - PRODUCT =====
 User.hasMany(Review, { foreignKey: 'userId', as: 'reviews' });
-Review.belongsTo(User, { foreignKey: 'userId', as: 'users' });
+Review.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-// Color.hasMany(CartItem, {
-//     foreignKey: 'colorId'
-// })
-Product.hasMany(ProductImage, { as: 'images', foreignKey: 'productId' });
+Product.hasMany(Review, { foreignKey: 'productId', as: 'reviews' });
+Review.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+
+// (Optional) Reply trong Review
+Review.hasMany(Review, { foreignKey: 'parentId', as: 'replies' });
+Review.belongsTo(Review, { foreignKey: 'parentId', as: 'parent' });
+
+// ===== ROLE - USER =====
+Role.hasMany(User, { foreignKey: 'roleId', as: 'users' });
+User.belongsTo(Role, { foreignKey: 'roleId', as: 'role' });

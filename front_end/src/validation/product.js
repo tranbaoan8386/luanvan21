@@ -1,4 +1,9 @@
 import * as yup from 'yup'
+// Function to check if the product name already exists
+const checkProductNameUnique = async (name) => {
+    const response = await productApi.checkProductName({ name });
+    return response.data.isUnique;
+};
 export const filterPriceSchema = yup
     .object({
         price_min: yup.string().test({
@@ -14,7 +19,14 @@ export const filterPriceSchema = yup
             }
         }),
         price_max: yup.string().test({
-            name: 'price-not-allowed',
+            name: yup
+                .string()
+                .required("Tên sản phẩm là bắt buộc")
+                .test("unique", "Tên sản phẩm đã tồn tại", async (value) => {
+                    if (!value) return true; // Bypass the test if value is empty (handled by required validation)
+                    const isUnique = await checkProductNameUnique(value);
+                    return isUnique;
+                }),
             message: 'Giá không phù hợp',
             test: function (value) {
                 const price_max = value
@@ -33,12 +45,31 @@ export const searchSchema = yup
         name: yup.string().trim().required()
     })
     .required()
+export const createProductSchema = yup.object().shape({
+    name: yup.string().required("Tên sản phẩm là bắt buộc"),
+    price: yup.number().required("Giá tiền là bắt buộc").positive("Giá tiền phải lớn hơn 0"),
+    productCouponId: yup.number().required("Mã khuyến mãi là bắt buộc"),
+    categoryId: yup.string().required("Loại sản phẩm là bắt buộc"),
+    brandId: yup.string().required("Thương hiệu là bắt buộc"),
+    colorId: yup.array().of(yup.string()),
+    colors: yup.array().of(
+        yup.object().shape({
+            colorId: yup.string().required(),
+            unitInStock: yup
+                .number()
+                .min(0, "Số lượng tồn không được nhỏ hơn 0")
+                .required("Số lượng tồn là bắt buộc"),
+        })
+    ),
+    sizeId: yup.array().of(yup.string()),
+    sizes: yup.array().of(
+        yup.object().shape({
+            sizeId: yup.string().required(),
+            unitInStock: yup
+                .number()
+                .min(0, "Số lượng tồn không được nhỏ hơn 0")
+                .required("Số lượng tồn là bắt buộc"),
+        })
+    ),
 
-export const createProductSchema = yup
-    .object({
-        name: yup.string().trim().required('Tên sản phẩm bắt buộc nhập'),
-        price: yup.string().required('Giá tiền bắt buộc nhập'),
-
-        categoryId: yup.string().required('Loại sản phẩm bắt buộc chọn')
-    })
-    .required()
+});

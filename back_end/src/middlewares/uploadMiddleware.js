@@ -1,30 +1,42 @@
-const multer = require('multer')
-const path = require('path')
-const { env } = require('../config/env')
+const multer = require('multer');
+const path = require('path');
+const { env } = require('../config/env');
+
+const mimeTypes = {
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/jpg': '.jpg',
+};
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '..', 'uploads'))
+        cb(null, path.join(__dirname, '..', 'uploads'));
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname))
-    }
-})
+        let ext = mimeTypes[file.mimetype];
+
+        // Nếu mimeType không có đuôi phù hợp, fallback bằng extname từ tên gốc
+        if (!ext) {
+            ext = path.extname(file.originalname) || '.jpg';
+        }
+
+        const uniqueName = `${Date.now()}${ext}`;
+        cb(null, uniqueName);
+    },
+});
 
 const fileFilter = (req, file, cb) => {
-    const { originalname } = file
-    if (!originalname.match(/\.(jpg|png|jpeg)$/i)) {
-        // 1: throw ra loi
-        // 2: true|false , true -> loi -> van luu
-        return cb(new Error(`Không hổ trợ ${path.extname(originalname)}`), false)
+    const ext = path.extname(file.originalname);
+    if (!ext.match(/\.(jpg|jpeg|png)$/i)) {
+        return cb(new Error('Chỉ hỗ trợ định dạng .jpg, .jpeg, .png'), false);
     }
-    // khong co loi luu
-    cb(null, true)
-}
+    cb(null, true);
+};
 
 const limits = {
-    fileSize: env.FILE_LIMIT * 1024 * 1024
-}
+    fileSize: env.FILE_LIMIT * 1024 * 1024,
+};
 
-const uploadMiddleware = multer({ storage, fileFilter, limits })
-module.exports = uploadMiddleware
+const uploadMiddleware = multer({ storage, fileFilter, limits });
+
+module.exports = uploadMiddleware;

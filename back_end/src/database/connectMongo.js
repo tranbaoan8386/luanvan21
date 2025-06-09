@@ -1,24 +1,14 @@
 const mongoose = require('mongoose');
 
 const connectMongo = async () => {
+    const uri = process.env.MONGODB_URI;
+
     try {
-        await mongoose.connect(`mongodb+srv://vole:16072002@cluster0.86vityx.mongodb.net/`);
-        console.log('Connected to MongoDB');
+        await mongoose.connect(uri); // ✅ Không cần thêm option
+        console.log('✅ Connected to MongoDB');
     } catch (error) {
-        console.error('Failed to connect to MongoDB:', error.message);
-        throw error; // Rethrow the error to handle it in connectToMongo()
+        console.error('❌ Failed to connect to MongoDB:', error.message);
     }
-}
+};
 
 module.exports = connectMongo;
-
-const connectToMongo = async () => {
-    try {
-        await connectMongo();
-        console.log('Connected mongo successfully!');
-    } catch (err) {
-        console.log('Failed to connect mongo:', err.message);
-    }
-}
-
-connectToMongo();

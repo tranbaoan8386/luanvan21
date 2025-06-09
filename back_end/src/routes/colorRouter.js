@@ -10,19 +10,19 @@ colorRouter.post(
     '/',
     jwtAuthMiddleware,
     validatorMiddleware(ColorSchema.createColor),
-    authorizedMiddleware('admin'),
+    authorizedMiddleware('Admin'),
     ColorController.createColor
 )
 
 colorRouter.get('/', jwtAuthMiddleware,
-    authorizedMiddleware('admin'), ColorController.getAllColor)
+    authorizedMiddleware('Admin'), ColorController.getAllColor)
 colorRouter.get('/:id', ColorController.getColor)
 colorRouter.patch(
     '/:id',
     jwtAuthMiddleware,
     validatorMiddleware(ColorSchema.updateColor),
-    authorizedMiddleware('admin'),
+    authorizedMiddleware('Admin'),
     ColorController.updateColor
 )
-colorRouter.delete('/:id', jwtAuthMiddleware, authorizedMiddleware('admin'), ColorController.deleteColor)
+colorRouter.delete('/:id', jwtAuthMiddleware, authorizedMiddleware('Admin'), ColorController.deleteColor)
 module.exports = colorRouter

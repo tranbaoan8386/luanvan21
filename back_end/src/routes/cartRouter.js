@@ -7,26 +7,33 @@ const CartSchema = require('../validations/CartSchema')
 
 const cartRouter = Router()
 
-cartRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('customer'), CartController.getCart)
-cartRouter.post('/', jwtAuthMiddleware, authorizedMiddleware('customer'), CartController.addProductToCart)
+cartRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('Customer'), CartController.getCart)
+cartRouter.post('/', jwtAuthMiddleware, authorizedMiddleware('Customer'), CartController.addProductToCart)
 cartRouter.delete(
     '/',
     jwtAuthMiddleware,
-    authorizedMiddleware('customer'),
+    authorizedMiddleware('Customer'),
     validatorMiddleware(CartSchema.deleteProductInCart),
     CartController.deleteProductFromCart
 )
 cartRouter.delete(
     '/carts',
 
-    jwtAuthMiddleware, authorizedMiddleware('customer'),
+    jwtAuthMiddleware, authorizedMiddleware('Customer'),
     validatorMiddleware(CartSchema.deleteProductInCart),
     CartController.deleteProductCart
 )
 cartRouter.patch(
     '/',
     jwtAuthMiddleware,
-    authorizedMiddleware('customer'),
+    authorizedMiddleware('Customer'),
+    validatorMiddleware(CartSchema.updateCartItemTotalPrice),
+    CartController.updateCartItemTotalPrice
+)
+cartRouter.patch(
+    '/',
+    jwtAuthMiddleware, authorizedMiddleware('Customer'),
+
     validatorMiddleware(CartSchema.updateCartItemTotalPrice),
     CartController.updateCartItemTotalPrice
 )

@@ -16,7 +16,7 @@ reviewRouter.get('/product/:id', ReviewController.getAllReviewProduct),
 reviewRouter.post(
     '/reply',
     jwtAuthMiddleware,
-    authorizedMiddleware('admin'),
+    authorizedMiddleware('Admin'),
     ReviewController.createReply
 )
 reviewRouter.patch(

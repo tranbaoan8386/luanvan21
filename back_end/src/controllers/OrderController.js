@@ -5,24 +5,245 @@ const ApiResponse = require('../response/ApiResponse')
 const OrderItem = require('../models/OrderItem')
 const ErrorResponse = require('../response/ErrorResponse')
 const User = require('../models/User')
-const Cart = require('../models/Cart')
+// const Cart = require('../models/Cart')
 const Product = require('../models/Product')
+const Color = require('../models/Color')
+const Size = require('../models/Size')
 class OrderController {
+    async setShipperOrder(req, res, next) {
+        try {
+            const { id: orderId } = req.params;
+
+            // Find the order by ID
+            const order = await Order.findOne({
+                where: {
+                    id: orderId
+                }
+            });
+
+            // If order is not found, throw an error
+            if (!order) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Không tìm thấy đơn hàng'
+                });
+            }
+
+            // Update the order status to 'shipped'
+            order.status = 'shipped';
+            await order.save();
+
+            // Return success response
+            return res.status(200).json({
+                success: true,
+                data: {
+                    message: 'Cập nhật đơn hàng thành công'
+                }
+            });
+        } catch (error) {
+            // Catch any unexpected errors and pass them to the next middleware
+            next(error);
+        }
+    }
+    async setDeliveredOrder(req, res, next) {
+        try {
+            const { id: orderId } = req.params;
+
+
+
+
+            // Find the order by ID
+            const order = await Order.findOne({
+                where: {
+                    id: orderId
+                }
+            });
+
+            // If order is not found, return 404
+            if (!order) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Không tìm thấy đơn hàng'
+                });
+            }
+
+            // Update the order status to 'delivered'
+            order.status = 'delivered';
+            await order.save();
+
+            // Return success response
+            return res.status(200).json({
+                success: true,
+                data: {
+                    message: 'Cập nhật đơn hàng thành công'
+                }
+            });
+        } catch (error) {
+            console.error('Error updating order status:', error); // Log the error details
+            return res.status(500).json({
+                success: false,
+                message: 'Internal Error.',
+                error: error.message
+            });
+        }
+    }
+    async setCancelledOrder(req, res, next) {
+        try {
+            const { id: orderId } = req.params;
+            // Find the order by ID
+            const order = await Order.findOne({
+                where: {
+                    id: orderId
+                }
+            });
+
+            // If order is not found, return 404
+            if (!order) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Không tìm thấy đơn hàng'
+                });
+            }
+
+            // Update the order status to 'delivered'
+            order.status = 'cancelled';
+            await order.save();
+
+            // Return success response
+            return res.status(200).json({
+                success: true,
+                data: {
+                    message: 'Cập nhật đơn hàng thành công'
+                }
+            });
+        } catch (error) {
+            console.error('Error updating order status:', error); // Log the error details
+            return res.status(500).json({
+                success: false,
+                message: 'Internal Error.',
+                error: error.message
+            });
+        }
+    }
+    async setPaymentOrder(req, res, next) {
+        try {
+            const { id: orderId } = req.params;
+            // Find the order by ID
+            const order = await Order.findOne({
+                where: {
+                    id: orderId
+                }
+            });
+
+            // If order is not found, return 404
+            if (!order) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Không tìm thấy đơn hàng'
+                });
+            }
+            order.statusPayment = 'paid';
+            await order.save();
+
+            // Return success response
+            return res.status(200).json({
+                success: true,
+                data: {
+                    message: 'Cập nhật đơn hàng thành công'
+                }
+            });
+        } catch (error) {
+            console.error('Error updating order status:', error); // Log the error details
+            return res.status(500).json({
+                success: false,
+                message: 'Internal Error.',
+                error: error.message
+            });
+        }
+    }
     async getAllOrder(req, res, next) {
         try {
-            let orders = await Order.findAll({
-                include: [
-                    {
-                        model: ProductItem,
-                        as: 'productitems'
+            const { id: userId, role } = req.user;
+            let orders;
+
+            // Nếu là admin/owner thì lấy tất cả đơn hàng
+            if (role === 'Admin') {
+                orders = await Order.findAll({
+                    include: [
+                        {
+                            model: OrderItem,
+                            as: 'items',
+                            include: [{
+                                model: ProductItem,
+                                as: 'productItem',
+                                include: [
+                                    {
+                                        model: Product,
+                                        as: 'product',
+                                        attributes: ['name', 'price']
+                                    },
+                                    {
+                                        model: Color,
+                                        as: 'color',
+                                        attributes: ['name']
+                                    },
+                                    {
+                                        model: Size,
+                                        as: 'size',
+                                        attributes: ['name']
+                                    }
+                                ]
+                            }]
+                        },
+                        {
+                            model: User,
+                            attributes: ['id', 'name', 'email'],
+                            as: 'users'
+                        }
+                    ],
+                    order: [['createDate', 'DESC']]
+                });
+            } else {
+                // Nếu là customer thì chỉ lấy đơn hàng của họ
+                orders = await Order.findAll({
+                    where: {
+                        userId: userId
                     },
-                    {
-                        model: User, // Tham chiếu đến mô hình User
-                        attributes: ['id', 'name', 'email'], // Chọn các trường của User bạn muốn include
-                        as: 'users' // Đặt tên alias cho User trong kết quả trả về
-                    }
-                ]
-            });
+                    include: [
+                        {
+                            model: OrderItem,
+                            as: 'items',
+                            include: [{
+                                model: ProductItem,
+                                as: 'productItem',
+                                include: [
+                                    {
+                                        model: Product,
+                                        as: 'product',
+                                        attributes: ['name', 'price']
+                                    },
+                                    {
+                                        model: Color,
+                                        as: 'color',
+                                        attributes: ['name']
+                                    },
+                                    {
+                                        model: Size,
+                                        as: 'size',
+                                        attributes: ['name']
+                                    }
+                                ]
+                            }]
+                        },
+                        {
+                            model: User,
+                            attributes: ['id', 'name', 'email'],
+                            as: 'users'
+                        }
+                    ],
+                    order: [['createDate', 'DESC']]
+                });
+            }
 
             return ApiResponse.success(res, {
                 status: 200,
@@ -41,8 +262,50 @@ class OrderController {
             const { id: userId, role } = req.user;
             const { id: orderId } = req.params;
 
-            let order = [];
-            if (role === 'customer') {
+            let order = null;
+            
+            // Nếu là Admin, cho phép xem tất cả đơn hàng
+            if (role === 'Admin') {
+                order = await Order.findOne({
+                    where: {
+                        id: orderId
+                    },
+                    include: [
+                        {
+                            model: OrderItem,
+                            as: 'items',
+                            include: [{
+                                model: ProductItem,
+                                as: 'productItem',
+                                include: [
+                                    {
+                                        model: Product,
+                                        as: 'product',
+                                        attributes: ['name', 'price']
+                                    },
+                                    {
+                                        model: Color,
+                                        as: 'color',
+                                        attributes: ['colorCode']
+                                    },
+                                    {
+                                        model: Size,
+                                        as: 'size',
+                                        attributes: ['name']
+                                    }
+                                ]
+                            }]
+                        },
+                        {
+                            model: User,
+                            attributes: ['id', 'name', 'email'],
+                            as: 'users'
+                        }
+                    ]
+                });
+            } 
+            // Xử lý cho Customer
+            else if (role === 'Customer') {
                 order = await Order.findOne({
                     where: {
                         id: orderId,
@@ -54,32 +317,23 @@ class OrderController {
                         include: [{
                             model: ProductItem,
                             as: 'productItem',
-                            include: [{
-                                model: Product,
-                                as: 'product',
-                                attributes: ['name', 'price']
-                            }]
-                        }]
-                    }]
-                });
-            }
-
-            if (role === 'owner') {
-                order = await Order.findOne({
-                    where: {
-                        id: orderId
-                    },
-                    include: [{
-                        model: OrderItem,
-                        as: 'items',
-                        include: [{
-                            model: ProductItem,
-                            as: 'productItem',
-                            include: [{
-                                model: Product,
-                                as: 'product',
-                                attributes: ['name'] // Chỉ bao gồm thuộc tính name của Product
-                            }]
+                            include: [
+                                {
+                                    model: Product,
+                                    as: 'product',
+                                    attributes: ['name', 'price']
+                                },
+                                {
+                                    model: Color,
+                                    as: 'color',
+                                    attributes: ['colorCode']
+                                },
+                                {
+                                    model: Size,
+                                    as: 'size',
+                                    attributes: ['name']
+                                }
+                            ]
                         }]
                     }]
                 });
@@ -97,9 +351,6 @@ class OrderController {
             next(error);
         }
     }
-
-
-
 
 
     async getSale(req, res) {
@@ -162,11 +413,16 @@ class OrderController {
                 fullname,
                 address,
                 paymentMethod,
-                orders_tem,
+                orders_item,
                 note
             } = req.body;
-
-            // Create the order
+    
+            // Kiểm tra tnh hợp lệ của `orders_item`
+            if (!Array.isArray(orders_item) || orders_item.length === 0) {
+                throw new Error('orders_item phải là một mảng và không được rỗng');
+            }
+    
+            // Tạo đơn hàng
             const order = await Order.create({
                 total,
                 phone,
@@ -178,46 +434,52 @@ class OrderController {
                 statusPayment: paymentMethod === 'cash' ? 'Chưa thanh toán' : 'Đã thanh toán',
                 note
             });
-
+    
             const createdOrderItems = [];
-
-            for (const item of orders_tem) {
+    
+            for (const item of orders_item) {
                 const { productItemId, quantity } = item;
-
-                // Create OrderItem
+    
+                // Kiểm tra cấu trúc item
+                if (!productItemId || !quantity) {
+                    throw new Error('Mỗi sản phẩm trong orders_item cần có productItemId và quantity');
+                }
+    
+                // Tạo OrderItem
                 const orderItem = await OrderItem.create({
                     orderId: order.id,
                     productItemId,
                     quantity
                 });
                 createdOrderItems.push(orderItem);
-
-                // Update the product item stock
+    
+                // Cập nhật tồn kho sản phẩm
                 const productItem = await ProductItem.findByPk(productItemId);
-                if (productItem) {
-                    const newStock = productItem.unitlnStock - quantity;
-                    if (newStock < 0) {
-                        throw new Error(`Không đủ tồn kho cho sản phẩm ${productItemId}`);
-                    }
-                    await productItem.update({ unitlnStock: newStock });
-
-                    // Update the product's sold quantity
-                    const product = await Product.findByPk(productItem.productId);
-                    if (product) {
-                        await product.update({
-                            sold: product.sold + quantity
-                        });
-                    }
-                } else {
+                if (!productItem) {
                     throw new Error(`Không tìm thấy sản phẩm với ID: ${productItemId}`);
                 }
+    
+                const newStock = productItem.unitlnStock - quantity;
+                if (newStock < 0) {
+                    throw new Error(`Không đủ tồn kho cho sản phẩm ${productItemId}`);
+                }
+    
+                await productItem.update({ unitlnStock: newStock });
+    
+                // Cập nhật số lượng đã bán của sản phẩm
+                const product = await Product.findByPk(productItem.productId);
+                if (product) {
+                    await product.update({
+                        sold: product.sold + quantity
+                    });
+                }
             }
-
+    
             const info_order = {
                 ...order.dataValues,
-                orders_tem: createdOrderItems
+                orders_item: createdOrderItems
             };
-
+    
             return res.status(200).json({
                 success: true,
                 data: {
@@ -232,7 +494,7 @@ class OrderController {
             });
         }
     }
-
+    
 
 
 
@@ -283,7 +545,7 @@ class OrderController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (role === 'customer' && userId !== order.userId) {
+            if (role === 'Customer' && userId !== order.userId) {
                 return ApiResponse.error(res, {
                     status: 403,
                     data: {
@@ -390,6 +652,7 @@ class OrderController {
     async setCancelledOrder(req, res, next) {
         try {
             const { id: orderId } = req.params;
+
             // Find the order by ID
             const order = await Order.findOne({
                 where: {
@@ -397,7 +660,7 @@ class OrderController {
                 }
             });
 
-            // If order is not found, return 404
+            // If order is not found, throw an error
             if (!order) {
                 return res.status(404).json({
                     success: false,
@@ -405,7 +668,7 @@ class OrderController {
                 });
             }
 
-            // Update the order status to 'delivered'
+            // Update the order status to 'shipped'
             order.status = 'cancelled';
             await order.save();
 
@@ -417,14 +680,11 @@ class OrderController {
                 }
             });
         } catch (error) {
-            console.error('Error updating order status:', error); // Log the error details
-            return res.status(500).json({
-                success: false,
-                message: 'Internal Error.',
-                error: error.message
-            });
+            // Catch any unexpected errors and pass them to the next middleware
+            next(error);
         }
     }
+
 
 
     async setPaymentOrder(req, res, next) {
@@ -459,6 +719,36 @@ class OrderController {
             return res.status(500).json({
                 success: false,
                 message: 'Internal Error.',
+                error: error.message
+            });
+        }
+    }
+
+    async getStatistics(req, res) {
+        try {
+            // Tính tổng doanh thu từ đơn hàng đã giao và đã thanh toán
+            const totalRevenue = await Order.sum('total', {
+                where: {
+                    status: 'delivered',
+                    statusPayment: 'paid'
+                }
+            });
+
+            console.log('Total Revenue:', totalRevenue); // Log để debug
+
+            // Trả về kết quả
+            return res.status(200).json({
+                success: true,
+                data: {
+                    totalRevenue: totalRevenue || 0
+                }
+            });
+
+        } catch (error) {
+            console.error('Error in getStatistics:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Internal Server Error',
                 error: error.message
             });
         }

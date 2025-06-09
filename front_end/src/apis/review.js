@@ -1,6 +1,9 @@
-import axiosClient from '../services/AxiosClient'
+import axiosClient from '../services/AxiosClient';
 
 const reviewApi = {
-    getReviewProduct: (id) => axiosClient.get(`/reviews/product/${id}`)
-}
-export default reviewApi
+    getAllReviewProduct: (id) => axiosClient.get(`/reviews/product/${id}`),
+    createReview: (body) => axiosClient.post(`/reviews`, body),
+    createReply: (id, body) => axiosClient.post(`/reviews/reply`, body)
+};
+
+export default reviewApi;

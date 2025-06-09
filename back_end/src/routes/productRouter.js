@@ -1,38 +1,45 @@
-const { Router } = require('express')
-const ProductController = require('../controllers/ProductController')
-const jwtAuthMiddleware = require('../middlewares/jwtAuthMiddleware')
-const authorizedMiddleware = require('../middlewares/authorizedMiddleware')
-const uploadMiddleware = require('../middlewares/uploadMiddleware')
+const { Router } = require('express');
+const ProductController = require('../controllers/ProductController');
+const jwtAuthMiddleware = require('../middlewares/jwtAuthMiddleware');
+const authorizedMiddleware = require('../middlewares/authorizedMiddleware');
+const uploadMiddleware = require('../middlewares/uploadMiddleware');
 
-const productRouter = Router()
+const productRouter = Router();
 
-productRouter.get('/', ProductController.getAllProduct)
-productRouter.get('/:id', ProductController.getDetailProduct)
+// List all products
+productRouter.get('/', ProductController.getAllProduct);
+
+// Get product with images by ID
+productRouter.get('/:id', ProductController.getProductWithImages);
+
+// Create a new product
 productRouter.post(
     '/',
     jwtAuthMiddleware,
-
-    uploadMiddleware.single('image'),
-    authorizedMiddleware('admin'),
+    uploadMiddleware.any(), // 👈 chấp nhận mọi field ảnh
+    authorizedMiddleware('Admin'),
     ProductController.createProduct
-)
+  );
+  
+
+
+// Update an existing product
 productRouter.patch(
     '/:id',
     jwtAuthMiddleware,
-
-    uploadMiddleware.single('image'),
-    authorizedMiddleware('admin'),
+    uploadMiddleware.any(),
+    authorizedMiddleware('Admin'),
     ProductController.updateProduct
-)
+  );
+  
 
-productRouter.get('/products/:id', ProductController.getProductWithImages);
+
+// Delete a product
 productRouter.delete(
     '/:id',
     jwtAuthMiddleware,
-
-    uploadMiddleware.single('image'),
-    authorizedMiddleware('admin'),
+    authorizedMiddleware('Admin'), // Không cần uploadMiddleware cho DELETE
     ProductController.deleteProduct
-)
+);
 
-module.exports = productRouter
+module.exports = productRouter;

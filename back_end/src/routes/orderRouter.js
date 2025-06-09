@@ -5,30 +5,34 @@ const authorizedMiddleware = require('../middlewares/authorizedMiddleware')
 const validatorMiddleware = require('../middlewares/validatorMiddleware')
 const OrderSchema = require('../validations/OrderSchema')
 const orderRouter = Router()
+orderRouter.get('/statistics', 
+    jwtAuthMiddleware, 
+    authorizedMiddleware('Admin'), 
+    OrderController.getStatistics
+);
 orderRouter.get('/sale',
     OrderController.getSale)
 orderRouter.get('/salemonth',
     OrderController.getMonthlyRevenue)
 orderRouter.get('/saleannual',
     OrderController.getAnnualRevenue)
-orderRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('customer', 'admin'), OrderController.getAllOrder)
-orderRouter.get('/:id', jwtAuthMiddleware, authorizedMiddleware('customer', 'admin'), OrderController.getOrderById)
+orderRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('Customer', 'Admin'), OrderController.getAllOrder)
+orderRouter.get('/:id', jwtAuthMiddleware, authorizedMiddleware('Customer', 'Admin'), OrderController.getOrderById)
 orderRouter.post(
     '/',
     jwtAuthMiddleware,
-    authorizedMiddleware('customer'),
+    authorizedMiddleware('Customer'),
     // validatorMiddleware(OrderSchema.createOrder),
     OrderController.createOrder
 )
-orderRouter.delete('/:id', jwtAuthMiddleware, authorizedMiddleware('admin'), OrderController.deleteOrder)
+orderRouter.delete('/:id', jwtAuthMiddleware, authorizedMiddleware('Admin'), OrderController.deleteOrder)
 orderRouter.patch(
     '/cancel/:id',
-    jwtAuthMiddleware,
-    authorizedMiddleware('owner', 'customer'),
-    validatorMiddleware(OrderSchema.cancelOrderById),
+
     OrderController.cancelOrderById
 )
-orderRouter.patch('/shipper/:id', jwtAuthMiddleware, authorizedMiddleware('owner'), OrderController.setShipperOrder)
-orderRouter.patch('/delivered/:id', jwtAuthMiddleware, authorizedMiddleware('owner'), OrderController.setDeliveredOrder)
-
+orderRouter.patch('/shipper/:id', jwtAuthMiddleware, authorizedMiddleware('Admin'), OrderController.setShipperOrder)
+orderRouter.patch('/cancelled/:id', jwtAuthMiddleware, authorizedMiddleware('Admin'), OrderController.setCancelledOrder)
+orderRouter.patch('/delivered/:id', jwtAuthMiddleware, authorizedMiddleware('Admin'), OrderController.setDeliveredOrder)
+orderRouter.patch('/payment/:id', jwtAuthMiddleware, authorizedMiddleware('Admin'), OrderController.setPaymentOrder)
 module.exports = orderRouter

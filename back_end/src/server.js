@@ -1,28 +1,34 @@
-const express = require('express')
-const morgan = require('morgan')
-const cors = require('cors')
-const path = require('path')
-const handleRouters = require('./routes')
-const errorMiddleware = require('./middlewares/errorMiddleware')
-const { env } = require('./config/env')
-const app = express()
+require('dotenv').config(); // ⬅️ PHẢI đặt ở dòng đầu tiên
 
-app.use(cors())
-app.use(express.json())
-app.use(morgan('dev'))
+const express = require('express');
+const morgan = require('morgan');
+const cors = require('cors');
+const path = require('path');
+const handleRouters = require('./routes');
+const errorMiddleware = require('./middlewares/errorMiddleware');
 
-const uploadsDirectory = path.join(__dirname, 'uploads')
-app.use('/uploads', express.static(uploadsDirectory))
-require('./models/relationship')
-// Connect database
-require('./database')
+const app = express();
 
-// Router
-handleRouters(app)
+// Middlewares
+app.use(cors());
+app.use(express.json());
+app.use(morgan('dev'));
 
-// Error handlers middleware
-app.use(errorMiddleware)
+// Static uploads
+const uploadsDirectory = path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadsDirectory));
 
-app.listen(env.PORT, () => {
-    console.log(`Example app listening on port ${env.PORT}`)
-})
+
+// Relationship + DB
+require('./models/relationship');
+require('./database');
+
+// Router + Error
+handleRouters(app);
+app.use(errorMiddleware);
+
+// Start server
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => {
+    console.log(`Example app listening on port ${PORT}`);
+});

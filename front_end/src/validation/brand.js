@@ -1,6 +1,6 @@
 import * as yup from 'yup'
-export const createBrandSchema = yup
+export const createBrand = yup
     .object({
-        name: yup.string().trim().required('Tên màu bắt buộc nhập')
+        name: yup.string().required('Tên thương hiệu sản phẩm bắt buộc nhập')
     })
     .required()

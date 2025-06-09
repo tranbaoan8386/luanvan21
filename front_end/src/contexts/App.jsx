@@ -22,7 +22,7 @@ export const AppProvider = ({ children }) => {
     const { data: cartData, refetch } = useQuery({
         queryKey: ['carts'],
         queryFn: () => cartApi.getCart(),
-        enabled: isAuthenticated && profile.role == 'customer'
+        enabled: isAuthenticated && profile.role == 'Customer'
     })
 
     const reset = () => {

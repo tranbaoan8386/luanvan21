@@ -92,14 +92,9 @@ class AuthSchema {
         })
     }
 
-    get resetPassword() {
+    get resetPasswords() {
         return Joi.object({
-            email: Joi.string().email().required().messages({
-                'string.base': 'Email phải là chuỗi',
-                'string.empty': 'Email không được để trống',
-                'string.email': 'Email không hợp lệ',
-                'any.required': 'Email là trường bắt buộc'
-            }),
+
             token: Joi.string().required().messages({
                 'string.base': 'Token phải là chuỗi',
                 'string.empty': 'Token không được để trống',

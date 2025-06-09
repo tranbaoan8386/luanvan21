@@ -8,6 +8,7 @@ import { createCategory } from '../../../../../../validation/category'
 import { useMutation } from '@tanstack/react-query'
 import categoryApi from '../../../../../../apis/category'
 import { useNavigate } from 'react-router-dom'
+import { toast } from "react-toastify";
 
 export default function CreateCategory() {
     const navigate = useNavigate()
@@ -26,6 +27,8 @@ export default function CreateCategory() {
         mutationFn: (body) => categoryApi.create(body),
         onSuccess: () => {
             navigate('/admin/category')
+        }, onError: () => {
+            toast.error('Tên danh mục đã bị trùng')
         }
     })
 
@@ -34,7 +37,7 @@ export default function CreateCategory() {
     })
     return (
         <Box>
-            <TitleManager>Thêm loại sản phẩm</TitleManager>
+            <TitleManager>Thêm danh mục</TitleManager>
             <Box
                 onSubmit={onSubmit}
                 component='form'
@@ -44,14 +47,14 @@ export default function CreateCategory() {
                     <Grid item md={6} xs={12}>
                         <Box>
                             <Typography sx={{ fontSize: '15px', color: '#555555CC', mb: '5px' }} component='p'>
-                                Tên loại sản phẩm
+                                Tên danh mục
                             </Typography>
                             <Input name='name' register={register} errors={errors} fullWidth size='small' />
                         </Box>
                     </Grid>
                 </Grid>
                 <Button type='submit' sx={{ width: '200px', mt: 2 }} variant='contained'>
-                    Thêm loại sản phẩm
+                    Thêm danh mục
                 </Button>
             </Box>
         </Box>

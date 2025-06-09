@@ -5,7 +5,7 @@ class ProductShema {
         return Joi.object({
             name: Joi.string().required().messages({
                 'string.base': 'Tên phải là chuỗi',
-                'string.empty': 'Tên không được để trống',
+                'string.empty': 'Tên sản phẩm không được để trống',
                 'any.required': 'Tên là trường bắt buộc'
             }),
             description: Joi.string().allow().messages({
@@ -21,6 +21,11 @@ class ProductShema {
                 'any.required': 'Mã danh mục là trường bắt buộc',
                 'number.base': 'Mã danh mục phải là số',
                 'number.empty': 'Mã danh mục không được để trống'
+            }),
+            brandId: Joi.number().required().message({
+                'any.required': 'Mã thương hiệu là trường bắt buộc',
+                'number.base': 'Mã thương hiệu phải là số',
+                'number.empty': 'Mã thương hiệu không được để trống'
             })
         })
     }
@@ -38,6 +43,9 @@ class ProductShema {
                 'number.base': 'Giá phải là số'
             }),
             categoryId: Joi.number().message({
+                'number.base': 'Mã danh mục phải là số'
+            }),
+            brandId: Joi.number().message({
                 'number.base': 'Mã danh mục phải là số'
             })
         })

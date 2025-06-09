@@ -1,16 +1,27 @@
-
-const sequelize = require('./connectMysql')
-const connectMongo = require('./connectMongo')
+const sequelize = require('./connectMysql');
+const connectMongo = require('./connectMongo');
 
 const connectToMysql = async () => {
     try {
-        sequelize.authenticate()
-        console.log('Connected mysql successfully')
+        await sequelize.authenticate();
+        console.log('✅ Connected to MySQL');
     } catch (err) {
-        console.log('Failed to connect mysql')
+        console.error('❌ Failed to connect to MySQL:', err.message);
     }
-}
+};
 
+const connectToMongo = async () => {
+    try {
+        await connectMongo();
+        console.log('✅ Connected to MongoDB');
+    } catch (err) {
+        console.error('❌ Failed to connect to MongoDB:', err.message);
+    }
+};
 
+const connectDatabases = async () => {
+    await connectToMysql();
+    await connectToMongo();
+};
 
-connectToMysql()
+connectDatabases();

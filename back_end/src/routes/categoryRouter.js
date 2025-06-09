@@ -15,17 +15,17 @@ categoryRouter.post(
     '/',
     jwtAuthMiddleware,
     validatorMiddleware(CategorySchema.createCategory),
-    authorizedMiddleware('admin'),
+    authorizedMiddleware('Admin'),
     CategoryController.createCategory
 )
 categoryRouter.patch(
     '/:id',
     jwtAuthMiddleware,
     validatorMiddleware(CategorySchema.updateCategory),
-    authorizedMiddleware('admin'),
+    authorizedMiddleware('Admin'),
     CategoryController.updateCategory
 )
 
-categoryRouter.delete('/:id', jwtAuthMiddleware, authorizedMiddleware('admin'), CategoryController.deleteCategory)
+categoryRouter.delete('/:id', jwtAuthMiddleware, authorizedMiddleware('Admin'), CategoryController.deleteCategory)
 
 module.exports = categoryRouter

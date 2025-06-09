@@ -2,7 +2,7 @@
   "development": {
     "username": "root",
     "password": null,
-    "database": "luanvan3",
+    "database": "luanvann1",
     "host": "localhost",
     "dialect": "mysql",
     "logging": true
@@ -10,7 +10,7 @@
   "test": {
     "username": "root",
     "password": null,
-    "database": "luanvan3",
+    "database": "luanvann1",
     "host": "localhost",
     "dialect": "mysql"
   },
