@@ -66,15 +66,16 @@ export default function ProductDetail() {
   const reviews = reviewData?.data || [];
 
   const product = productData?.data.product;
-  const products = productDa;
-  const images = useMemo(
-    () => products?.images.map((image) => image.url) || [],
-    [products?.images]
-  );
-  const image = useMemo(
-    () => (product?.image ? [product.image] : []),
-    [product?.image]
-  );
+const images = useMemo(
+  () => productDa?.data?.images || [],
+  [productDa?.data?.images]
+);
+
+ const image = useMemo(
+  () => (product?.avatar ? [product.avatar] : []),
+  [product?.avatar]
+);
+
   const imageRef = useRef(null);
 
   const currentImages = useMemo(
@@ -120,14 +121,21 @@ export default function ProductDetail() {
   };
 
   const handleZoom = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const image = imageRef.current;
-    const { naturalHeight, naturalWidth } = image;
-    const { offsetX, offsetY } = e.nativeEvent;
-    const top = offsetY * (1 - naturalHeight / rect.height);
-    const left = offsetX * (1 - naturalWidth / rect.width);
-    image.style.transform = `scale(2) translate(${left / 2}px, ${top / 2}px)`;
-  };
+  const image = imageRef.current;
+  if (!image) return;
+
+  const rect = image.getBoundingClientRect(); // 👈 sửa lại cho đúng
+  const { naturalHeight, naturalWidth } = image;
+  const { offsetX, offsetY } = e.nativeEvent;
+
+  const top = offsetY * (1 - naturalHeight / rect.height);
+  const left = offsetX * (1 - naturalWidth / rect.width);
+
+  image.style.transform = `scale(2) translate(${left / 2}px, ${top / 2}px)`;
+  image.style.transformOrigin = "top left";
+};
+
+
  
    
   const handleRemoveZoom = () => {
@@ -296,10 +304,13 @@ export default function ProductDetail() {
 
   if (!product) return null;
 
-  const originalPrice = product.price;
-  const discountPrice = product.productCoupon ? product.productCoupon.price : 0;
-  const finalPrice = originalPrice - discountPrice;
-  const selectedColor = product.colors.find((color) => color.id === selectedColorId);
+ const firstProductItem = product?.productItems?.[0];
+const originalPrice = firstProductItem?.price || 0;
+const discountPrice = firstProductItem?.coupon?.price || 0;
+const finalPrice = originalPrice - discountPrice;
+
+  const selectedColor = product.colors?.find((color) => color.id === selectedColorId);
+
   const sizesForSelectedColor = selectedColor ? selectedColor.sizes : [];
   return (
     <Container sx={{ mt: 2 }}>
@@ -319,7 +330,8 @@ export default function ProductDetail() {
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
-              <img /*ref={imageRef}*/ src={BASE_URL_IMAGE + activeImage} alt="" />
+              <img ref={imageRef} src={BASE_URL_IMAGE + activeImage} alt="" />
+
             </div>
             <div className="product-image">
               {currentImages.length > 1 && (
@@ -365,8 +377,9 @@ export default function ProductDetail() {
                 {product.name}
               </Typography>
               <Typography display="flex">
-                <Typography>{product.description}</Typography>
+                <Typography component="span">{product.description}</Typography>
               </Typography>
+
               <Box
                 sx={{
                   p: 1,
@@ -376,34 +389,34 @@ export default function ProductDetail() {
                 }}
               >
                 <Typography
-                  sx={{
-                    textDecoration: discountPrice > 0 ? "line-through" : "none",
-                    fontSize: "18px",
-                    ml: 1,
-                    color: discountPrice > 0 ? "#707070" : "#D70018",
-                    marginTop: "10px",
-                    fontWeight: "500",
-                    height: "30px"
-                  }}
-                  component="span"
-                >
-                  Giá: {formatCurrency(originalPrice)} VND
-                </Typography>
-                {discountPrice > 0 && (
-                  <Typography
-                    sx={{
-                      fontSize: "20px",
-                      ml: 1,
-                      color: "#D70018",
-                      marginTop: "10px",
-                      fontWeight: "500",
-                      height: "30px"
-                    }}
-                    component="span"
-                  >
-                    Giá khuyến mãi: {formatCurrency(finalPrice)} VND
-                  </Typography>
-                )}
+  sx={{
+    textDecoration: discountPrice > 0 ? "line-through" : "none",
+    fontSize: "18px",
+    ml: 1,
+    color: discountPrice > 0 ? "#707070" : "#D70018",
+    marginTop: "10px",
+    fontWeight: "500",
+    height: "30px"
+  }}
+  component="span"
+>
+  Giá: {originalPrice > 0 ? formatCurrency(originalPrice) + " VND" : "Liên hệ"}
+</Typography>
+{discountPrice > 0 && (
+  <Typography
+    sx={{
+      fontSize: "20px",
+      ml: 1,
+      color: "#D70018",
+      marginTop: "10px",
+      fontWeight: "500",
+      height: "30px"
+    }}
+    component="span"
+  >
+    Giá khuyến mãi: {formatCurrency(finalPrice)} VND
+  </Typography>
+)}
               </Box>
               <Divider sx={{ mt: 2 }} component="p" />
               <Typography display="flex" color="gray">
@@ -421,7 +434,7 @@ export default function ProductDetail() {
                     fontWeight="500"
                     color="#000"
                   >
-                    {product.category.name}
+                    {product.category?.name || "Không xác định"}
                   </Typography>
                 </Typography>
               </Typography>
@@ -441,7 +454,7 @@ export default function ProductDetail() {
                     fontWeight="500"
                     color="#000"
                   >
-                    {product.brand.name}
+                    {product.brand?.name || "Không xác định"}
                   </Typography>
                 </Typography>
               </Typography>
@@ -458,23 +471,25 @@ export default function ProductDetail() {
                 </Typography>
                 {/* Render color buttons */}
                 <div>
-                  {product.colors.map((color) => (
-                    <Button
-                      variant="outlined"
-                      style={{
-                        backgroundColor: color.colorCode,                
-                        margin: '5px',
-                        marginTop: '20px',
-                        minWidth:'23px',
-                        height:'23px',
-                        borderRadius:'5',
-                      }}
-                      onClick={() => handleColorClick(color.id)}
-                      disabled={selectedColorId === color.id}
-                    >
-                    
-                    </Button>
-                  ))}
+                  {Array.isArray(product.colors) &&
+  product.colors.map((color) => (
+    <Button
+      key={color.id} // ✅ nên thêm key để tránh warning React
+      variant="outlined"
+      style={{
+        backgroundColor: color.colorCode,
+        margin: '5px',
+        marginTop: '20px',
+        minWidth: '23px',
+        height: '23px',
+        borderRadius: '5',
+      }}
+      onClick={() => handleColorClick(color.id)}
+      disabled={selectedColorId === color.id}
+    >
+    </Button>
+))}
+
                 </div>
               </div>
 
