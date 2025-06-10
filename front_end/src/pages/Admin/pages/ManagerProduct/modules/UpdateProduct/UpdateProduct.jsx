@@ -8,8 +8,6 @@ import {
   MenuItem,
   Select,
   Typography,
- 
- 
   TextField
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
@@ -24,13 +22,16 @@ import Input from "../../../../../../components/Input";
 import categoryApi from "../../../../../../apis/category";
 import brandApi from "../../../../../../apis/brand";
 import colorApi from "../../../../../../apis/color";
+import materialApi from "../../../../../../apis/material"; 
 import { BASE_URL_IMAGE } from "../../../../../../constants/index";
 import sizeApi from "../../../../../../apis/size";
 import { toast } from "react-toastify";
 
 export default function UpdateProduct() {
   const navigate = useNavigate();
+  // State lưu ảnh đại diện sản phẩm
   const [image, setImage] = useState(null);
+  // Tạo preview ảnh từ file hoặc URL
   const previewImage = useMemo(() => {
     if (image instanceof Blob) {
       return URL.createObjectURL(image);
@@ -40,17 +41,26 @@ export default function UpdateProduct() {
       return "";
     }
   }, [image]);
+  // Mô tả sản phẩm dạng text (từ editor)
   const [description, setDescription] = useState("");
+  // Quản lý số lượng tồn kho theo màu - size
   const [colorUnits, setColorUnits] = useState({});
+  // Lưu chất liệu theo từng màu
+  const [materialIds, setMaterialIds] = useState({});
+   // Lưu ảnh chi tiết theo từng màu
+  const [colorImages, setColorImages] = useState({});
+
+  // Khởi tạo form với useForm
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors },
     setError,
     clearErrors,
+    watch,
+    setValue,
     reset,
-    watch
+    formState: { errors }
   } = useForm({
     defaultValues: {
       name: "",
@@ -62,7 +72,7 @@ export default function UpdateProduct() {
       description: ""
     }
   });
-
+  // Input ẩn để chọn file ảnh đại diện
   const VisuallyHiddenInput = styled("input")({
     clip: "rect(0 0 0 0)",
     clipPath: "inset(50%)",
@@ -75,7 +85,7 @@ export default function UpdateProduct() {
     width: 1
   });
 
-  // Get categories
+  // Gọi API lấy danh sách danh mục, thương hiệu, màu, size, chất liệu
   const { data: categoriesData } = useQuery({
     queryKey: ["categories"],
     queryFn: () => categoryApi.getAllCategory()
@@ -87,39 +97,108 @@ export default function UpdateProduct() {
     queryFn: brandApi.getAllBrand
   });
   const brands = brandsData?.data || [];
- 
-  const ColorAndSizeSelection = ({ colors, sizes, control, colorUnits, handleColorUnitChange }) => {
     
-  
-  };
-  
-  
   // Get colors
   const { data: colorData } = useQuery({
     queryKey: ["colors"],
     queryFn: () => colorApi.getAllColor()
   });
   const colors = colorData?.data || [];
+  // Get sz
+  const { data: sizesData } = useQuery({
+    queryKey: ["sizes"],
+    queryFn: sizeApi.getAllSize
+  });
+  const sizes = sizesData?.data || [];
+  //get material
+  const { data: materialsData } = useQuery({
+    queryKey: ["materials"],
+    queryFn: materialApi.getAllMaterial
+  });
+  const materials = materialsData?.data || [];
 
+  // Lấy id sản phẩm từ URL
   const { id } = useParams();
-
+  // Lấy thông tin chi tiết sản phẩm từ server
   const { data: productData } = useQuery({
     queryKey: ["product", id],
     queryFn: () => productApi.getDetailProduct(id),
     enabled: true
   });
-  const product = productData?.data?.product;
-  const { data: sizesData } = useQuery({
-    queryKey: ["sizes"],
-    queryFn: sizeApi.getAllSize  // Replace with the actual API method to get sizes
-  });
+  const product = productData?.data?.product; 
   
-  const sizes = sizesData?.data || []; // If sizesData is undefined or null, default to an empty array
+  // Khi có dữ liệu sản phẩm, reset form và state
+  useEffect(() => {
+    if (product) {
+      console.log("product:", product);
   
+      const initialColorUnits = {};
+      const initialMaterialIds = {};
+      const initialColorImages = {};
+      const selectedColorIdsSet = new Set();
+  
+      product.productItems.forEach(item => {
+        const colorId = item.color.id;
+        const sizeId = item.size.id;
+        const materialId = item.material?.id;
+        const unitInStock = item.unitInStock || 0;
+        const imageUrls = item.images?.map(img => img.url) || [];
+  
+        selectedColorIdsSet.add(colorId);
+  
+        // Số lượng tồn theo size
+        if (!initialColorUnits[colorId]) initialColorUnits[colorId] = {};
+        initialColorUnits[colorId][sizeId] = unitInStock;
+  
+        // Chất liệu
+        if (!initialMaterialIds[colorId]) initialMaterialIds[colorId] = materialId;
+  
+        // Ảnh
+        if (!initialColorImages[colorId]) initialColorImages[colorId] = [];
+        imageUrls.forEach(url => {
+          if (!initialColorImages[colorId].some(img => img.name === url)) {
+            initialColorImages[colorId].push({
+              name: url,
+              isOld: true,
+              preview: `${BASE_URL_IMAGE}/${url}`
+            });
+          }
+        });
+      });
+      console.log("initialColorUnits", initialColorUnits);
+
+      reset({
+        name: product.name,
+        price: product.productItems?.[0]?.price || 0,
+        productCouponId: product.coupon?.id || null,
+        categoryId: product.categories_id,
+        brandId: product.brands_id,
+        colorId: Array.from(selectedColorIdsSet),
+        description: product.description
+      });
+      
+  
+      setValue("colorId", Array.from(selectedColorIdsSet));
+      setMaterialIds(initialMaterialIds);
+      setColorUnits(initialColorUnits);
+      setColorImages(initialColorImages);
+      setDescription(product.description);
+      setImage(product.avatar ? `${BASE_URL_IMAGE}/${product.avatar}` : null);
+    }
+    
+  }, [product]);
+  
+  
+  
+  
+
+
+  // Hàm xử lý thay đổi ảnh đại diện
   const handleChangePhoto = (e) => {
     const fileFromLocal = e.target.files?.[0];
     setImage(fileFromLocal);
   };
+  // Hàm xử lý thay đổi số lượng theo size và màu
   const handleColorUnitChange = (colorId, sizeId, value) => {
     const numValue = parseInt(value) || 0;
     if (numValue < 0) {
@@ -143,39 +222,31 @@ export default function UpdateProduct() {
       }));
     }
   };
-
-  useEffect(() => {
-    if (product) {
-      console.log("Product data:", product); // Để debug
-
-      // Khởi tạo colorUnits từ dữ liệu colors của sản phẩm
-      const initialColorUnits = {};
-      product.colors?.forEach(color => {
-        initialColorUnits[color.id] = {};
-        color.sizes?.forEach(size => {
-          initialColorUnits[color.id][size.sizeId] = size.stock;
-        });
-      });
-
-      // Set giá trị cho form
-      reset({
-        name: product.name,
-        price: product.price,
-        productCouponId: product.productCouponId,
-        categoryId: product.categoryId,
-        brandId: product.brandId,
-        colorId: product.colors?.map(color => color.id) || [],
-        description: product.description
-      });
-
-      setColorUnits(initialColorUnits);
-      setDescription(product.description);
-      setImage(product.image ? `${BASE_URL_IMAGE}/${product.image}` : null);
-    }
-  }, [product, reset]);
-
-  
-
+  // Xử lý thay đổi material theo màu
+  const handleMaterialChange = (colorId, materialId) => {
+    setMaterialIds(prev => ({
+      ...prev,
+      [colorId]: materialId
+    }));
+  };
+  // Xử lý upload ảnh mới theo từng màu
+  const handleColorImagesChange = (colorId, files) => {
+    const newFiles = Array.from(files).map(file => ({ file, isOld: false }));
+    setColorImages(prev => ({
+      ...prev,
+      [colorId]: [...(prev[colorId] || []).filter(img => img.isOld), ...newFiles]
+    }));
+  };
+  // Theo dõi danh sách màu được chọn
+  const selectedColors = watch("colorId");
+  // Xử lý thay đổi nội dung mô tả từ editor
+  const handleEditorChange = (content) => {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = content;
+    const textContent = tempDiv.innerText || tempDiv.textContent;
+    setDescription(textContent);
+  };
+    // Gọi API cập nhật sản phẩm
   const updateProductMutation = useMutation({
     mutationFn: (mutationPayload) =>
       productApi.updateProduct(mutationPayload.id, mutationPayload.body),
@@ -186,13 +257,21 @@ export default function UpdateProduct() {
     }
   });
 
+   // Xử lý khi submit form
   const onSubmit = handleSubmit((data) => {
-    // Kiểm tra giá có chia hết cho 1000 không
     if (data.price % 1000 !== 0) {
       setError("price", {
         type: "manual",
         message: "Giá sản phẩm phải là bội số của 1000"
       });
+      return;
+    }
+
+    const hasInvalidStock = Object.keys(colorUnits).some(colorId =>
+      Object.values(colorUnits[colorId]).some(stock => parseInt(stock) < 0)
+    );
+    if (hasInvalidStock) {
+      toast.error("Số lượng tồn phải lớn hơn 0");
       return;
     }
 
@@ -204,37 +283,38 @@ export default function UpdateProduct() {
     formData.append("categoryId", data.categoryId);
     formData.append("brandId", data.brandId);
 
-    // Chuyển đổi dữ liệu màu và size theo đúng format
-    const colorsArray = data.colorId.map((colorId) => ({
-      colorId,
-      sizes: Object.keys(colorUnits[colorId] || {}).map((sizeId) => ({
-        id: parseInt(sizeId, 10),
-        unitlnStock: parseInt(colorUnits[colorId][sizeId], 10) || 0
-      }))
-    }));
-
-    formData.append("colors", JSON.stringify(colorsArray));
-
     if (image && image instanceof Blob) {
       formData.append("image", image);
     }
 
+    Object.keys(colorImages).forEach((colorId) => {
+      colorImages[colorId].forEach((imgObj) => {
+        if (!imgObj.isOld) {
+          formData.append(`colorImages_${colorId}[]`, imgObj.file);
+        }
+      });
+    });
+
+    const colorsArray = data.colorId.map((colorId) => ({
+      colorId,
+      materialId: materialIds[colorId] || null,
+      sizes: Object.keys(colorUnits[colorId] || {}).map(sizeId => ({
+        id: parseInt(sizeId),
+        unitInStock: parseInt(colorUnits[colorId][sizeId]) || 0
+      })),
+      images: (colorImages[colorId] || []).map(imgObj =>
+        imgObj.isOld ? imgObj.name : imgObj.file.name
+      )
+    }));
+
+    formData.append("colors", JSON.stringify(colorsArray));
     updateProductMutation.mutate({ id, body: formData });
   });
 
-  // Watch colorId field to dynamically enable/disable unitlnStock inputs
-  const selectedColors = watch("colorId");
-
-  const handleEditorChange = (content) => {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = content;
-    const textContent = tempDiv.innerText || tempDiv.textContent;
-    setDescription(textContent);
-  };
-
+  
   return (
     <Box>
-      <TitleManager>Cập nhật sản phẩm</TitleManager>
+      <TitleManager>Sửa sản phẩm</TitleManager>
       <Box
         onSubmit={onSubmit}
         component="form"
@@ -259,80 +339,108 @@ export default function UpdateProduct() {
             </Box>
 
             <Box sx={{ mt: 2 }}>
-              <Typography sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }} component="p">
-                Màu sắc & Số lượng tồn
-              </Typography>
-        
-              {colors.map((color) => (
-                <Box
-                  key={color.id}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    mb: 1,
-                    padding: "5px",
-                    borderRadius: "5px",
-                    backgroundColor: watch("colorId").includes(color.id) ? "#f5f5f5" : "transparent"
-                  }}
-                >
-                  <Controller
-                    name="colorId"
-                    control={control}
-                    defaultValue={[]}
-                    render={({ field }) => (
-                      <>
-                        <input
-                          style={{ marginLeft: "10px" }}
-                          type="checkbox"
-                          value={color.id}
-                          onChange={(e) => {
-                            const selectedColors = e.target.checked
-                              ? [...field.value, color.id]
-                              : field.value.filter((id) => id !== color.id);
-                            field.onChange(selectedColors);
-                          }}
-                          checked={field.value.includes(color.id)}
-                        />
-                        <Box
-                          sx={{
-                            mb: 1,
-                            width: "30px",
-                            height: "26px",
-                            marginLeft: "10px",
-                            borderRadius: "50%",
-                            border: "1px solid #ddd",
-                            backgroundColor: color.colorCode,
-                            padding: "5px"
-                          }}
-                        />
-                      </>
-                    )}
+  <Typography sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }} component="p">
+    Màu sắc & Số lượng tồn
+  </Typography>
+  {colors.map((color) => (
+    <Box
+      key={color.id}
+      sx={{
+        display: "flex",
+        flexDirection: "column", // 👉 Cho gọn gàng
+        mb: 2,
+        padding: "10px",
+        borderRadius: "5px",
+        border: "1px solid #ddd"
+      }}
+    >
+      <Controller
+        name="colorId"
+        control={control}
+        defaultValue={[]}
+        render={({ field }) => (
+          <>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+              <input
+                style={{ marginLeft: "10px" }}
+                type="checkbox"
+                value={color.id}
+                onChange={(e) => {
+                  const selectedColors = e.target.checked
+                    ? [...field.value, color.id]
+                    : field.value.filter((id) => id !== color.id);
+                  field.onChange(selectedColors);
+                }}
+                checked={field.value.includes(color.id)}
+              />
+              <Box
+                sx={{
+                  width: "30px",
+                  height: "26px",
+                  marginLeft: "10px",
+                  borderRadius: "50%",
+                  border: "1px solid #ddd",
+                  backgroundColor: color.colorCode,
+                  padding: "5px"
+                }}
+              />
+            </Box>
+
+            {/* 👇 Chọn chất liệu cho từng màu */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 160, ml: 2, mb: 2 }}
+              disabled={!field.value.includes(color.id)}
+            >
+              <Select
+                displayEmpty
+                value={materialIds[color.id] || ""}
+                onChange={(e) => handleMaterialChange(color.id, e.target.value)}
+              >
+                <MenuItem value="">Chọn chất liệu</MenuItem>
+                {materials.map((m) => (
+                  <MenuItem key={m.id} value={m.id}>
+                    {m.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* ✅ Thêm chọn ảnh chi tiết tại đây */}
+            <Box sx={{ ml: 2, mb: 2 }}>
+              <Typography variant="caption">Chọn ảnh chi tiết cho màu {color.name}</Typography>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => handleColorImagesChange(color.id, e.target.files)}
+                disabled={!field.value.includes(color.id)}
+              />
+            </Box>
+
+            {/* 👇 Số lượng theo size */}
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+              {sizes.map((size) => (
+                <Box key={size.id} sx={{ display: "flex", alignItems: "center" }}>
+                  <Typography sx={{ fontSize: "14px", mr: 1 }}>{size.name}</Typography>
+                  <TextField
+                    type="number"
+                    size="small"
+                    value={colorUnits[color.id]?.[size.id] ?? ""}
+                    onChange={(e) => handleColorUnitChange(color.id, size.id, e.target.value)}
+                    error={Boolean(errors.colorUnits?.[color.id]?.[size.id]?.message)}
+                    helperText={errors.colorUnits?.[color.id]?.[size.id]?.message}
                   />
-        
-                  {sizes.map((size) => (
-                    <Box key={size.id} sx={{ ml: 2, display: "flex", alignItems: "center" }}>
-                      <Typography sx={{ fontSize: "14px", mr: 1 }}>
-                        {size.name}
-                      </Typography>
-                      <TextField
-                        type="number"
-                        size="small"
-                        sx={{ width: "80px" }}
-                        value={colorUnits[color.id]?.[size.id] || ""}
-                        onChange={(e) => handleColorUnitChange(color.id, size.id, e.target.value)}
-                        disabled={!watch("colorId").includes(color.id)}
-                        error={Boolean(errors.colorUnits?.[color.id]?.[size.id])}
-                        helperText={errors.colorUnits?.[color.id]?.[size.id]?.message}
-                        // inputProps={{
-                        //   min: 0,
-                        //   max: 100
-                        // }}
-                      />
-                    </Box>
-                  ))}
                 </Box>
               ))}
             </Box>
+          </>
+        )}
+      />
+    </Box>
+  ))}
+</Box>
+
 
             <Box sx={{ mt: 2 }}>
               <Typography
@@ -371,7 +479,7 @@ export default function UpdateProduct() {
               />
             </Box>
             
-          </Grid>
+            </Grid>
           <Grid item md={6} xs={12}>
             <FormControl fullWidth>
               <Typography
@@ -380,10 +488,10 @@ export default function UpdateProduct() {
               >
                 Danh mục
               </Typography>
-
               <Controller
                 name="categoryId"
                 control={control}
+                defaultValue={[]}
                 render={({ field }) => (
                   <Select
                     {...field}
@@ -404,7 +512,7 @@ export default function UpdateProduct() {
                 {errors.categoryId?.message}
               </FormHelperText>
             </FormControl>
-            
+
             <FormControl fullWidth>
               <Typography
                 sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
@@ -415,6 +523,7 @@ export default function UpdateProduct() {
               <Controller
                 name="brandId"
                 control={control}
+                defaultValue={[]}
                 render={({ field }) => (
                   <Select
                     {...field}
@@ -431,11 +540,10 @@ export default function UpdateProduct() {
                   </Select>
                 )}
               />
-              
               <FormHelperText error={!!errors.brandId?.message}>
                 {errors.brandId?.message}
               </FormHelperText>
-            </FormControl>
+            </FormControl>  
 
             <Box sx={{ mt: 2 }}>
               <Typography
@@ -445,9 +553,19 @@ export default function UpdateProduct() {
                 Mô tả sản phẩm
               </Typography>
               <Editor
-                onContentChange={handleEditorChange}
                 initialContent={description}
+                onContentChange={handleEditorChange}
               />
+
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              <Typography
+                sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
+                component="p"
+              >
+                Xem trước mô tả
+              </Typography>
+              <Box>{description}</Box>
             </Box>
 
             <Box sx={{ mt: 2 }}>
@@ -455,7 +573,7 @@ export default function UpdateProduct() {
                 sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
                 component="p"
               >
-                Hình ảnh
+                Hình ảnh Avatar
               </Typography>
               <Button
                 sx={{ width: "200px", py: 1 }}
@@ -483,6 +601,7 @@ export default function UpdateProduct() {
                 />
               )}
             </Box>
+            
           </Grid>
         </Grid>
         <Button
@@ -490,8 +609,8 @@ export default function UpdateProduct() {
           sx={{ width: "200px", mt: 2 }}
           variant="contained"
         >
-          Cập nhật sản phẩm
-        </Button>
+          Sửa sản phẩm
+        </Button>        
       </Box>
     </Box>
   );

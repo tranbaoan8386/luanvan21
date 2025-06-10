@@ -24,6 +24,7 @@ Product.belongsTo(Category, { foreignKey: 'categories_id', as: 'category' });
 Brand.hasMany(Product, { foreignKey: 'brands_id' });
 Product.belongsTo(Brand, { foreignKey: 'brands_id', as: 'brand' });
 
+
 // ===== PRODUCT - PRODUCT ITEM =====
 Product.hasMany(ProductItem, { foreignKey: 'products_id', as: 'productItems' });
 ProductItem.belongsTo(Product, { foreignKey: 'products_id', as: 'product' });

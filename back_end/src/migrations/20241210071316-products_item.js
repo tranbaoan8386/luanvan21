@@ -17,7 +17,7 @@ module.exports = {
             primaryKey: true,
             autoIncrement: true
         },
-        unitlnStock: {
+        unitInStock: {
             type: DataTypes.INTEGER,
             allowNull: false
         },

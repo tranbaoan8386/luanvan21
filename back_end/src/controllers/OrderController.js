@@ -459,12 +459,12 @@ class OrderController {
                     throw new Error(`Không tìm thấy sản phẩm với ID: ${productItemId}`);
                 }
     
-                const newStock = productItem.unitlnStock - quantity;
+                const newStock = productItem.unitInStock - quantity;
                 if (newStock < 0) {
                     throw new Error(`Không đủ tồn kho cho sản phẩm ${productItemId}`);
                 }
     
-                await productItem.update({ unitlnStock: newStock });
+                await productItem.update({ unitInStock: newStock });
     
                 // Cập nhật số lượng đã bán của sản phẩm
                 const product = await Product.findByPk(productItem.productId);

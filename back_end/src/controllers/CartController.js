@@ -35,7 +35,7 @@ class CartController {
                     {
                         model: ProductItem,
                         as: 'productItem',
-                        attributes: ['id', 'colorId', 'productId', 'unitlnStock', 'sizeId'],
+                        attributes: ['id', 'colorId', 'productId', 'unitInStock', 'sizeId'],
                         include: [
                             {
                                 model: Product,
@@ -118,10 +118,10 @@ class CartController {
             }
 
             // Kiểm tra tồn kho
-            if (productItem.unitlnStock < quantity) {
+            if (productItem.unitInStock < quantity) {
                 return res.status(400).json({
                     success: false,
-                    message: `Số lượng sản phẩm vượt quá tồn kho. Tồn kho hiện tại: ${productItem.unitlnStock}`
+                    message: `Số lượng sản phẩm vượt quá tồn kho. Tồn kho hiện tại: ${productItem.unitInStock}`
                 });
             }
 
@@ -139,7 +139,7 @@ class CartController {
             if (cartItem) {
                 // Cập nhật số lượng và tổng giá trị
                 const newQuantity = cartItem.quantity + quantity;
-                if (newQuantity > productItem.unitlnStock) {
+                if (newQuantity > productItem.unitInStock) {
                     return res.status(400).json({
                         success: false,
                         message: `Số lượng sản phẩm vượt quá tồn kho.`

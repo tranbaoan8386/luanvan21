@@ -9,8 +9,9 @@ const productRouter = Router();
 // List all products
 productRouter.get('/', ProductController.getAllProduct);
 
-// Get product with images by ID
-productRouter.get('/:id', ProductController.getProductWithImages);
+productRouter.get('/:id', ProductController.getDetailProduct);
+
+
 
 // Create a new product
 productRouter.post(
