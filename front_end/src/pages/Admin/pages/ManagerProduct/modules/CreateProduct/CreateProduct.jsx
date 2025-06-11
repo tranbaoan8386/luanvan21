@@ -167,11 +167,13 @@ export default function CreateProduct() {
   });
 
   const handleEditorChange = (content) => {
+    /* console.log("Nội dung editor:", content); */
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = content;
     const textContent = tempDiv.innerText || tempDiv.textContent;
-    setDescription(textContent);
+    setDescription(textContent.trim()); // thêm .trim() để loại bỏ khoảng trắng
   };
+  
 
   const onSubmit = handleSubmit((data) => {
     // Kiểm tra giá có chia hết cho 1000 không

@@ -23,12 +23,32 @@ const Editor = ({ onContentChange, initialContent }) => {
     }, [debouncedContent, onContentChange])
 
     useEffect(() => {
-        if (quill && initialContent !== undefined && initialContent !== editorContent) {
-            quill.clipboard.dangerouslyPasteHTML(initialContent)
-            setEditorContent(initialContent)
-        }
-    }, [quill, initialContent])
+        if (quill) {
+            const handleChange = () => {
+                const html = quill.root.innerHTML;
+                setEditorContent(html);
+            };
     
+            quill.on('text-change', handleChange);
+    
+            // 🧹 Clean up
+            return () => {
+                quill.off('text-change', handleChange);
+            };
+        }
+    }, [quill]);
+    
+    useEffect(() => {
+        if (quill && initialContent) {
+          const isEmpty = quill.getLength() === 1; // chỉ có ký tự "\n"
+          if (isEmpty) {
+            quill.clipboard.dangerouslyPasteHTML(initialContent);
+            setEditorContent(initialContent);
+          }
+        }
+      }, [quill, initialContent]);
+      
+      
 
     return (
         <div>

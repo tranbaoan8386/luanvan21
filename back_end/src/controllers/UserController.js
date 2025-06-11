@@ -11,24 +11,29 @@ class UserController {
     async getAll(req, res, next) {
         try {
             let users = await User.findAll({
-                where: {
-                    role: {
-                        [Op.not]: 'admin'
+                include: [
+                    {
+                        model: Role,
+                        as: 'role',
+                        where: {
+                            name: {
+                                [Op.not]: 'Admin'
+                            }
+                        }
                     }
-                }
-            }
-            );
-
+                ]
+            });
+    
             return ApiResponse.success(res, {
                 status: 200,
-                data: {
-                    users
-                }
+                data: { users }
             });
         } catch (error) {
+            console.log("🔴 ERROR GET USERS:", error);
             next(error);
         }
     }
+    
     async getMe(req, res, next) {
         try {
             const { id: userId } = req.user;

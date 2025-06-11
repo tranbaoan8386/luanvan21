@@ -50,7 +50,7 @@ Coupon.hasMany(ProductItem, { foreignKey: 'coupons_id', as: 'productItems' });
 ProductItem.belongsTo(Coupon, { foreignKey: 'coupons_id', as: 'coupon' });
 
 // ===== USER - ORDER =====
-User.hasMany(Order, { foreignKey: 'userId' });
+User.hasMany(Order, { foreignKey: 'userId', as: 'orders' });
 Order.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 // ===== ORDER - ORDER ITEM - PRODUCT ITEM =====

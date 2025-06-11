@@ -182,13 +182,20 @@ export default function UpdateProduct() {
       setMaterialIds(initialMaterialIds);
       setColorUnits(initialColorUnits);
       setColorImages(initialColorImages);
-      setDescription(product.description);
       setImage(product.avatar ? `${BASE_URL_IMAGE}/${product.avatar}` : null);
+
+
+       // 👇 Bổ sung: đảm bảo mô tả là HTML hợp lệ
+    let safeDescription = product.description || "<p></p>";
+    if (!safeDescription.includes("<")) {
+      safeDescription = `<p>${safeDescription}</p>`;
+    }
+
+    console.log("Force set description to:", safeDescription); // kiểm tra
+    setDescription(safeDescription);
     }
     
   }, [product]);
-  
-  
   
   
 
@@ -237,15 +244,7 @@ export default function UpdateProduct() {
       [colorId]: [...(prev[colorId] || []).filter(img => img.isOld), ...newFiles]
     }));
   };
-  // Theo dõi danh sách màu được chọn
-  const selectedColors = watch("colorId");
-  // Xử lý thay đổi nội dung mô tả từ editor
-  const handleEditorChange = (content) => {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = content;
-    const textContent = tempDiv.innerText || tempDiv.textContent;
-    setDescription(textContent);
-  };
+  
     // Gọi API cập nhật sản phẩm
   const updateProductMutation = useMutation({
     mutationFn: (mutationPayload) =>
@@ -310,7 +309,15 @@ export default function UpdateProduct() {
     formData.append("colors", JSON.stringify(colorsArray));
     updateProductMutation.mutate({ id, body: formData });
   });
-
+  // Theo dõi danh sách màu được chọn
+  const selectedColors = watch("colorId");
+  // Xử lý thay đổi nội dung mô tả từ editor
+  const handleEditorChange = (content) => {
+    console.log('Editor content:', content); // 👈 log nội dung
+    setDescription(content);
+  };
+  
+  
   
   return (
     <Box>
@@ -553,19 +560,9 @@ export default function UpdateProduct() {
                 Mô tả sản phẩm
               </Typography>
               <Editor
-                initialContent={description}
-                onContentChange={handleEditorChange}
+               initialContent={description} // 👈 truyền nội dung mô tả
+               onContentChange={handleEditorChange}
               />
-
-            </Box>
-            <Box sx={{ mt: 2 }}>
-              <Typography
-                sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
-                component="p"
-              >
-                Xem trước mô tả
-              </Typography>
-              <Box>{description}</Box>
             </Box>
 
             <Box sx={{ mt: 2 }}>

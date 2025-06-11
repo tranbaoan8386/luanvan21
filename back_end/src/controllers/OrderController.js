@@ -10,157 +10,7 @@ const Product = require('../models/Product')
 const Color = require('../models/Color')
 const Size = require('../models/Size')
 class OrderController {
-    async setShipperOrder(req, res, next) {
-        try {
-            const { id: orderId } = req.params;
 
-            // Find the order by ID
-            const order = await Order.findOne({
-                where: {
-                    id: orderId
-                }
-            });
-
-            // If order is not found, throw an error
-            if (!order) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Không tìm thấy đơn hàng'
-                });
-            }
-
-            // Update the order status to 'shipped'
-            order.status = 'shipped';
-            await order.save();
-
-            // Return success response
-            return res.status(200).json({
-                success: true,
-                data: {
-                    message: 'Cập nhật đơn hàng thành công'
-                }
-            });
-        } catch (error) {
-            // Catch any unexpected errors and pass them to the next middleware
-            next(error);
-        }
-    }
-    async setDeliveredOrder(req, res, next) {
-        try {
-            const { id: orderId } = req.params;
-
-
-
-
-            // Find the order by ID
-            const order = await Order.findOne({
-                where: {
-                    id: orderId
-                }
-            });
-
-            // If order is not found, return 404
-            if (!order) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Không tìm thấy đơn hàng'
-                });
-            }
-
-            // Update the order status to 'delivered'
-            order.status = 'delivered';
-            await order.save();
-
-            // Return success response
-            return res.status(200).json({
-                success: true,
-                data: {
-                    message: 'Cập nhật đơn hàng thành công'
-                }
-            });
-        } catch (error) {
-            console.error('Error updating order status:', error); // Log the error details
-            return res.status(500).json({
-                success: false,
-                message: 'Internal Error.',
-                error: error.message
-            });
-        }
-    }
-    async setCancelledOrder(req, res, next) {
-        try {
-            const { id: orderId } = req.params;
-            // Find the order by ID
-            const order = await Order.findOne({
-                where: {
-                    id: orderId
-                }
-            });
-
-            // If order is not found, return 404
-            if (!order) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Không tìm thấy đơn hàng'
-                });
-            }
-
-            // Update the order status to 'delivered'
-            order.status = 'cancelled';
-            await order.save();
-
-            // Return success response
-            return res.status(200).json({
-                success: true,
-                data: {
-                    message: 'Cập nhật đơn hàng thành công'
-                }
-            });
-        } catch (error) {
-            console.error('Error updating order status:', error); // Log the error details
-            return res.status(500).json({
-                success: false,
-                message: 'Internal Error.',
-                error: error.message
-            });
-        }
-    }
-    async setPaymentOrder(req, res, next) {
-        try {
-            const { id: orderId } = req.params;
-            // Find the order by ID
-            const order = await Order.findOne({
-                where: {
-                    id: orderId
-                }
-            });
-
-            // If order is not found, return 404
-            if (!order) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Không tìm thấy đơn hàng'
-                });
-            }
-            order.statusPayment = 'paid';
-            await order.save();
-
-            // Return success response
-            return res.status(200).json({
-                success: true,
-                data: {
-                    message: 'Cập nhật đơn hàng thành công'
-                }
-            });
-        } catch (error) {
-            console.error('Error updating order status:', error); // Log the error details
-            return res.status(500).json({
-                success: false,
-                message: 'Internal Error.',
-                error: error.message
-            });
-        }
-    }
     async getAllOrder(req, res, next) {
         try {
             const { id: userId, role } = req.user;
@@ -180,7 +30,7 @@ class OrderController {
                                     {
                                         model: Product,
                                         as: 'product',
-                                        attributes: ['name', 'price']
+                                        attributes: ['id', 'name']
                                     },
                                     {
                                         model: Color,
@@ -198,7 +48,7 @@ class OrderController {
                         {
                             model: User,
                             attributes: ['id', 'name', 'email'],
-                            as: 'users'
+                            as: 'user'
                         }
                     ],
                     order: [['createDate', 'DESC']]
@@ -220,7 +70,7 @@ class OrderController {
                                     {
                                         model: Product,
                                         as: 'product',
-                                        attributes: ['name', 'price']
+                                        attributes: ['id', 'name']
                                     },
                                     {
                                         model: Color,
@@ -238,7 +88,7 @@ class OrderController {
                         {
                             model: User,
                             attributes: ['id', 'name', 'email'],
-                            as: 'users'
+                            as: 'user'
                         }
                     ],
                     order: [['createDate', 'DESC']]
@@ -252,11 +102,10 @@ class OrderController {
                 }
             });
         } catch (error) {
+            console.log('🔴 ERROR:', error);
             next(error);
         }
     }
-
-
     async getOrderById(req, res, next) {
         try {
             const { id: userId, role } = req.user;
@@ -281,7 +130,7 @@ class OrderController {
                                     {
                                         model: Product,
                                         as: 'product',
-                                        attributes: ['name', 'price']
+                                        attributes: ['id', 'name']
                                     },
                                     {
                                         model: Color,
@@ -299,7 +148,7 @@ class OrderController {
                         {
                             model: User,
                             attributes: ['id', 'name', 'email'],
-                            as: 'users'
+                            as: 'user'
                         }
                     ]
                 });
@@ -321,7 +170,7 @@ class OrderController {
                                 {
                                     model: Product,
                                     as: 'product',
-                                    attributes: ['name', 'price']
+                                    attributes: ['id', 'name']
                                 },
                                 {
                                     model: Color,
@@ -348,11 +197,10 @@ class OrderController {
                 data: order
             });
         } catch (error) {
+            console.error("❌ getOrderById error:", error);
             next(error);
         }
     }
-
-
     async getSale(req, res) {
         try {
             const dailyRevenue = await Order.findAll({
@@ -403,6 +251,7 @@ class OrderController {
     }
 
 
+
     async createOrder(req, res, next) {
         try {
             const { id: userId } = req.user;
@@ -430,8 +279,8 @@ class OrderController {
                 fullname,
                 address,
                 userId,
-                status: 'pending',
-                statusPayment: paymentMethod === 'cash' ? 'Chưa thanh toán' : 'Đã thanh toán',
+                status: 'ordered',
+                statusPayment: paymentMethod === 'cash' ? 'unpaid' : 'paid',
                 note
             });
     
@@ -494,11 +343,6 @@ class OrderController {
             });
         }
     }
-    
-
-
-
-
     async deleteOrder(req, res, next) {
         try {
             const { id: orderId } = req.params
@@ -569,8 +413,6 @@ class OrderController {
             next(err);
         }
     }
-
-
     async setShipperOrder(req, res, next) {
         try {
             const { id: orderId } = req.params;
@@ -684,9 +526,6 @@ class OrderController {
             next(error);
         }
     }
-
-
-
     async setPaymentOrder(req, res, next) {
         try {
             const { id: orderId } = req.params;
