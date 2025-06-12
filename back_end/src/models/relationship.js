@@ -24,6 +24,7 @@ Product.belongsTo(Category, { foreignKey: 'categories_id', as: 'category' });
 Brand.hasMany(Product, { foreignKey: 'brands_id' });
 Product.belongsTo(Brand, { foreignKey: 'brands_id', as: 'brand' });
 
+
 // ===== PRODUCT - PRODUCT ITEM =====
 Product.hasMany(ProductItem, { foreignKey: 'products_id', as: 'productItems' });
 ProductItem.belongsTo(Product, { foreignKey: 'products_id', as: 'product' });
@@ -49,7 +50,7 @@ Coupon.hasMany(ProductItem, { foreignKey: 'coupons_id', as: 'productItems' });
 ProductItem.belongsTo(Coupon, { foreignKey: 'coupons_id', as: 'coupon' });
 
 // ===== USER - ORDER =====
-User.hasMany(Order, { foreignKey: 'userId' });
+User.hasMany(Order, { foreignKey: 'userId', as: 'orders' });
 Order.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 // ===== ORDER - ORDER ITEM - PRODUCT ITEM =====

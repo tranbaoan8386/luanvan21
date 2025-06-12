@@ -24,17 +24,31 @@ const Editor = ({ onContentChange, initialContent }) => {
 
     useEffect(() => {
         if (quill) {
-            quill.on('text-change', (delta, oldContents) => {
-                const htmlContent = quill.root.innerHTML
-                setEditorContent(htmlContent)
-            })
-
-            // Set the initial content when the Quill editor is ready
-            if (initialContent) {
-                quill.clipboard.dangerouslyPasteHTML(initialContent)
-            }
+            const handleChange = () => {
+                const html = quill.root.innerHTML;
+                setEditorContent(html);
+            };
+    
+            quill.on('text-change', handleChange);
+    
+            // 🧹 Clean up
+            return () => {
+                quill.off('text-change', handleChange);
+            };
         }
-    }, [quill, initialContent])
+    }, [quill]);
+    
+    useEffect(() => {
+        if (quill && initialContent) {
+          const isEmpty = quill.getLength() === 1; // chỉ có ký tự "\n"
+          if (isEmpty) {
+            quill.clipboard.dangerouslyPasteHTML(initialContent);
+            setEditorContent(initialContent);
+          }
+        }
+      }, [quill, initialContent]);
+      
+      
 
     return (
         <div>
@@ -44,3 +58,25 @@ const Editor = ({ onContentChange, initialContent }) => {
 }
 
 export default Editor
+/* Chức năng chính của Editor.jsx
+Tích hợp trình soạn thảo Quill.js
+
+Đây là một thư viện rich text editor phổ biến với nhiều tính năng định dạng (in đậm, nghiêng, chèn ảnh, tiêu đề, v.v).
+
+Cho phép set nội dung ban đầu (initialContent)
+
+Khi sửa sản phẩm, bạn muốn hiển thị mô tả cũ đã có sẵn → dùng quill.clipboard.dangerouslyPasteHTML() để hiển thị lại nội dung đó.
+
+Gửi nội dung ra ngoài qua onContentChange
+
+Khi người dùng nhập hoặc thay đổi nội dung, Editor gọi lại onContentChange() để truyền nội dung HTML ra ngoài component cha (UpdateProduct.jsx).
+
+Debounce nội dung
+
+Dùng custom hook useDebounce để tránh việc spam callback khi người dùng đang gõ.
+
+Hỗ trợ định dạng ảnh thông minh
+
+Bạn đang dùng quill-blot-formatter để cho phép resize / di chuyển ảnh trong vùng nhập.
+
+ */

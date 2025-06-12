@@ -1,6 +1,8 @@
 const Category = require('../models/Category')
 const ErrorResponse = require('../response/ErrorResponse')
 const ApiResponse = require('../response/ApiResponse')
+const { Op } = require("sequelize");
+
 
 class CategoryController {
     async getAllCategory(req, res, next) {
@@ -89,8 +91,12 @@ class CategoryController {
 
             // Kiểm tra xem tên danh mục đã tồn tại chưa
             const existingCategory = await Category.findOne({
-                where: { name }
+                where: {
+                    name,
+                    id: { [Op.ne]: id } // ⚠️ loại chính mình
+                }
             });
+            
 
             if (existingCategory) {
                 return ApiResponse.error(res, {

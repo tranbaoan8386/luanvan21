@@ -13,136 +13,146 @@ const Material = require('../models/Material');
 
 class ProductController {
 
-    async createProduct(req, res, next) {
-        const t = await sequelize.transaction();
-        try {
-            let {
-                id,
-                name,
-                description,
-                price,
-                categoryId,
-                brandId,
-                productCouponId,
-                colors
-            } = req.body;
-    
-            if (price % 1000 !== 0) {
-                await t.rollback();
-                return ApiResponse.error(res, {
-                    status: 400,
-                    data: { message: 'Giá sản phẩm phải là bội số của 1000' }
-                });
-            }
-    
-            if (typeof colors === 'string') {
-                colors = JSON.parse(colors);
-            }
-    
-            const BASE_IMAGE_URL = process.env.BASE_IMAGE_URL || 'http://localhost:8000/uploads/';
-            let avatar = '';        
-    
-            const avatarFile = req.files.find((f) => f.fieldname === 'image');
-            if (avatarFile) {
-                avatar = avatarFile.filename; // ✅ Chỉ lưu tên file
-            }else if (req.body.avatar) {
-                avatar = req.body.avatar;
-            } else if (
-                Array.isArray(colors) &&
-                colors.length > 0 &&
-                Array.isArray(colors[0].images) &&
-                colors[0].images.length > 0
-            ) {
-                avatar = colors[0].images[0];
-            }
-    
-            const existingProduct = await Product.findOne({ where: { name }, transaction: t });
-            if (existingProduct) {
-                await t.rollback();
-                return ApiResponse.error(res, {
-                    status: 400,
-                    data: { field: 'name', message: 'Tên sản phẩm đã bị trùng' }
-                });
-            }
-    
-            const product = await Product.create({
-                id,
-                name,
-                description,
-                categories_id: categoryId,
-                brands_id: brandId,
-                avatar
-            }, { transaction: t });
-    
-            const productItems = [];
-    
-         for (const color of colors) {
-    const { colorId, materialId, sizes, images } = color;
+  async createProduct(req, res, next) {
+    // Bắt đầu một transaction để đảm bảo mọi thao tác DB được thực hiện an toàn
+    const t = await sequelize.transaction();
+    try {
+        // Lấy dữ liệu từ request gửi lên (qua form hoặc JSON)
+        let {
+            id,
+            name,
+            description,
+            price,
+            categoryId,
+            brandId,
+            productCouponId,
+            colors
+        } = req.body;
 
-    const productItemIds = [];
+        // Kiểm tra giá phải là bội số của 1000
+        if (price % 1000 !== 0) {
+            await t.rollback(); // Hủy giao dịch nếu không hợp lệ
+            return ApiResponse.error(res, {
+                status: 400,
+                data: { message: 'Giá sản phẩm phải là bội số của 1000' }
+            });
+        }
 
-    for (const size of sizes) {
-        const { id: sizeId, unitInStock } = size;
+        // Parse lại `colors` nếu là dạng chuỗi JSON (do FormData gửi)
+        if (typeof colors === 'string') {
+            colors = JSON.parse(colors);
+        }
 
-        const sizeExists = await Size.findByPk(sizeId, { transaction: t });
-        if (!sizeExists) {
+        // Lấy avatar chính
+        const BASE_IMAGE_URL = process.env.BASE_IMAGE_URL || 'http://localhost:8000/uploads/';
+        let avatar = '';        
+
+        // Tìm file ảnh avatar gửi lên theo field `image`
+        const avatarFile = req.files.find((f) => f.fieldname === 'image');
+        if (avatarFile) {
+            avatar = avatarFile.filename; // ✅ Chỉ lưu tên file
+        } else if (req.body.avatar) {
+            avatar = req.body.avatar; // Trường hợp avatar gửi từ frontend đã là tên file
+        } else if (
+            Array.isArray(colors) &&
+            colors.length > 0 &&
+            Array.isArray(colors[0].images) &&
+            colors[0].images.length > 0
+        ) {
+            // Nếu không có file và avatar rõ ràng thì lấy tạm ảnh đầu tiên của màu đầu tiên
+            avatar = colors[0].images[0];
+        }
+
+        // Kiểm tra tên sản phẩm đã tồn tại chưa (tránh trùng)
+        const existingProduct = await Product.findOne({ where: { name }, transaction: t });
+        if (existingProduct) {
             await t.rollback();
             return ApiResponse.error(res, {
                 status: 400,
-                message: `Kích thước với id ${sizeId} không tồn tại`
+                data: { field: 'name', message: 'Tên sản phẩm đã bị trùng' }
             });
         }
 
-        const productItem = await ProductItem.create({
-            unitInStock,
-            products_id: product.id,
-            coupons_id: productCouponId || null,
-            price,
-            sold: 0,
-            color_id: colorId,
-            size_id: sizeId,
-            materials_id: materialId || null
+        // Tạo sản phẩm chính
+        const product = await Product.create({
+            id,
+            name,
+            description,
+            categories_id: categoryId,
+            brands_id: brandId,
+            avatar
         }, { transaction: t });
 
-        productItems.push(productItem);
-        productItemIds.push(productItem.id); // lưu lại để liên kết ảnh (nếu cần)
-    }
+        const productItems = []; // Danh sách các biến thể của sản phẩm
 
-    // ✅ Chỉ lưu ảnh 1 lần cho mỗi màu (chỉ gắn với 1 productItem thôi)
-    if (images && Array.isArray(images) && images.length > 0 && productItemIds.length > 0) {
-        for (const imgUrl of images) {
-            if (imgUrl) {
-                await ProductImage.create({
-                    url: imgUrl,
-                    products_item_id: productItemIds[0] // hoặc chọn item đại diện
+        // Duyệt từng màu để tạo ProductItem và ProductImage
+        for (const color of colors) {
+            const { colorId, materialId, sizes, images } = color;
+
+            const productItemIds = []; // Giữ các id để gắn ảnh
+
+            for (const size of sizes) {
+                const { id: sizeId, unitInStock } = size;
+
+                // Kiểm tra size có tồn tại không
+                const sizeExists = await Size.findByPk(sizeId, { transaction: t });
+                if (!sizeExists) {
+                    await t.rollback();
+                    return ApiResponse.error(res, {
+                        status: 400,
+                        message: `Kích thước với id ${sizeId} không tồn tại`
+                    });
+                }
+
+                // Tạo sản phẩm con (product item)
+                const productItem = await ProductItem.create({
+                    unitInStock,
+                    products_id: product.id,
+                    coupons_id: productCouponId || null,
+                    price,
+                    sold: 0,
+                    color_id: colorId,
+                    size_id: sizeId,
+                    materials_id: materialId || null
                 }, { transaction: t });
+
+                productItems.push(productItem);
+                productItemIds.push(productItem.id); // Lưu để dùng khi thêm ảnh
+            }
+
+            // ✅ Chỉ lưu ảnh một lần cho mỗi màu (gắn với 1 productItem đại diện thôi)
+            if (images && Array.isArray(images) && images.length > 0 && productItemIds.length > 0) {
+                for (const imgUrl of images) {
+                    if (imgUrl) {
+                        await ProductImage.create({
+                            url: imgUrl,
+                            products_item_id: productItemIds[0] // Gắn vào item đầu tiên của màu đó
+                        }, { transaction: t });
+                    }
+                }
             }
         }
+
+        await t.commit(); // ✅ Hoàn tất giao dịch
+
+        return ApiResponse.success(res, {
+            status: 201,
+            data: {
+                product: {
+                    ...product.dataValues,
+                    productItems // Danh sách biến thể (các màu/size)
+                },
+                message: 'Thêm sản phẩm thành công'
+            }
+        });
+    } catch (err) {
+        await t.rollback(); // ❌ Hủy toàn bộ nếu lỗi
+        console.error(err);
+        next(err);
     }
 }
 
-            await t.commit(); // ✅ Xác nhận thành công
     
-            return ApiResponse.success(res, {
-                status: 201,
-                data: {
-                    product: {
-                        ...product.dataValues,
-                        productItems
-                    },
-                    message: 'Thêm sản phẩm thành công'
-                }
-            });
-        } catch (err) {
-            await t.rollback(); // ❌ Nếu có lỗi, hủy toàn bộ
-            console.error(err);
-            next(err);
-        }
-    }
-    
-
-
-
     async updateProduct(req, res, next) {
         try {
             const { name, description, price, categoryId, brandId, productCouponId, colors } = req.body;
@@ -171,13 +181,14 @@ class ProductController {
             // Avatar
            // Avatar
             const BASE_IMAGE_URL = process.env.BASE_IMAGE_URL || 'http://localhost:8000/uploads/';
-            let avatar = product.avatar;
+            let avatar = product.avatar; // mặc định giữ avatar cũ
 
-            if (req.file) {
-                avatar = BASE_IMAGE_URL + req.file.filename;
-            } else if (req.body.avatar) {
-                avatar = req.body.avatar;
+            if (req.file && req.file.filename) {
+                avatar = req.file.filename;
+            } else if (typeof req.body.avatar === 'string' && req.body.avatar.trim() !== '') {
+                avatar = req.body.avatar.replace(`${BASE_IMAGE_URL}`, ''); // Nếu frontend gửi cả link, chỉ lấy tên file
             }
+
 
 
     
@@ -221,13 +232,13 @@ class ProductController {
                     if (productItem) {
                         productItem.unitInStock = unitInStock;
                         productItem.price = price;
-                        productItem.coupons_id = productCouponId || null;
+                        productItem.coupons_id = Number.isInteger(+productCouponId) ? +productCouponId : null;
                         await productItem.save();
                     } else {
                         productItem = await ProductItem.create({
                             unitInStock,
                             price,
-                            coupons_id: productCouponId || null,
+                            coupons_id: Number.isInteger(+productCouponId) ? +productCouponId : null,
                             products_id: product.id,
                             color_id: colorId,
                             size_id: sizeId,
@@ -264,8 +275,29 @@ class ProductController {
     
             // Lấy lại thông tin sản phẩm
             const updatedProduct = await Product.findByPk(productId, {
-                include: [{ model: ProductItem, as: 'productItems' }]
+              include: [
+                {
+                  model: ProductItem,
+                  as: 'productItems',  // 👈 phải đúng alias đã định nghĩa trong association
+                  include: [
+                    { model: Color, as: 'color' },         // alias trong ProductItem.belongsTo(Color)
+                    { model: Size, as: 'size' },
+                    { model: Material, as: 'material' },
+                    { model: Coupon, as: 'coupon' },
+                    {
+                      model: ProductImage,
+                      as: 'images',                 // 👈 đây là chỗ bạn bị lỗi do thiếu alias
+                      attributes: ['url']
+                    }
+                  ]
+                },
+                { model: Category, as: 'category' },
+                { model: Brand, as: 'brand' }
+              ]
             });
+            
+            
+            
     
             return ApiResponse.success(res, {
                 status: 200,
@@ -280,7 +312,6 @@ class ProductController {
         }
     }
     
-
     async deleteProduct(req, res, next) {
         try {
             const { id: productId } = req.params;
@@ -326,7 +357,6 @@ class ProductController {
         }
     }
     
-
     async getAllProduct(req, res, next) {
         try {
           const {
@@ -449,8 +479,6 @@ class ProductController {
         }
       }
       
-    
-    
     async getDetailProduct(req, res, next) {
   try {
     const { id: productId } = req.params;
@@ -575,9 +603,6 @@ class ProductController {
             next(err);
         }
     }
-    
-    
-
 }
 
 module.exports = new ProductController()

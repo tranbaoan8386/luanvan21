@@ -62,23 +62,29 @@ export const convertStatusOrder = (status) => {
 }
 
 export const convertUpdateStatusOrder = (status) => {
-    switch (status) {
-        case 'pending':
-            return 'Chờ xác nhận'
-        case 'shipped':
-            return 'Giao cho vận chuyển'
-        case 'delivered':
-            return 'Đã giao hàng'
-        case 'cancelled':
-            return 'Hủy đơn hàng'
-    }
-}
-export const convertUpdateStatuspayment = (statusPayment) => {
-    switch (statusPayment) {
+  switch (status) {
+    case "pending":
+      return "CHỜ XÁC NHẬN";
+    case "shipped":
+      return "GIAO CHO VẬN CHUYỂN";
+    case "delivered":
+      return "ĐÃ GIAO HÀNG";
+    case "cancelled":
+      return "ĐÃ HỦY";
+    default:
+      return "CHỜ XÁC NHẬN"; // 👈 xử lý khi status null, undefined, ""
+  }
+};
+
+export const convertUpdateStatuspayment = (statusPayment = '') => {
+    switch (statusPayment.toLowerCase()) {
         case "paid":
             return "Đã thanh toán";
+        case "unpaid":
+            return "Chưa thanh toán";
         default:
             return statusPayment;
     }
 };
+
 

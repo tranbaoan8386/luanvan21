@@ -180,9 +180,9 @@ export default function Cart() {
     const productItem = carts.find(
       (cart) => cart.productItem.id === productItemId
     ).productItem;
-    if (Number(newQuantity) > productItem.unitlnStock) {
+    if (Number(newQuantity) > productItem.unitInStock) {
       setError(
-        `Số lượng sản phẩm vượt quá số lượng tồn kho. Tồn kho hiện tại: ${productItem.unitlnStock}`
+        `Số lượng sản phẩm vượt quá số lượng tồn kho. Tồn kho hiện tại: ${productItem.unitInStock}`
       );
       return;
     }
@@ -201,9 +201,9 @@ export default function Cart() {
     const productItem = carts.find(
       (cart) => cart.productItem.id === productItemId
     ).productItem;
-    if (quantities[productItemId] + 1 > productItem.unitlnStock) {
+    if (quantities[productItemId] + 1 > productItem.unitInStock) {
       setError(
-        `Số lượng sản phẩm vượt quá số lượng tồn kho. Tồn kho hiện tại: ${productItem.unitlnStock}`
+        `Số lượng sản phẩm vượt quá số lượng tồn kho. Tồn kho hiện tại: ${productItem.unitInStock}`
       );
       return;
     }

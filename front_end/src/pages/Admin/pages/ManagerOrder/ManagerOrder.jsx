@@ -143,9 +143,11 @@ export default function ManagerOrder() {
     keepPreviousData: true
   });
   const orders = ordersData?.data.orders || [];
+  console.log("Orders:", orders.map((o) => o.user));
+
 
   const filteredOrders = orders.filter((order) => {
-    const name = order.users?.email?.toLowerCase() || "";
+    const name = order.user?.email?.toLowerCase() || "";
     return name.includes(search.toLowerCase());
   });
 
@@ -162,6 +164,7 @@ export default function ManagerOrder() {
 
   const updateOrderStatusMutation = useMutation({
     mutationFn: async (updateData) => {
+      console.log("🚀 updateData", updateData); // Thêm dòng này
       switch (updateData.status) {
         case "cancelled":
           await orderApi.setCancelledOrder(updateData.id);
@@ -197,31 +200,39 @@ export default function ManagerOrder() {
     const id = idRef.current;
     const order = orders.find((order) => order.id === id);
     const currentStatus = order ? order.status : null;
+  
+    // Nếu không chọn gì thì trả về "pending"
+    const selectedStatus = value || "pending";
+  
     console.log("currentStatus", currentStatus);
     console.log("value", value);
-
+    console.log("selectedStatus", selectedStatus);
+  
     if (
       (currentStatus === "cancelled" &&
-        (value === "shipped" || value === "delivered")) ||
-      (currentStatus === "delivered" && value === "shipped") ||
-      (currentStatus === "pending" && value === "delivered") ||
-      (currentStatus === "shipped" && value === "cancelled") ||
-      (currentStatus === "delivered" && value === "cancelled") ||
-      (currentStatus === "delivered" && value === "delivered") ||
-      (currentStatus === "shipped" && value === "shipped") ||
-      (currentStatus === "cancelled" && value === "cancelled")
+        (selectedStatus === "shipped" || selectedStatus === "delivered")) ||
+      (currentStatus === "delivered" && selectedStatus === "shipped") ||
+      (currentStatus === "pending" && selectedStatus === "delivered") ||
+      (currentStatus === "shipped" && selectedStatus === "cancelled") ||
+      (currentStatus === "delivered" && selectedStatus === "cancelled") ||
+      (currentStatus === "delivered" && selectedStatus === "delivered") ||
+      (currentStatus === "shipped" && selectedStatus === "shipped") ||
+      (currentStatus === "cancelled" && selectedStatus === "cancelled")
     ) {
       toast.error("Không thể chuyển đổi Trạng thái");
       idRef.current = null;
       return;
     }
-
+  
     setOpen(false);
-    setSelectedValue(value);
-
-    updateOrderStatusMutation.mutate({ id, status: value });
+    setSelectedValue(selectedStatus);
+  
+    // ✅ Sử dụng selectedStatus thay vì value
+    updateOrderStatusMutation.mutate({ id, status: selectedStatus });
+  
     idRef.current = null;
   };
+  
 
   const handleClosePayment = (value) => {
     setOpenPayment(false);
@@ -309,41 +320,40 @@ export default function ManagerOrder() {
                           {order.id}
                         </TableCell>
                         <TableCell width='15%' align="left">
-                          <Button
-                            variant="outlined"
-                            onClick={() =>
-                              handleClickOpenPayment(
-                                order.id,
-                                order.statusPayment
-                              )
-                            }
-                          >
-                            {convertUpdateStatuspayment(order?.statusPayment)}
-                          </Button>
+                        <Button
+  variant="outlined"
+  onClick={() =>
+    handleClickOpenPayment(order.id, order.statusPayment)
+  }
+>
+  {convertUpdateStatuspayment(order?.statusPayment)}
+</Button>
+
                         </TableCell>
-                        <TableCell align="left">{order?.users?.name}</TableCell>
-                        <TableCell align="left">{order?.users?.email}</TableCell>
+                        <TableCell align="left">{order?.user?.name}</TableCell>
+                        <TableCell align="left">{order?.user?.email}</TableCell>
                         <TableCell width='11%' align="left">
                           {formatCurrency(order?.total)} VND
                         </TableCell>
                         <TableCell align="left">
-                          <Button
-                            color={
-                              order.status === "Đã đặt hàng"
-                                ? "warning"
-                                : order.status === "Đang giao"
-                                ? "primary"
-                                : order.status === "Đã giao hàng"
-                                ? "success"
-                                : order.status === "Đã hủy"
-                                ? "error"
-                                : "secondary"
-                            }
-                            onClick={() => handleClickOpen(order.id)}
-                            variant="outlined"
-                          >
-                            {convertUpdateStatusOrder(order?.status)}
-                          </Button>
+                        <Button
+  color={
+    order.status === "pending"
+      ? "warning"
+      : order.status === "shipped"
+      ? "primary"
+      : order.status === "delivered"
+      ? "success"
+      : order.status === "cancelled"
+      ? "error"
+      : "secondary"
+  }
+  onClick={() => handleClickOpen(order.id)}
+  variant="outlined"
+>
+  {convertUpdateStatusOrder(order?.status)}
+</Button>
+
                         </TableCell>
                         <TableCell align="left">{order?.address}</TableCell>
                         <TableCell align="left">

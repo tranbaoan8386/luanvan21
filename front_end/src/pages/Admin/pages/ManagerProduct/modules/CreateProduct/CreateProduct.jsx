@@ -167,11 +167,13 @@ export default function CreateProduct() {
   });
 
   const handleEditorChange = (content) => {
+    /* console.log("Nội dung editor:", content); */
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = content;
     const textContent = tempDiv.innerText || tempDiv.textContent;
-    setDescription(textContent);
+    setDescription(textContent.trim()); // thêm .trim() để loại bỏ khoảng trắng
   };
+  
 
   const onSubmit = handleSubmit((data) => {
     // Kiểm tra giá có chia hết cho 1000 không
@@ -222,10 +224,10 @@ export default function CreateProduct() {
       colorId,
       materialId: materialIds[colorId] || null,
       sizes: Object.keys(colorUnits[colorId] || {}).map((id) => {
-        const unitlnStock = parseInt(colorUnits[colorId][id], 10);
+        const unitInStock = parseInt(colorUnits[colorId][id], 10);
         return {
           id: parseInt(id, 10),
-          unitlnStock: isNaN(unitlnStock) ? 0 : unitlnStock
+          unitInStock: isNaN(unitInStock) ? 0 : unitInStock
         };
       }),
       images: (colorImages[colorId] || []).map((file) => file.name) // 👈 dùng tên file thật
@@ -233,7 +235,7 @@ export default function CreateProduct() {
 
     
     // Kiểm tra để đảm bảo không có giá trị null hoặc undefined trong unitInStock
-    if (colorsArray.some(color => color.sizes.some(size => size.unitlnStock === null || size.unitlnStock === undefined))) {
+    if (colorsArray.some(color => color.sizes.some(size => size.unitInStock === null || size.unitInStock === undefined))) {
       toast.error("Số lượng tồn kho không thể để trống hoặc là null");
       return;
     }

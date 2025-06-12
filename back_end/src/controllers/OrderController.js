@@ -13,157 +13,7 @@ const Cart = require('../models/Cart');
 const CartItem = require('../models/CartItem')
 
 class OrderController {
-    async setShipperOrder(req, res, next) {
-        try {
-            const { id: orderId } = req.params;
 
-            // Find the order by ID
-            const order = await Order.findOne({
-                where: {
-                    id: orderId
-                }
-            });
-
-            // If order is not found, throw an error
-            if (!order) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Không tìm thấy đơn hàng'
-                });
-            }
-
-            // Update the order status to 'shipped'
-            order.status = 'shipped';
-            await order.save();
-
-            // Return success response
-            return res.status(200).json({
-                success: true,
-                data: {
-                    message: 'Cập nhật đơn hàng thành công'
-                }
-            });
-        } catch (error) {
-            // Catch any unexpected errors and pass them to the next middleware
-            next(error);
-        }
-    }
-    async setDeliveredOrder(req, res, next) {
-        try {
-            const { id: orderId } = req.params;
-
-
-
-
-            // Find the order by ID
-            const order = await Order.findOne({
-                where: {
-                    id: orderId
-                }
-            });
-
-            // If order is not found, return 404
-            if (!order) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Không tìm thấy đơn hàng'
-                });
-            }
-
-            // Update the order status to 'delivered'
-            order.status = 'delivered';
-            await order.save();
-
-            // Return success response
-            return res.status(200).json({
-                success: true,
-                data: {
-                    message: 'Cập nhật đơn hàng thành công'
-                }
-            });
-        } catch (error) {
-            console.error('Error updating order status:', error); // Log the error details
-            return res.status(500).json({
-                success: false,
-                message: 'Internal Error.',
-                error: error.message
-            });
-        }
-    }
-    async setCancelledOrder(req, res, next) {
-        try {
-            const { id: orderId } = req.params;
-            // Find the order by ID
-            const order = await Order.findOne({
-                where: {
-                    id: orderId
-                }
-            });
-
-            // If order is not found, return 404
-            if (!order) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Không tìm thấy đơn hàng'
-                });
-            }
-
-            // Update the order status to 'delivered'
-            order.status = 'cancelled';
-            await order.save();
-
-            // Return success response
-            return res.status(200).json({
-                success: true,
-                data: {
-                    message: 'Cập nhật đơn hàng thành công'
-                }
-            });
-        } catch (error) {
-            console.error('Error updating order status:', error); // Log the error details
-            return res.status(500).json({
-                success: false,
-                message: 'Internal Error.',
-                error: error.message
-            });
-        }
-    }
-    async setPaymentOrder(req, res, next) {
-        try {
-            const { id: orderId } = req.params;
-            // Find the order by ID
-            const order = await Order.findOne({
-                where: {
-                    id: orderId
-                }
-            });
-
-            // If order is not found, return 404
-            if (!order) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Không tìm thấy đơn hàng'
-                });
-            }
-            order.statusPayment = 'paid';
-            await order.save();
-
-            // Return success response
-            return res.status(200).json({
-                success: true,
-                data: {
-                    message: 'Cập nhật đơn hàng thành công'
-                }
-            });
-        } catch (error) {
-            console.error('Error updating order status:', error); // Log the error details
-            return res.status(500).json({
-                success: false,
-                message: 'Internal Error.',
-                error: error.message
-            });
-        }
-    }
     async getAllOrder(req, res, next) {
         try {
             const { id: userId, role } = req.user;
@@ -183,7 +33,7 @@ class OrderController {
                                     {
                                         model: Product,
                                         as: 'product',
-                                        attributes: ['name', 'price']
+                                        attributes: ['id', 'name']
                                     },
                                     {
                                         model: Color,
@@ -201,7 +51,7 @@ class OrderController {
                         {
                             model: User,
                             attributes: ['id', 'name', 'email'],
-                            as: 'users'
+                            as: 'user'
                         }
                     ],
                     order: [['createDate', 'DESC']]
@@ -223,7 +73,7 @@ class OrderController {
                                     {
                                         model: Product,
                                         as: 'product',
-                                        attributes: ['name', 'price']
+                                        attributes: ['id', 'name']
                                     },
                                     {
                                         model: Color,
@@ -241,7 +91,7 @@ class OrderController {
                         {
                             model: User,
                             attributes: ['id', 'name', 'email'],
-                            as: 'users'
+                            as: 'user'
                         }
                     ],
                     order: [['createDate', 'DESC']]
@@ -255,11 +105,10 @@ class OrderController {
                 }
             });
         } catch (error) {
+            console.log('🔴 ERROR:', error);
             next(error);
         }
     }
-
-
     async getOrderById(req, res, next) {
         try {
             const { id: userId, role } = req.user;
@@ -284,7 +133,7 @@ class OrderController {
                                     {
                                         model: Product,
                                         as: 'product',
-                                        attributes: ['name', 'price']
+                                        attributes: ['id', 'name']
                                     },
                                     {
                                         model: Color,
@@ -302,7 +151,7 @@ class OrderController {
                         {
                             model: User,
                             attributes: ['id', 'name', 'email'],
-                            as: 'users'
+                            as: 'user'
                         }
                     ]
                 });
@@ -324,7 +173,7 @@ class OrderController {
                                 {
                                     model: Product,
                                     as: 'product',
-                                    attributes: ['name', 'price']
+                                    attributes: ['id', 'name']
                                 },
                                 {
                                     model: Color,
@@ -351,11 +200,10 @@ class OrderController {
                 data: order
             });
         } catch (error) {
+            console.error("❌ getOrderById error:", error);
             next(error);
         }
     }
-
-
     async getSale(req, res) {
         try {
             const dailyRevenue = await Order.findAll({
@@ -406,6 +254,7 @@ class OrderController {
     }
 
 
+<<<<<<< HEAD
    async createOrder(req, res, next) {
   try {
     console.log('🟡 DỮ LIỆU TỪ FRONTEND:', req.body);
@@ -517,6 +366,100 @@ class OrderController {
 
 
 
+=======
+
+    async createOrder(req, res, next) {
+        try {
+            const { id: userId } = req.user;
+            const {
+                total,
+                phone,
+                email,
+                fullname,
+                address,
+                paymentMethod,
+                orders_item,
+                note
+            } = req.body;
+    
+            // Kiểm tra tnh hợp lệ của `orders_item`
+            if (!Array.isArray(orders_item) || orders_item.length === 0) {
+                throw new Error('orders_item phải là một mảng và không được rỗng');
+            }
+    
+            // Tạo đơn hàng
+            const order = await Order.create({
+                total,
+                phone,
+                email,
+                fullname,
+                address,
+                userId,
+                status: 'ordered',
+                statusPayment: paymentMethod === 'cash' ? 'unpaid' : 'paid',
+                note
+            });
+    
+            const createdOrderItems = [];
+    
+            for (const item of orders_item) {
+                const { productItemId, quantity } = item;
+    
+                // Kiểm tra cấu trúc item
+                if (!productItemId || !quantity) {
+                    throw new Error('Mỗi sản phẩm trong orders_item cần có productItemId và quantity');
+                }
+    
+                // Tạo OrderItem
+                const orderItem = await OrderItem.create({
+                    orderId: order.id,
+                    productItemId,
+                    quantity
+                });
+                createdOrderItems.push(orderItem);
+    
+                // Cập nhật tồn kho sản phẩm
+                const productItem = await ProductItem.findByPk(productItemId);
+                if (!productItem) {
+                    throw new Error(`Không tìm thấy sản phẩm với ID: ${productItemId}`);
+                }
+    
+                const newStock = productItem.unitInStock - quantity;
+                if (newStock < 0) {
+                    throw new Error(`Không đủ tồn kho cho sản phẩm ${productItemId}`);
+                }
+    
+                await productItem.update({ unitInStock: newStock });
+    
+                // Cập nhật số lượng đã bán của sản phẩm
+                const product = await Product.findByPk(productItem.productId);
+                if (product) {
+                    await product.update({
+                        sold: product.sold + quantity
+                    });
+                }
+            }
+    
+            const info_order = {
+                ...order.dataValues,
+                orders_item: createdOrderItems
+            };
+    
+            return res.status(200).json({
+                success: true,
+                data: {
+                    info_order,
+                    message: 'Đặt hàng thành công'
+                }
+            });
+        } catch (err) {
+            return res.status(400).json({
+                success: false,
+                message: err.message
+            });
+        }
+    }
+>>>>>>> bb7ef2b56946aea9747c52f12512e6a76b6b72cb
     async deleteOrder(req, res, next) {
     try {
         const { id: orderId } = req.params;
@@ -598,8 +541,6 @@ class OrderController {
             next(err);
         }
     }
-
-
     async setShipperOrder(req, res, next) {
         try {
             const { id: orderId } = req.params;
@@ -713,9 +654,6 @@ class OrderController {
             next(error);
         }
     }
-
-
-
     async setPaymentOrder(req, res, next) {
         try {
             const { id: orderId } = req.params;
