@@ -480,89 +480,78 @@ class ProductController {
       }
       
     async getDetailProduct(req, res, next) {
-        try {
-          const { id: productId } = req.params;
-      
-          const product = await Product.findByPk(productId, {
-            include: [
-              { model: Category, as: 'category', attributes: ['id', 'name'] },
-              { model: Brand, as: 'brand', attributes: ['id', 'name'] },
-            ]
-          });
-      
-          if (!product) {
-            return ApiResponse.error(res, {
-              status: 404,
-              data: { message: 'Không tìm thấy sản phẩm' }
-            });
-          }
-      
-          const productItems = await ProductItem.findAll({
-            where: { products_id: productId },
-            include: [
-              { model: Color, as: 'color', attributes: ['id', 'colorCode'] },
-              { model: Size, as: 'size', attributes: ['id', 'name'] },
-              { model: Material, as: 'material', attributes: ['id', 'name'] },
-              { model: ProductImage, as: 'images', attributes: ['url'] },
-              { model: Coupon, as: 'coupon', attributes: ['id', 'price'] } 
-            ]
-          });
-            console.log(JSON.stringify(productItems, null, 2));
-      
-          const colorMap = {};
-      
-          for (const item of productItems) {
-            const colorId = item.color_id;
-      
-            if (!colorMap[colorId]) {
-              colorMap[colorId] = {
-                colorId,
-                colorCode: item.color?.colorCode || '',
-                materialId: item.materials_id,
-                materialName: item.material?.name || '',
-                images: item.images?.map(img => img.url) || [],
-                sizes: []
-              };
+  try {
+    const { id: productId } = req.params;
+
+    const product = await Product.findByPk(productId, {
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name']
+        },
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'name']
+        },
+        // {
+        //   model: Coupon,
+        //   as: 'productCoupon',
+        //   attributes: ['id', 'price']
+        // },
+        {
+          model: ProductItem,
+          as: 'productItems',
+          attributes: ['id', 'price', 'unitInStock'],
+          include: [
+            {
+              model: Color,
+              as: 'color',
+              attributes: ['id', 'name', 'colorCode']
+            },
+            {
+              model: Size,
+              as: 'size',
+              attributes: ['id', 'name']
+            },
+            {
+              model: Material,
+              as: 'material',
+              attributes: ['id', 'name']
+            },
+            {
+              model: ProductImage,
+              as: 'images',
+              attributes: ['id', 'url']
             }
-      
-            colorMap[colorId].sizes.push({
-              sizeId: item.size_id,
-              sizeName: item.size?.name || '',
-              stock: item.unitInStock,
-              price: item.price
-            });
-          }
-      
-          const colors = Object.values(colorMap);
-      
-          return ApiResponse.success(res, {
-            status: 200,
-            data: {
-              product: {
-                id: product.id,
-                name: product.name,
-                description: product.description,
-                avatar: product.avatar,
-                brandId: product.brand?.id || null,
-                categoryId: product.category?.id || null,
-                coupon: product.productCoupon || null,
-                productCouponId: product.productCoupon?.id || null,
-                categories_id: product.category?.id || null,
-                brands_id: product.brand?.id || null,
-                price: productItems[0]?.price || 0,
-                colors,
-                productItems // ✅ thêm dòng này nếu cần debug hoặc sử dụng lại logic raw
-              }
-            }
-          });
-          
-      
-        } catch (err) {
-          console.log(err);
-          next(err);
+          ]
         }
+      ]
+    });
+
+    if (!product) {
+      return ApiResponse.error(res, {
+        status: 404,
+        data: { message: 'Không tìm thấy sản phẩm' }
+      });
     }
-        
+
+    return ApiResponse.success(res, {
+      status: 200,
+      data: { product }
+    });
+  } catch (err) {
+    console.error('❌ Lỗi getDetailProduct:', err);
+    next(err);
+  }
+}
+
+
+    
+    
+
+    
     async getProductWithImages(req, res, next) {
         try {
             const { id } = req.params;

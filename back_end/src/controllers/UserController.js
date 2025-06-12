@@ -5,6 +5,8 @@ const ErrorResponse = require('../response/ErrorResponse')
 const ApiResponse = require('../response/ApiResponse')
 const { env } = require('../config/env')
 const { Op } = require('sequelize')
+const Role = require('../models/Role')
+
 const Address = require('../models/Address')
 
 class UserController {
@@ -33,29 +35,36 @@ class UserController {
             next(error);
         }
     }
-    
     async getMe(req, res, next) {
-        try {
-            const { id: userId } = req.user;
-            const user = await User.findByPk(userId, {
-                attributes: {
-                    exclude: ['password']
-                },
-                include: [{
-                    model: Address
-                }]
-            });
+  try {
+    const { id: userId } = req.user;
 
-            return ApiResponse.success(res, {
-                success: true,
-                data: {
-                    profile: user
-                }
-            });
-        } catch (err) {
-            next(err);
+    const user = await User.findByPk(userId, {
+      attributes: {
+        exclude: ['password']
+      },
+      include: [
+        {
+          model: Address,
+          as: 'Address',       // Đúng alias đã khai báo trong quan hệ
+          required: false      // Tránh lỗi nếu user chưa có địa chỉ
         }
-    }
+      ]
+    });
+
+    return ApiResponse.success(res, {
+      success: true,
+      data: {
+        profile: user
+      }
+    });
+  } catch (err) {
+    // ✅ In lỗi chi tiết ra console để debug lỗi 500
+    console.error('❌ Lỗi tại getMe:', err);
+    next(err);
+  }
+}
+
     async getUser(req, res, next) {
         try {
             const { id: userId } = req.params

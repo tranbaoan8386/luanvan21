@@ -11,17 +11,17 @@ const CartItem = sequelize.define(
       primaryKey: true,
       autoIncrement: true
     },
-    carts_id: { // ✅ đổi tên theo bảng
+    carts_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
       references: {
         model: Cart,
         key: 'id'
       }
     },
-    products_item_id: { // ✅ đổi tên theo bảng
+    products_item_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
       references: {
         model: ProductItem,
         key: 'id'
@@ -29,14 +29,16 @@ const CartItem = sequelize.define(
     },
     quantity: {
       type: DataTypes.INTEGER,
-      allowNull: true, // vì bảng cho phép null
-      defaultValue: 0
+      allowNull: false,
+      defaultValue: 1
     }
   },
   {
     tableName: 'carts_item',
-    timestamps: false // ✅ đúng vì bảng không có createdAt, updatedAt
+    timestamps: false
   }
 );
+
+
 
 module.exports = CartItem;

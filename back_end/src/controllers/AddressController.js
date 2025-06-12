@@ -1,86 +1,98 @@
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const User = require('../models/User')
-const Address = require('../models/Address')
-const ApiResponse = require('../response/ApiResponse')
-const { env } = require('../config/env')
-const { Op } = require('sequelize')
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const Address = require('../models/Address');
+const ApiResponse = require('../response/ApiResponse');
+const { env } = require('../config/env');
+const { Op } = require('sequelize');
 
 class AddressController {
+    // Tạo hoặc cập nhật địa chỉ
     async createAddress(req, res, next) {
-        const { street, district, village, province, phone } = req.body;
+        const { address_line, district, city, ward, phone, name } = req.body;
         const { id: userId } = req.user;
+
         try {
-            console.log('User ID:', userId); // Log chi tiết về user ID
-            let address = await Address.findOne({ where: { userId } });
-            console.log('Existing Address:', address); // Log chi tiết về địa chỉ hiện có (nếu có)
+            console.log('User ID:', userId);
+            let address = await Address.findOne({ where: { users_id: userId } });
+            console.log('Existing Address:', address);
 
             if (address) {
-                address.street = street || address.street;
+                // Cập nhật địa chỉ hiện tại
+                address.address_line = address_line || address.address_line;
                 address.district = district || address.district;
-                address.village = village || address.village;
-                address.province = province || address.province;
+                address.city = city || address.city;
+                address.ward = ward || address.ward;
                 address.phone = phone || address.phone;
+                address.name = name || address.name;
                 await address.save();
 
-                return res.json({ message: 'Address updated successfully', address });
+                return res.json({ message: 'Cập nhật địa chỉ thành công', address });
             } else {
+                // Tạo mới nếu chưa có
                 address = await Address.create({
-                    userId,
-                    street,
+                    users_id: userId,
+                    address_line,
                     district,
-                    village,
-                    province,
-                    phone
+                    city,
+                    ward,
+                    phone,
+                    name,
+                    is_default: false
                 });
 
-                return res.json({ message: 'Address added successfully', address });
+                return res.json({ message: 'Thêm địa chỉ thành công', address });
             }
         } catch (error) {
-            console.error('Address error:', error); // Log chi tiết về lỗi
-            res.status(500).json({ message: 'Internal server error' });
+            console.error('Lỗi xử lý địa chỉ:', error);
+            res.status(500).json({ message: 'Lỗi server khi lưu địa chỉ' });
         }
     }
+
+    // Lấy địa chỉ theo user
     async getAddressById(req, res) {
         const { id: userId } = req.user;
 
         try {
-            const address = await Address.findOne({ where: { userId } });
+            const address = await Address.findOne({ where: { users_id: userId } });
 
             if (!address) {
-                return res.status(404).json({ message: 'Address not found' });
+                return res.status(404).json({ message: 'Không tìm thấy địa chỉ' });
             }
 
             return res.json({ address });
         } catch (error) {
-            console.error('Address retrieval error:', error);
-            res.status(500).json({ message: 'Internal server error' });
+            console.error('Lỗi lấy địa chỉ:', error);
+            res.status(500).json({ message: 'Lỗi server' });
         }
     }
+
+    // Cập nhật địa chỉ
     async updateAddress(req, res) {
         const { id: userId } = req.user;
-        const { street, district, village, province, phone } = req.body;
+        const { address_line, district, city, ward, phone, name } = req.body;
 
         try {
-            let address = await Address.findOne({ where: { userId } });
+            let address = await Address.findOne({ where: { users_id: userId } });
 
             if (!address) {
-                return res.status(404).json({ message: 'Address not found' });
+                return res.status(404).json({ message: 'Không tìm thấy địa chỉ' });
             }
 
-            address.street = street || address.street;
+            address.address_line = address_line || address.address_line;
             address.district = district || address.district;
-            address.village = village || address.village;
-            address.province = province || address.province;
+            address.city = city || address.city;
+            address.ward = ward || address.ward;
             address.phone = phone || address.phone;
+            address.name = name || address.name;
             await address.save();
 
-            return res.json({ message: 'Address updated successfully', address });
+            return res.json({ message: 'Cập nhật địa chỉ thành công', address });
         } catch (error) {
-            console.error('Address update error:', error);
-            res.status(500).json({ message: 'Internal server error' });
+            console.error('Lỗi cập nhật địa chỉ:', error);
+            res.status(500).json({ message: 'Lỗi server' });
         }
     }
 }
-module.exports = new AddressController()
 
+module.exports = new AddressController();

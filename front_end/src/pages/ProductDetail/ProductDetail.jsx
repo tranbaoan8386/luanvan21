@@ -36,15 +36,18 @@ export default function ProductDetail() {
   const { isAuthenticated, profile: user } = useContext(AppContext);
 
   const navigate = useNavigate();
+  
   const { data: productData } = useQuery({
-    queryKey: ["product", id],
-    queryFn: () => productApi.getDetailProduct(id)
-  });
+  queryKey: ["product", id],
+  queryFn: () => productApi.getDetailProduct(id)
+});
 
-  const { data: productDa } = useQuery({
-    queryKey: ["products", id],
-    queryFn: () => productApi.getProductWithImages(id)
-  });
+
+
+  // const { data: productDa } = useQuery({
+  //   queryKey: ["products", id],
+  //   queryFn: () => productApi.getProductWithImages(id)
+  // });
 
   const [quantity, setQuantity] = useState(1);
   const [currentIndexImage, setCurrentIndexImage] = useState([0, 5]);
@@ -66,10 +69,42 @@ export default function ProductDetail() {
   const reviews = reviewData?.data || [];
 
   const product = productData?.data.product;
-const images = useMemo(
-  () => productDa?.data?.images || [],
-  [productDa?.data?.images]
-);
+
+  const colors = useMemo(() => {
+  if (!product?.productItems) return [];
+  const colorMap = {};
+
+  product.productItems.forEach((item) => {
+    const colorId = item.color?.id;
+    const sizeId = item.size?.id;
+    if (!colorId || !sizeId) return;
+
+    if (!colorMap[colorId]) {
+      colorMap[colorId] = {
+        id: colorId,
+        name: item.color.name,
+        colorCode: item.color.colorCode,
+        sizes: []
+      };
+    }
+
+    colorMap[colorId].sizes.push({
+      sizeId,
+      sizeName: item.size.name,
+      stock: item.unitInStock,
+      productItemId: item.id
+    });
+  });
+
+  return Object.values(colorMap);
+}, [product]);
+
+  const images = useMemo(() => product?.images || [], [product?.images]);
+
+// const images = useMemo(
+//   () => productDa?.data?.images || [],
+//   [productDa?.data?.images]
+// );
 
  const image = useMemo(
   () => (product?.avatar ? [product.avatar] : []),
@@ -179,10 +214,12 @@ const images = useMemo(
         return;
     }
 
+const selectedColor = colors.find((color) => color.id === selectedColorId);
     // Tìm productItem dựa trên colorId
-    const productItem = product.productsDetail.find(
-        (detail) => detail.colorId === selectedColorId
-    );
+    const productItem = selectedColor?.sizes.find(
+  (size) => size.sizeId === selectedSizeId
+);
+
 
     if (!productItem) {
         alert("Không tìm thấy sản phẩm với màu đã chọn.");
@@ -190,7 +227,8 @@ const images = useMemo(
     }
 
     // Kiểm tra tồn kho
-    const selectedColor = product.colors.find((color) => color.id === selectedColorId);
+    
+
     const selectedSize = selectedColor?.sizes.find((size) => size.sizeId === selectedSizeId);
     
     if (!selectedSize || selectedSize.stock <= 0) {
@@ -201,10 +239,10 @@ const images = useMemo(
     // Gọi API thêm vào giỏ hàng với productItem.id và size được chọn
     addToCartMutation.mutate(
         {
-            ProductItemId: productItem.id,
+            products_item_id: productItem.productItemId, // ✅ đúng tên backend
             quantity,
-            colorId: selectedColorId,
-            sizeId: selectedSizeId  // Gửi size được chọn
+            color_id: selectedColorId,
+            size_id: selectedSizeId
         },
         {
             onSuccess: (data) => {
@@ -223,7 +261,8 @@ const images = useMemo(
 
   
   const getStockQuantity = (colorId, sizeId) => {
-    const selectedColor = product.colors.find((color) => color.id === colorId);
+   const selectedColor = colors.find((color) => color.id === colorId);
+
     const selectedSize = selectedColor?.sizes.find((size) => size.sizeId === sizeId);
     return selectedSize?.stock || 0;
   };
@@ -309,7 +348,8 @@ const originalPrice = firstProductItem?.price || 0;
 const discountPrice = firstProductItem?.coupon?.price || 0;
 const finalPrice = originalPrice - discountPrice;
 
-  const selectedColor = product.colors?.find((color) => color.id === selectedColorId);
+  const selectedColor = colors.find((color) => color.id === selectedColorId);
+
 
   const sizesForSelectedColor = selectedColor ? selectedColor.sizes : [];
   return (
@@ -471,8 +511,9 @@ const finalPrice = originalPrice - discountPrice;
                 </Typography>
                 {/* Render color buttons */}
                 <div>
-                  {Array.isArray(product.colors) &&
-  product.colors.map((color) => (
+                  {colors.length > 0 &&
+ colors.map((color) => (
+
     <Button
       key={color.id} // ✅ nên thêm key để tránh warning React
       variant="outlined"

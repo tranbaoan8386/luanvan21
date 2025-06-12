@@ -156,16 +156,25 @@ export default function Cart() {
     }
   });
 
-  const deleteProductFromCartMutation = useMutation({
-    mutationFn: (body) => cartApi.deleteProductCart(body),
-    onSuccess: () => {
+ const deleteProductFromCartMutation = useMutation({
+  mutationFn: (body) => cartApi.deleteProductCart(body),
+  onSuccess: (data) => {
+    if (data?.success) {
       handleRefetchCart();
-      // Automatically refresh the page on successful deletion
-    },
-    onError: (error) => {
-      toast.error("Lỗi khi xoá sản phẩm. Vui lòng thử lại.");
+    } else {
+      // Bạn có thể giữ hoặc bỏ dòng này, tuỳ muốn hiển thị hay không
+      console.warn('Xoá thất bại:', data?.message || 'Không rõ lý do');
+      // toast.warn(data?.message || 'Xóa không thành công.');
     }
-  });
+  },
+  onError: (error) => {
+    
+    console.warn('Không thể kết nối server khi xoá sản phẩm:', error.message);
+    // Nếu muốn ẩn hẳn luôn, có thể để trống hoặc bỏ luôn phần onError
+  }
+});
+
+
 
   const handleQuantityChange = (productItemId, newQuantity) => {
     const productItem = carts.find(
@@ -231,7 +240,8 @@ export default function Cart() {
   const calculateTotalCart = () => {
     if (carts && carts.length > 0) {
       return carts.reduce((total, cart) => {
-        const productPrice = cart.productItem?.product?.price || 0;
+        const productPrice = cart.productItem?.price
+ || 0;
         const couponDiscount =
           cart.productItem?.product?.productCoupon?.price || 0;
         const quantity = quantities[cart.productItem.id] || cart.quantity;
@@ -450,13 +460,15 @@ export default function Cart() {
     if (hasError) {
       return;
     }
-    createAddressMutation.mutate({
-      street: address.street,
-      village: address.village,
-      district: address.district,
-      province: address.province,
-      phone: phone
-    });
+   createAddressMutation.mutate({
+  address_line: address.street,
+  ward: address.village,
+  district: address.district,
+  city: address.province,
+  phone: phone,
+  name: profile?.data?.profile?.name || "Khách hàng"
+});
+
   };
 
   const handleUpdateAddress = (e) => {
@@ -499,11 +511,12 @@ export default function Cart() {
     }
 
     updateAddressMutation.mutate({
-      street: address.street,
-      village: address.village,
-      district: address.district,
-      province: address.province,
-      phone: phone
+     address_line: address.street,
+  ward: address.village,
+  district: address.district,
+  city: address.province,
+  phone: phone,
+  name: profile?.data?.profile?.name || "Khách hàng"
     });
   };
 
@@ -513,10 +526,11 @@ export default function Cart() {
     e.preventDefault();
     // Kiểm tra nếu user chưa có địa chỉ
     if (
-      !profile?.data?.profile?.Address?.street ||
-      !profile?.data?.profile?.Address?.village ||
-      !profile?.data?.profile?.Address?.district ||
-      !profile?.data?.profile?.Address?.province
+      !profile?.data?.profile?.Address?.address_line ||
+!profile?.data?.profile?.Address?.ward ||
+!profile?.data?.profile?.Address?.city ||
+!profile?.data?.profile?.Address?.district
+
     ) {
       toast.error("Vui lòng thêm địa chỉ trước khi đặt hàng.");
       return;
@@ -533,32 +547,46 @@ export default function Cart() {
     }
     let fullAddress = `${profile?.data?.profile?.Address?.street}, ${profile?.data?.profile?.Address?.village}, ${profile?.data?.profile?.Address?.district}, ${profile?.data?.profile?.Address?.province}`;
 
-    try {
-      await createOrderMutation.mutateAsync({
-        total: totalCart - couponValue,
-        phone,
-        email: profile?.data?.profile?.email,
-        fullname: profile?.data?.profile?.name,
-        address: fullAddress,
-        orders_item: carts.map((cart) => ({
-          productItemId: cart.productItem.id,
-          quantity: quantities[cart.productItem.id]
-        })),
-        note,
-        paymentMethod
-      });
+   try {
+  const discount = couponValue || 0;
+  const total = totalCart;
+  const totalPayable = total - discount;
 
-      for (const cart of carts) {
-        await deleteProductFromCartMutation.mutateAsync({
-          productItemId: cart.productItem.id
-        });
-      }
-      // toast.success("Địa chỉ mới đã được thêm!");
-      handleRefetchCart();
-      navigate("/");
-    } catch (error) {
-      toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
+  await createOrderMutation.mutateAsync({
+    total,
+    total_discount: discount,
+    total_payable: totalPayable,
+    phone: profile?.data?.profile?.phone, // 👉 Đúng trường
+    email: profile?.data?.profile?.email,
+    fullname: profile?.data?.profile?.name,
+    address: fullAddress, // ví dụ: "123 Nguyễn Trãi, Phường 5, Quận 5, TP.HCM"
+    orders_item: carts.map((cart) => ({
+      productItemId: cart.productItem.id,
+      quantity: quantities[cart.productItem.id]
+    })),
+    note,
+    paymentMethod
+  });
+
+
+  // ✅ Không để việc xóa giỏ ảnh hưởng toast chính
+  for (const cart of carts) {
+    try {
+      await deleteProductFromCartMutation.mutateAsync({
+        productItemId: cart.productItem.id
+      });
+    } catch (err) {
+      console.warn(`⚠️ Không thể xoá sản phẩm ID ${cart.productItem.id}:`, err);
     }
+  }
+
+  await handleRefetchCart();
+  toast.success("Đặt hàng thành công!"); // ✅ Đặt ở đây
+  navigate("/");
+} catch (error) {
+  toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
+}
+
 
     setOpen(false);
   };
@@ -618,47 +646,42 @@ export default function Cart() {
                     }}
                   >
                     <TableCell width="500px" component="th" scope="row">
-                      <div className="cart-product">
-                        <img
-                          src={BASE_URL_IMAGE + cart.productItem.product?.image}
-                          alt={
-                            cart.productItem.products?.name || "Product Image"
-                          }
-                        />
-                        <div className="cart-product-content">
-                          <span className="cart-product-name">
-                            {cart.productItem?.product?.name || "Product Name"}
-                          </span>
-                          <p className="cart-product-color">
-                            <div style={{color:'#c50e0e' } }>Màu sắc:</div> {cart.productItem.colorInfo && (
-                            // <p className="cart-product-color">
-                            //   Màu: {cart.productItem.colorInfo.colorCode}
-                            // </p>
-                              <Typography
-                              sx={{
-                                backgroundColor: cart.productItem.colorInfo.colorCode,  // Đặt nền màu bằng tên màu Hex
-                                width: "20px",               // Kích thước của màu sắc
-                                height: "20px",              // Kích thước của màu sắc
-                                borderRadius: "50%",         // Để hình tròn
-                                border:"1px solid #ddd",
-                                display: "inline-block",     // Hiển thị kiểu inline để gắn với text
-                                marginTop: '0px',
-                                marginLeft: '5px'
-                              }}
-                              ></Typography>
-                            
-                            )}
-                          
-                          {/* <Typography color="black">{cart.color.colorCode}</Typography> */}
-                          </p>
+  <div className="cart-product">
+    <img
+      src={BASE_URL_IMAGE + cart.productItem.product?.avatar}
 
-                          <p className="cart-product-size">
-                            Size: {cart.productItem.sizeInfo.name}
-                          </p>
-                        </div>
-                        
-                      </div>
-                    </TableCell>
+      alt={cart.productItem.product?.name || "Product Image"}
+    />
+    <div className="cart-product-content">
+      <span className="cart-product-name">
+        {cart.productItem?.product?.name || "Product Name"}
+      </span>
+      <div className="cart-product-color">
+  <div style={{ color: "#c50e0e" }}>Màu sắc:</div>
+  {cart.productItem.color && (
+    <Typography
+      sx={{
+        backgroundColor: cart.productItem.color.colorCode,
+        width: "20px",
+        height: "20px",
+        borderRadius: "50%",
+        border: "1px solid #ddd",
+        display: "inline-block",
+        marginTop: "0px",
+        marginLeft: "5px"
+      }}
+    ></Typography>
+  )}
+</div>
+
+      <div className="cart-product-size">
+  Size: {cart.productItem.size?.name}
+</div>
+
+    </div>
+  </div>
+</TableCell>
+
                     <TableCell align="right">
                       <div className="quantity">
                         <div
@@ -707,16 +730,17 @@ export default function Cart() {
                     <TableCell align="right">
                      
                       {formatCurrency(
-                        cart.productItem?.product?.price -
-                        cart.productItem.product.productCoupon.price
+                       (cart.productItem?.price || 0) - (cart.productItem?.product?.productCoupon?.price || 0)
+
                       )}
                     </TableCell>
                     <TableCell align="right">
                       {formatCurrency(
-                        (cart.productItem?.product?.price -
-                          cart.productItem.product.productCoupon.price) *
-                        (quantities[cart.productItem.id] || cart.quantity) // Ensure quantity is a number
-                      )}
+  ((cart.productItem?.price || 0) -
+    (cart.productItem?.product?.productCoupon?.price || 0)) *
+    (quantities[cart.productItem.id] || cart.quantity)
+)
+}
                     </TableCell>
                     <TableCell align="right">
                       <Button
@@ -825,7 +849,7 @@ export default function Cart() {
                   mb={1}
                   fontSize="15px"
                   fontWeight="500"
-                  component="p"
+                  component="div"
                 >
                   Mã khuyến mãi (nếu có)
                 </Typography>

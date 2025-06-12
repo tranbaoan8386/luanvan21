@@ -14,7 +14,7 @@ const Cart = require('./Cart');
 const CartItem = require('./CartItem');
 const Review = require('./Review');
 const Role = require('./Role');
-
+const Address = require('./Address');
 
 // ===== CATEGORY - PRODUCT =====
 Category.hasMany(Product, { foreignKey: 'categories_id' });
@@ -29,7 +29,7 @@ Product.belongsTo(Brand, { foreignKey: 'brands_id', as: 'brand' });
 Product.hasMany(ProductItem, { foreignKey: 'products_id', as: 'productItems' });
 ProductItem.belongsTo(Product, { foreignKey: 'products_id', as: 'product' });
 
-// ===== PRODUCT ITEM - PRODUCT IMAGE ===== ✅ Sửa đúng theo thiết kế mới
+// ===== PRODUCT ITEM - PRODUCT IMAGE =====
 ProductItem.hasMany(ProductImage, { foreignKey: 'products_item_id', as: 'images' });
 ProductImage.belongsTo(ProductItem, { foreignKey: 'products_item_id', as: 'productItem' });
 
@@ -72,29 +72,29 @@ ProductItem.belongsToMany(Order, {
 });
 
 // ===== USER - CART - CART ITEM - PRODUCT ITEM =====
-User.hasOne(Cart, { foreignKey: 'userId', as: 'cart' });
-Cart.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasOne(Cart, { foreignKey: 'users_id', as: 'cart' });
+Cart.belongsTo(User, { foreignKey: 'users_id', as: 'user' });
 
-Cart.hasMany(CartItem, { foreignKey: 'cartId', as: 'cartItems' });
-CartItem.belongsTo(Cart, { foreignKey: 'cartId', as: 'cart' });
+Cart.hasMany(CartItem, { foreignKey: 'carts_id', as: 'cartItems' });
+CartItem.belongsTo(Cart, { foreignKey: 'carts_id', as: 'cart' });
 
-CartItem.belongsTo(ProductItem, { foreignKey: 'productItemId', as: 'productItem' });
-
-// (Optional) Size in CartItem
-CartItem.belongsTo(Size, { foreignKey: 'sizeId', as: 'size' });
-Size.hasMany(CartItem, { foreignKey: 'sizeId', as: 'cartItems' });
+CartItem.belongsTo(ProductItem, { foreignKey: 'products_item_id', as: 'productItem' });
 
 // ===== USER - REVIEW - PRODUCT =====
-User.hasMany(Review, { foreignKey: 'userId', as: 'reviews' });
-Review.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(Review, { foreignKey: 'users_id', as: 'reviews' });
+Review.belongsTo(User, { foreignKey: 'users_id', as: 'user' });
 
-Product.hasMany(Review, { foreignKey: 'productId', as: 'reviews' });
-Review.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+Product.hasMany(Review, { foreignKey: 'products_id', as: 'reviews' });
+Review.belongsTo(Product, { foreignKey: 'products_id', as: 'product' });
 
-// (Optional) Reply trong Review
-Review.hasMany(Review, { foreignKey: 'parentId', as: 'replies' });
-Review.belongsTo(Review, { foreignKey: 'parentId', as: 'parent' });
+// ===== REPLY - REVIEW =====
+Review.belongsTo(Review, { foreignKey: 'parent_id', as: 'parent' });
+Review.hasMany(Review, { foreignKey: 'parent_id', as: 'replies' });
 
 // ===== ROLE - USER =====
 Role.hasMany(User, { foreignKey: 'roleId', as: 'users' });
 User.belongsTo(Role, { foreignKey: 'roleId', as: 'role' });
+
+// ===== USER - ADDRESS =====
+User.hasOne(Address, { foreignKey: 'users_id', as: 'Address' });
+Address.belongsTo(User, { foreignKey: 'users_id', as: 'user' });
