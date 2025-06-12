@@ -10,7 +10,7 @@ const Cart = sequelize.define(
       primaryKey: true,
       autoIncrement: true
     },
-    users_id: { // ✅ Đổi tên cho khớp bảng
+    users_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
@@ -18,15 +18,25 @@ const Cart = sequelize.define(
         key: 'id'
       }
     },
+    // ✅ Thêm alias userId để dùng trong code JS
+    userId: {
+      type: DataTypes.VIRTUAL,
+      get() {
+        return this.getDataValue('users_id');
+      },
+      set(value) {
+        this.setDataValue('users_id', value);
+      }
+    },
     isPaid: {
       type: DataTypes.BOOLEAN,
-      allowNull: true, // ✅ Bảng cho phép null
+      allowNull: true,
       defaultValue: false
     }
   },
   {
     tableName: 'carts',
-    timestamps: true // ✅ Vì bảng có createdAt, updatedAt
+    timestamps: true
   }
 );
 

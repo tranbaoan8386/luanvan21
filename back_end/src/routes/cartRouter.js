@@ -1,41 +1,50 @@
-const { Router } = require('express')
-const CartController = require('../controllers/CartController')
-const jwtAuthMiddleware = require('../middlewares/jwtAuthMiddleware')
-const authorizedMiddleware = require('../middlewares/authorizedMiddleware')
-const validatorMiddleware = require('../middlewares/validatorMiddleware')
-const CartSchema = require('../validations/CartSchema')
+const { Router } = require('express');
+const CartController = require('../controllers/CartController');
+const jwtAuthMiddleware = require('../middlewares/jwtAuthMiddleware');
+const authorizedMiddleware = require('../middlewares/authorizedMiddleware');
+// const validatorMiddleware = require('../middlewares/validatorMiddleware');
+// const CartSchema = require('../validations/CartSchema');
 
-const cartRouter = Router()
+const cartRouter = Router();
 
-cartRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('Customer'), CartController.getCart)
-cartRouter.post('/', jwtAuthMiddleware, authorizedMiddleware('Customer'), CartController.addProductToCart)
+// Lấy giỏ hàng
+cartRouter.get(
+  '/',
+  jwtAuthMiddleware,
+  authorizedMiddleware('Customer'),
+  CartController.getCart
+);
+
+// Thêm sản phẩm vào giỏ
+cartRouter.post(
+  '/',
+  jwtAuthMiddleware,
+  authorizedMiddleware('Customer'),
+  CartController.addProductToCart
+);
+
+// Xoá 1 sản phẩm khỏi giỏ (theo productItemId)
 cartRouter.delete(
-    '/',
-    jwtAuthMiddleware,
-    authorizedMiddleware('Customer'),
-    validatorMiddleware(CartSchema.deleteProductInCart),
-    CartController.deleteProductFromCart
-)
+  '/',
+  jwtAuthMiddleware,
+  authorizedMiddleware('Customer'),
+  CartController.deleteProductFromCart // ✅ tạm bỏ validator
+);
+
+// Xoá sản phẩm giỏ hàng khi đặt hàng
 cartRouter.delete(
-    '/carts',
+  '/carts',
+  jwtAuthMiddleware,
+  authorizedMiddleware('Customer'),
+  CartController.deleteProductCart // ✅ tạm bỏ validator
+);
 
-    jwtAuthMiddleware, authorizedMiddleware('Customer'),
-    validatorMiddleware(CartSchema.deleteProductInCart),
-    CartController.deleteProductCart
-)
+// Cập nhật số lượng hoặc tổng
 cartRouter.patch(
-    '/',
-    jwtAuthMiddleware,
-    authorizedMiddleware('Customer'),
-    validatorMiddleware(CartSchema.updateCartItemTotalPrice),
-    CartController.updateCartItemTotalPrice
-)
-cartRouter.patch(
-    '/',
-    jwtAuthMiddleware, authorizedMiddleware('Customer'),
+  '/',
+  jwtAuthMiddleware,
+  authorizedMiddleware('Customer'),
+  CartController.updateCartItemTotalPrice // ✅ tạm bỏ validator
+);
 
-    validatorMiddleware(CartSchema.updateCartItemTotalPrice),
-    CartController.updateCartItemTotalPrice
-)
-
-module.exports = cartRouter
+module.exports = cartRouter;

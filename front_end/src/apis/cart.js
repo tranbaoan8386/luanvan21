@@ -1,16 +1,20 @@
-import axiosClient from '../services/AxiosClient'
+import axiosClient from '../services/AxiosClient';
 
 const cartApi = {
-    addToCart: (body) => axiosClient.post('/carts', body),
-    getCart: () => axiosClient.get('/carts'),
-    updateCart: (body) => axiosClient.patch('/carts', body),
-    deleteProductFromCart: (body) =>
-        axiosClient.delete('/carts', {
-            data: body
-        }),
-    deleteProductCart: (body) =>
-        axiosClient.delete('/carts/carts', {
-            data: body
-        })
-}
-export default cartApi
+  // Thêm sản phẩm vào giỏ hàng
+  addToCart: (body) => axiosClient.post('/carts', body),
+
+  // Lấy toàn bộ giỏ hàng
+  getCart: () => axiosClient.get('/carts'),
+
+  // Cập nhật số lượng sản phẩm trong giỏ
+  updateCart: (body) => axiosClient.patch('/carts', body),
+
+  // Xoá sản phẩm khỏi giỏ hàng (dùng đúng endpoint)
+  deleteProductCart: (body) =>
+    axiosClient.delete('/carts', {
+      data: body
+    })
+};
+
+export default cartApi;

@@ -9,6 +9,8 @@ const Color = require('../models/Color')
 const Coupon = require('../models/Coupon')
 const Brand = require('../models/Brand')
 const Size = require('../models/Size')
+const Material = require('../models/Material');
+
 class ProductController {
 
     async createProduct(req, res, next) {
@@ -450,113 +452,74 @@ class ProductController {
     
     
     async getDetailProduct(req, res, next) {
-        try {
-            const { id: productId } = req.params;
-    
-            // Lấy sản phẩm chính kèm theo Category, Brand, Coupon
-            const product = await Product.findByPk(productId, {
-                include: [
-                    {
-                        model: Category,
-                        as: 'category',
-                        attributes: ['id', 'name']
-                    },
-                    {
-                        model: Brand,
-                        as: 'brand',
-                        attributes: ['id', 'name']
-                    },
-                    {
-                        model: Coupon,
-                        as: 'productCoupon',
-                        attributes: ['id', 'price']
-                    }
-                ]
-            });
-    
-            if (!product) {
-                return ApiResponse.error(res, {
-                    status: 404,
-                    data: { message: 'Không tìm thấy sản phẩm' }
-                });
+  try {
+    const { id: productId } = req.params;
+
+    const product = await Product.findByPk(productId, {
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name']
+        },
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'name']
+        },
+        // {
+        //   model: Coupon,
+        //   as: 'productCoupon',
+        //   attributes: ['id', 'price']
+        // },
+        {
+          model: ProductItem,
+          as: 'productItems',
+          attributes: ['id', 'price', 'unitInStock'],
+          include: [
+            {
+              model: Color,
+              as: 'color',
+              attributes: ['id', 'name', 'colorCode']
+            },
+            {
+              model: Size,
+              as: 'size',
+              attributes: ['id', 'name']
+            },
+            {
+              model: Material,
+              as: 'material',
+              attributes: ['id', 'name']
+            },
+            {
+              model: ProductImage,
+              as: 'images',
+              attributes: ['id', 'url']
             }
-    
-            // Lấy danh sách ProductItem kèm theo Color, Size, Material
-            const productItems = await ProductItem.findAll({
-                where: { products_id: productId },
-                include: [
-                    {
-                        model: Color,
-                        as: 'color',
-                        attributes: ['id', 'colorCode']
-                    },
-                    {
-                        model: Size,
-                        as: 'size',
-                        attributes: ['id', 'name']
-                    },
-                    {
-                        model: Material,
-                        as: 'material',
-                        attributes: ['id', 'name']
-                    }
-                ],
-                attributes: ['id', 'price', 'unitInStock', 'color_id', 'size_id', 'materials_id'],
-                raw: true,
-                nest: true
-            });
-    
-            // Gom nhóm theo màu sắc
-            const colorMap = {};
-    
-            for (const item of productItems) {
-                const colorId = item.color_id;
-                if (!colorMap[colorId]) {
-                    colorMap[colorId] = {
-                        id: colorId,
-                        colorCode: item.color?.colorCode,
-                        sizes: []
-                    };
-                }
-    
-                colorMap[colorId].sizes.push({
-                    sizeId: item.size_id,
-                    sizeName: item.size?.name,
-                    stock: item.unitInStock,
-                    price: item.price,
-                    materialId: item.materials_id,
-                    materialName: item.material?.name
-                });
-            }
-    
-            const colors = Object.values(colorMap);
-    
-            // Dữ liệu đơn giản hóa
-            const cleanedproductItems = productItems.map(item => ({
-                id: item.id,
-                unitInStock: item.unitInStock,
-                productId: productId,
-                colorId: item.color_id,
-                sizeId: item.size_id,
-                materialId: item.materials_id
-            }));
-    
-            return ApiResponse.success(res, {
-                status: 200,
-                data: {
-                    product: {
-                        ...product.toJSON(),
-                        productItems: cleanedproductItems,
-                        colors
-                    }
-                }
-            });
-        } catch (err) {
-            console.log(err);
-            next(err);
+          ]
         }
+      ]
+    });
+
+    if (!product) {
+      return ApiResponse.error(res, {
+        status: 404,
+        data: { message: 'Không tìm thấy sản phẩm' }
+      });
     }
-    
+
+    return ApiResponse.success(res, {
+      status: 200,
+      data: { product }
+    });
+  } catch (err) {
+    console.error('❌ Lỗi getDetailProduct:', err);
+    next(err);
+  }
+}
+
+
     
     
 
