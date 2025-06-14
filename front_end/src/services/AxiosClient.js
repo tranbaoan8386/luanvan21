@@ -47,9 +47,10 @@ class AxiosClient {
                 }
 
                 // Xử lí tát cả các response thành công
-                if (response.data.success == true) {
+                if (response.data.success === true && response.data.data?.message) {
                     toast.success(response.data.data.message)
-                }
+                  }
+                  
 
                 return response.data
             },

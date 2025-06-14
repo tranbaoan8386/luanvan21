@@ -52,10 +52,16 @@ const headCells = [
     label: "Email"
   },
   {
-    id: "total",
+    id: "phone",
     numeric: true,
     disablePadding: false,
-    label: "Tổng đơn"
+    label: "Số điện thoại"
+  },
+  {
+    id: "total_payable",
+    numeric: true,
+    disablePadding: false,
+    label: "Tổng đơn đã giảm"
   },
   {
     id: "status",
@@ -332,8 +338,9 @@ export default function ManagerOrder() {
                         </TableCell>
                         <TableCell align="left">{order?.user?.name}</TableCell>
                         <TableCell align="left">{order?.user?.email}</TableCell>
+                        <TableCell align="left">{order?.phone}</TableCell>
                         <TableCell width='11%' align="left">
-                          {formatCurrency(order?.total)} VND
+                          {formatCurrency(order?.total_payable)} VND
                         </TableCell>
                         <TableCell align="left">
                         <Button
@@ -414,16 +421,26 @@ export default function ManagerOrder() {
                                       </TableCell>
                                       <TableCell align="center">{item.quantity}</TableCell>
                                       <TableCell align="center">
-                                        {formatCurrency(item.productItem.product.price)} VND
+                                        {formatCurrency(item.productItem.price)} VND
                                       </TableCell>
                                       <TableCell align="right">
-                                        {formatCurrency(item.productItem.product.price * item.quantity)} VND
+                                        {formatCurrency(selectedOrder?.total_payable)} VND
                                       </TableCell>
                                     </TableRow>
                                   ))}
                                   <TableRow>
-                                    <TableCell sx={{color: '#D70018'}} colSpan={6} align="right">
-                                      <strong>Tổng cộng: {formatCurrency(selectedOrder?.total)} VND</strong>
+                                    <TableCell colSpan={6} align="right">
+                                      <strong>Tổng tiền: {formatCurrency(selectedOrder?.total)} VND</strong>
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow>
+                                  <TableCell colSpan={6} align="right">
+                                    <strong>Giảm giá: {formatCurrency(selectedOrder?.total_discount)} VND</strong>
+                                  </TableCell>
+                                  </TableRow>
+                                  <TableRow>
+                                    <TableCell sx={{ color: '#D70018' }} colSpan={6} align="right">
+                                      <strong>Thành tiền phải trả: {formatCurrency(selectedOrder?.total_payable)} VND</strong>
                                     </TableCell>
                                   </TableRow>
                                 </TableBody>

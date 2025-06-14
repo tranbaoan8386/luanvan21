@@ -161,17 +161,21 @@ export default function Cart() {
   onSuccess: (data) => {
     if (data?.success) {
       handleRefetchCart();
+      const msg = data?.data?.message || data?.message;
+      if (msg) toast.success(msg);
     } else {
-      // Bạn có thể giữ hoặc bỏ dòng này, tuỳ muốn hiển thị hay không
-      console.warn('Xoá thất bại:', data?.message || 'Không rõ lý do');
-      // toast.warn(data?.message || 'Xóa không thành công.');
+      const msg = data?.data?.message || data?.message || 'Không rõ lý do';
+      console.warn('Xoá thất bại:', msg);
+      toast.warn(msg);
     }
   },
   onError: (error) => {
-    
-    console.warn('Không thể kết nối server khi xoá sản phẩm:', error.message);
-    // Nếu muốn ẩn hẳn luôn, có thể để trống hoặc bỏ luôn phần onError
-  }
+    const message =
+      error?.response?.data?.message || error?.message || 'Không thể xoá sản phẩm.';
+  
+    console.warn('Không thể kết nối server khi xoá sản phẩm:', message);
+    toast.error(`❌ ${message}`);
+  }  
 });
 
 
@@ -260,11 +264,11 @@ export default function Cart() {
   const paypalAmount = ((totalCart - couponValue) / 30000).toFixed(2);
   const [paypalPaid, setPaypalPaid] = useState(false);
   const onSuccessPaypal = (details, data) => {
-    let fullAddress = `${profile?.data?.profile?.Address?.street}, ${profile?.data?.profile?.Address?.village}, ${profile?.data?.profile?.Address?.district}, ${profile?.data?.profile?.Address?.province}`;
-
+    let fullAddress = `${profile?.data?.profile?.Address?.address_line}, ${profile?.data?.profile?.Address?.ward}, ${profile?.data?.profile?.Address?.district}, ${profile?.data?.profile?.Address?.city}`;
+  
     const orderData = {
       total: totalCart - couponValue,
-      phone: profile?.data?.profile?.Address?.phone,
+      phone: profile?.data?.profile?.Address?.phone || profile?.data?.profile?.phone,
       email: profile?.data?.profile?.email,
       fullname: profile?.data?.profile?.name,
       address: fullAddress,
@@ -275,15 +279,13 @@ export default function Cart() {
       note,
       paymentMethod
     };
-
+  
     createOrderMutation.mutate(orderData, {
-      onSuccess: (response) => {
+      onSuccess: () => {
         setPaypalPaid(true);
         handleRefetchCart();
         carts.forEach((cart) => {
-          deleteProductFromCartMutation.mutate({
-            productItemId: cart.productItem.id
-          });
+          deleteProductFromCartMutation.mutate({ productItemId: cart.productItem.id });
         });
         navigate("/");
       },
@@ -293,6 +295,7 @@ export default function Cart() {
       }
     });
   };
+  
 
   const addCoupon = async () => {
     if (code.trim() === "") {
@@ -545,7 +548,8 @@ export default function Cart() {
     if (code) {
       addCouponMutation.mutate({ codeCoupon: code });
     }
-    let fullAddress = `${profile?.data?.profile?.Address?.street}, ${profile?.data?.profile?.Address?.village}, ${profile?.data?.profile?.Address?.district}, ${profile?.data?.profile?.Address?.province}`;
+    let fullAddress = `${profile?.data?.profile?.Address?.address_line}, ${profile?.data?.profile?.Address?.ward}, ${profile?.data?.profile?.Address?.district}, ${profile?.data?.profile?.Address?.city}`;
+
 
    try {
   const discount = couponValue || 0;
@@ -556,10 +560,10 @@ export default function Cart() {
     total,
     total_discount: discount,
     total_payable: totalPayable,
-    phone: profile?.data?.profile?.phone, // 👉 Đúng trường
+    phone: profile?.data?.profile?.Address?.phone || profile?.data?.profile?.phone,
     email: profile?.data?.profile?.email,
     fullname: profile?.data?.profile?.name,
-    address: fullAddress, // ví dụ: "123 Nguyễn Trãi, Phường 5, Quận 5, TP.HCM"
+    address: fullAddress,
     orders_item: carts.map((cart) => ({
       productItemId: cart.productItem.id,
       quantity: quantities[cart.productItem.id]
@@ -567,6 +571,7 @@ export default function Cart() {
     note,
     paymentMethod
   });
+  
 
 
   // ✅ Không để việc xóa giỏ ảnh hưởng toast chính
@@ -579,7 +584,7 @@ export default function Cart() {
       console.warn(`⚠️ Không thể xoá sản phẩm ID ${cart.productItem.id}:`, err);
     }
   }
-
+  //Cập nhật lại giao diện giỏ hàng
   await handleRefetchCart();
   toast.success("Đặt hàng thành công!"); // ✅ Đặt ở đây
   navigate("/");
@@ -1039,24 +1044,27 @@ export default function Cart() {
               </Select>
               {districtError && <Alert severity="error">{districtError}</Alert>}
             </FormControl>
-            <FormControl fullWidth margin="normal" x={!selectedDistrict}>
-              <InputLabel id="ward-label">Phường / Xã</InputLabel>
-              <Select
-                labelId="ward-label"
-                value={selectedWard}
-                onChange={handleWardChange}
-              >
-                <MenuItem value="">
-                  <em>Chọn Phường / Xã</em>
-                </MenuItem>
-                {wards.map((ward) => (
-                  <MenuItem key={ward.Id} value={ward.Id}>
-                    {ward.Name}
-                  </MenuItem>
-                ))}
-              </Select>
-              {wardError && <Alert severity="error">{wardError}</Alert>}
-            </FormControl>
+            {selectedDistrict && (
+  <FormControl fullWidth margin="normal">
+    <InputLabel id="ward-label">Phường / Xã</InputLabel>
+    <Select
+      labelId="ward-label"
+      value={selectedWard}
+      onChange={handleWardChange}
+    >
+      <MenuItem value="">
+        <em>Chọn Phường / Xã</em>
+      </MenuItem>
+      {wards.map((ward) => (
+        <MenuItem key={ward.Id} value={ward.Id}>
+          {ward.Name}
+        </MenuItem>
+      ))}
+    </Select>
+    {wardError && <Alert severity="error">{wardError}</Alert>}
+  </FormControl>
+)}
+
             <TextField
               sx={{ mt: 3 }}
               fullWidth
@@ -1065,7 +1073,7 @@ export default function Cart() {
               inputProps={{
                 readOnly: false
               }}
-              value={address.street}
+              value={address.street ?? ''}
               onChange={handleStreetChange}
             />
             {error && <Alert severity="error">{error}</Alert>}
@@ -1077,7 +1085,7 @@ export default function Cart() {
               inputProps={{
                 readOnly: false
               }}
-              value={phone}
+              value={phone ?? ''}
               onChange={handlePhoneChange}
             />
             {phoneError && <Alert severity="error">{phoneError}</Alert>}

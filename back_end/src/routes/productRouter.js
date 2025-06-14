@@ -9,24 +9,19 @@ const productRouter = Router();
 // [GET] /api/v1/products
 // 👉 Lấy danh sách tất cả sản phẩm
 productRouter.get('/', ProductController.getAllProduct);
-<<<<<<< HEAD
-
 // Get product with images by ID
 productRouter.get('/:id/images', ProductController.getProductWithImages);
-productRouter.get('/:id', ProductController.getDetailProduct);
 
-
-// Create a new product
-=======
 // [GET] /api/v1/products/:id
 // 👉 Lấy chi tiết 1 sản phẩm theo ID
 productRouter.get('/:id', ProductController.getDetailProduct);
+
 // [POST] /api/v1/products
 // 👉 Thêm sản phẩm mới (chỉ Admin được phép)
 //    - Cần xác thực JWT
 //    - Cần có quyền Admin
 //    - Cho phép upload nhiều file với mọi field (dùng .any())
->>>>>>> bb7ef2b56946aea9747c52f12512e6a76b6b72cb
+
 productRouter.post(
   '/',
   jwtAuthMiddleware,               // Xác thực người dùng đã đăng nhập

@@ -23,130 +23,123 @@ class ReviewController {
         }
     }
 
-   async getAllReviewProduct(req, res, next) {
-    try {
-        const { id: productId } = req.params;
-        const reviews = await Review.findAll({
-            where: {
-                products_id: productId, // ✅ Sửa lại cho đúng với tên cột trong DB
-                parent_id: null
-            },
-            include: [
-                {
-                    model: Review,
-                    as: 'replies',
-                    include: [
-                        {
-                            model: User,
-                            as: 'user',
-                            attributes: ['id', 'name']
-                        }
-                    ]
+    async getAllReviewProduct(req, res, next) {
+        try {
+            const { id: productId } = req.params;
+            const reviews = await Review.findAll({
+                where: {
+                  products_id: productId // ✅ sửa lại đúng tên cột
                 },
-                {
+                include: [
+                  {
                     model: User,
                     as: 'user',
                     attributes: ['id', 'name']
-                }
-            ]
-        });
-
-        if (reviews.length === 0) {
-            return ApiResponse.error(res, {
-                status: 404,
-                data: {
-                    message: 'Chưa có lượt đánh giá nào'
-                }
+                  }
+                ]
+              });
+              
+    
+            if (reviews.length === 0) {
+                return ApiResponse.error(res, {
+                    status: 404,
+                    data: {
+                        message: 'Chưa có lượt đánh giá nào'
+                    }
+                });
+            }
+    
+            return ApiResponse.success(res, {
+                status: 200,
+                data: reviews
             });
+        } catch (err) {
+            console.error('❌ Lỗi khi lấy đánh giá sản phẩm:', err);
+            next(err);
         }
-
-        return ApiResponse.success(res, {
-            status: 200,
-            data: reviews
-        });
-    } catch (err) {
-        next(err);
     }
-}
+    
 
 
     // reviewController.js
     async createReview(req, res, next) {
-    try {
-        const { id: userId } = req.user;
-        const { comment, rating, products_id } = req.body;
-
-        // Kiểm tra các trường bắt buộc
-        if (!userId || !comment || !rating || !products_id) {
-            return ApiResponse.error(res, {
-                status: 400,
-                message: "Thiếu thông tin bắt buộc."
-            });
-        }
-
-        // Kiểm tra xem người dùng đã mua sản phẩm này chưa
-        const hasPurchased = await Order.findOne({
-            where: {
-                userId,
-                status: 'delivered'
-            },
-            include: [{
-                model: OrderItem,
-                as: 'items',
-                include: [{
-                    model: ProductItem,
-                    as: 'productItem',
-                    where: {
-                        products_id: products_id // ✅ sửa chỗ này
-                    }
-                }]
-            }]
-        });
-
-        if (!hasPurchased) {
-            return ApiResponse.error(res, {
-                status: 403,
-                message: "Bạn cần mua sản phẩm này trước khi đánh giá"
-            });
-        }
-
-        // Kiểm tra xem người dùng đã đánh giá sản phẩm này chưa
-        const existingReview = await Review.findOne({
-            where: {
-                userId,
-                products_id: products_id, // ✅ sửa chỗ này
-                parentId: null
+        try {
+            const { id: userId } = req.user;
+            const { comment, rating, productId } = req.body;
+    
+            // Kiểm tra các trường bắt buộc
+            if (!userId || !comment || !rating || !productId) {
+                return ApiResponse.error(res, {
+                    status: 400,
+                    message: "Thiếu thông tin bắt buộc."
+                });
             }
-        });
-
-        if (existingReview) {
+    
+            // Kiểm tra xem người dùng đã mua sản phẩm này chưa
+            const hasPurchased = await Order.findOne({
+                where: {
+                    userId,
+                    status: 'delivered'
+                },
+                include: [{
+                    model: OrderItem,
+                    as: 'items',
+                    include: [{
+                        model: ProductItem,
+                        as: 'productItem',
+                        where: {
+                            products_id: productId
+                        }
+                    }]
+                }]
+            });
+    
+            if (!hasPurchased) {
+                return ApiResponse.error(res, {
+                    status: 403,
+                    message: "Bạn cần mua sản phẩm này trước khi đánh giá"
+                });
+            }
+    
+            // Kiểm tra xem người dùng đã đánh giá sản phẩm này chưa
+            const existingReview = await Review.findOne({
+                where: {
+                    userId,
+                    products_id: productId,
+                    parentId: null
+                }
+            });
+    
+            if (existingReview) {
+                return ApiResponse.error(res, {
+                    status: 400,
+                    message: "Bạn đã đánh giá sản phẩm này rồi"
+                });
+            }
+    
+            // Tạo đánh giá mới
+            const review = await Review.create({
+                comment,
+                rating,
+                products_id: productId, // đây là tên cột DB
+                userId,
+                parentId: null
+            });
+    
+            return ApiResponse.success(res, {
+                status: 201,
+                message: "Đánh giá sản phẩm thành công",
+                data: review
+            });
+        } catch (err) {
+            console.error('Lỗi tạo review:', err); // THÊM log chi tiết
             return ApiResponse.error(res, {
-                status: 400,
-                message: "Bạn đã đánh giá sản phẩm này rồi"
+                status: 500,
+                message: "Có lỗi xảy ra khi tạo đánh giá"
             });
         }
-
-        // Tạo đánh giá mới
-        const review = await Review.create({
-            comment,
-            rating,
-            products_id, // ✅ đúng tên cột DB
-            userId,
-            parentId: null
-        });
-
-        return ApiResponse.success(res, {
-            status: 201,
-            message: "Đánh giá sản phẩm thành công",
-            data: review
-        });
-    } catch (err) {
-        return ApiResponse.error(res, {
-            status: 500,
-            message: "Có lỗi xảy ra khi tạo đánh giá"
-        });
     }
-}
+    
 
 
     async createReply(req, res, next) {
@@ -198,51 +191,55 @@ class ReviewController {
 
     async updateReview(req, res, next) {
         try {
-            const { id: reviewId } = req.params
-            const { comment, rating } = req.body
-
-            const review = await Review.findOne({
-                where: { id: reviewId }
-            })
-
+            const { id: reviewId } = req.params;
+            const { comment, rating } = req.body;
+    
+            const review = await Review.findByPk(reviewId);
+    
             if (!review) {
-                throw new ErrorResponse(404, 'Không tìm thấy đánh giá')
+                throw new ErrorResponse(404, 'Không tìm thấy đánh giá');
             }
-            review.comment = comment
-            review.rating = rating
-
-            await review.save()
+    
+            review.comment = comment;
+            review.rating = rating;
+    
+            await review.save();
+    
             return new ApiResponse(res, {
                 status: 200,
+                message: 'Cập nhật đánh giá thành công',
                 data: review
-            })
+            });
         } catch (err) {
-            next(err)
+            next(err);
         }
     }
+    
 
     async hiddenReview(req, res, next) {
         try {
-            const { id: reviewId } = req.params
-
-            const review = await Review.findOne({
-                where: { id: reviewId }
-            })
-
+            const { id: reviewId } = req.params;
+    
+            const review = await Review.findByPk(reviewId);
+    
             if (!review) {
-                throw new ErrorResponse(404, 'Không tìm thấy đánh giá')
+                throw new ErrorResponse(404, 'Không tìm thấy đánh giá');
             }
-            review.isHidden = true
-
-            await review.save()
+    
+            review.isHidden = !review.isHidden;
+    
+            await review.save();
+    
             return new ApiResponse(res, {
                 status: 200,
+                message: review.isHidden ? 'Đã ẩn đánh giá' : 'Đã hiện lại đánh giá',
                 data: review
-            })
+            });
         } catch (err) {
-            next(err)
+            next(err);
         }
     }
+    
 
     async deleteReview(req, res, next) {
         try {
@@ -258,8 +255,9 @@ class ReviewController {
             await review.destroy()
             return new ApiResponse(res, {
                 status: 200,
+                message: 'Xoá đánh giá thành công',
                 data: review
-            })
+            });            
         } catch (err) {
             next(err)
         }
