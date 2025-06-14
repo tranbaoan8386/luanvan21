@@ -358,126 +358,136 @@ class ProductController {
     }
     
     async getAllProduct(req, res, next) {
-        try {
-          const {
-            page = 1,
-            limit = 15,
-            order = 'desc',
-            sort_by = 'price',
-            category,
-            brand,
-            price_max,
-            price_min,
-            name
-          } = req.query;
-      
-          const whereProduct = {};
-          const whereItem = {};
-      
-          if (category) {
-            whereProduct.categories_id = category;
-          }
-      
-          if (brand) {
-            whereProduct.brands_id = brand;
-          }
-      
-          if (name) {
-            whereProduct.name = { [Op.like]: `%${name}%` };
-          }
-      
-          if (price_min && price_max) {
-            whereItem.price = { [Op.between]: [parseInt(price_min), parseInt(price_max)] };
-          } else if (price_min) {
-            whereItem.price = { [Op.gte]: parseInt(price_min) };
-          } else if (price_max) {
-            whereItem.price = { [Op.lte]: parseInt(price_max) };
-          }
-      
-          const orderArray = [];
-      
-          if (sort_by === 'price') {
-            orderArray.push([{ model: ProductItem, as: 'productItems' }, 'price', order]);
-          } else {
-            orderArray.push([sort_by, order]);
-          }
-      
-          const products = await Product.findAll({
-            where: whereProduct,
-            include: [
-              {
-                model: ProductItem,
-                as: 'productItems',
-                required: false,
-                attributes: ['id', 'price'],
-                ...(Object.keys(whereItem).length ? { where: whereItem } : {}),
-                include: [
-                  {
-                    model: ProductImage,
-                    as: 'images',
-                    attributes: ['url'],
-                    required: false
-                  }
-                ]
-              },
-              {
-                model: Category,
-                as: 'category',
-                attributes: ['name']
-              },
-              {
-                model: Brand,
-                as: 'brand',
-                attributes: ['name']
-              }
-            ],
-            order: orderArray,
-            offset: (page - 1) * limit,
-            limit: parseInt(limit)
-          });
-      
-          // ✅ Tính giá thấp nhất từ productItems
-          const mappedProducts = products.map((product) => {
-            const productData = product.toJSON();
-            const prices = productData.productItems.map((item) => item.price);
-            const minPrice = prices.length > 0 ? Math.min(...prices) : null;
-            return {
-              ...productData,
-              price: minPrice
-            };
-          });
-      
-          const totalCount = await Product.count({
-            where: whereProduct,
-            include: Object.keys(whereItem).length
-              ? [
-                  {
-                    model: ProductItem,
-                    as: 'productItems',
-                    where: whereItem
-                  }
-                ]
-              : []
-          });
-      
-          const page_size = Math.ceil(totalCount / limit);
-      
-          return ApiResponse.success(res, {
-            status: 200,
-            data: {
-              products: mappedProducts,
-              pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                page_size
-              }
+  try {
+    const {
+      page = 1,
+      limit = 15,
+      order = 'desc',
+      sort_by = 'price',
+      category,
+      brand,
+      price_max,
+      price_min,
+      name
+    } = req.query;
+
+    const whereProduct = {};
+    const whereItem = {};
+
+    if (category) {
+      whereProduct.categories_id = category;
+    }
+
+    if (brand) {
+      whereProduct.brands_id = brand;
+    }
+
+    if (name) {
+      whereProduct.name = { [Op.like]: `%${name}%` };
+    }
+
+    if (price_min && price_max) {
+      whereItem.price = { [Op.between]: [parseInt(price_min), parseInt(price_max)] };
+    } else if (price_min) {
+      whereItem.price = { [Op.gte]: parseInt(price_min) };
+    } else if (price_max) {
+      whereItem.price = { [Op.lte]: parseInt(price_max) };
+    }
+
+    const orderArray = [];
+
+    if (sort_by === 'price') {
+      orderArray.push([{ model: ProductItem, as: 'productItems' }, 'price', order]);
+    } else {
+      orderArray.push([sort_by, order]);
+    }
+
+    const products = await Product.findAll({
+      where: whereProduct,
+      include: [
+        {
+          model: ProductItem,
+          as: 'productItems',
+          required: false,
+          attributes: ['id', 'price', 'sold'],
+          ...(Object.keys(whereItem).length ? { where: whereItem } : {}),
+          include: [
+            {
+              model: ProductImage,
+              as: 'images',
+              attributes: ['url'],
+              required: false
             }
-          });
-        } catch (err) {
-          console.log(err);
-          next(err);
+          ]
+        },
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['name']
+        },
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['name']
+        }
+      ],
+      order: orderArray,
+      offset: (page - 1) * limit,
+      limit: parseInt(limit)
+    });
+
+    // ✅ Map kết quả trả ra: tính tổng sold, lấy thumbnail và giá từ item có ảnh hoặc sold
+    const mappedProducts = products.map((product) => {
+      const productData = product.toJSON();
+
+      const allSold = productData.productItems.reduce(
+        (sum, item) => sum + (item.sold || 0), 0
+      );
+
+      const itemWithImageOrSold = productData.productItems.find(
+        (item) => (item.sold > 0 || (item.images && item.images.length > 0))
+      ) || productData.productItems[0];
+
+      return {
+        ...productData,
+        price: itemWithImageOrSold?.price || 0,
+        sold: allSold,
+        thumbnail: itemWithImageOrSold?.images?.[0]?.url || productData.avatar
+      };
+    });
+
+    const totalCount = await Product.count({
+      where: whereProduct,
+      include: Object.keys(whereItem).length
+        ? [
+            {
+              model: ProductItem,
+              as: 'productItems',
+              where: whereItem
+            }
+          ]
+        : []
+    });
+
+    const page_size = Math.ceil(totalCount / limit);
+
+    return ApiResponse.success(res, {
+      status: 200,
+      data: {
+        products: mappedProducts,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          page_size
         }
       }
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+}
+
       
     async getDetailProduct(req, res, next) {
   try {
@@ -503,7 +513,8 @@ class ProductController {
         {
           model: ProductItem,
           as: 'productItems',
-          attributes: ['id', 'price', 'unitInStock'],
+         attributes: ['id', 'price', 'unitInStock', 'sold'],
+
           include: [
             {
               model: Color,
@@ -562,7 +573,8 @@ class ProductController {
                     {
                         model: ProductItem,
                         as: 'productItems', // Tên alias trong association
-                        attributes: ['id', 'price'], // Lấy ID và giá nếu cần
+                        attributes: ['id', 'price', 'sold'],
+ // Lấy ID và giá nếu cần
                         include: [
                             {
                                 model: ProductImage,

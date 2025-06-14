@@ -39,25 +39,26 @@ export default function ProductList() {
   const brands = brandsData?.data || [];
 
   const productItems = producstData?.data.products?.map((product) => {
-    const firstItem = product.productItems?.[0];
+  const firstItem = product.productItems?.[0];
 
-    const avatarPath = product.avatar
-      ? product.avatar.startsWith("/uploads")
-        ? product.avatar
-        : `/uploads/${product.avatar}`
-      : "/fallback.jpg";
+  const avatarPath = product.avatar
+    ? product.avatar.startsWith("/uploads")
+      ? product.avatar
+      : `/uploads/${product.avatar}`
+    : "/fallback.jpg";
 
-    return {
-      id: product.id ?? "",
-      name: product.name ?? "Sản phẩm không tên",
-      img: `${BASE_API_URL}${avatarPath}`,
-      price: firstItem?.price ?? null,
-      promotionPrice: null,
-      rating: product.rating ?? 0,
-      sold: firstItem?.sold ?? 0,
-      weight: product.weight ?? null,
-    };
-  }) ?? [];
+  return {
+    id: product.id ?? "",
+    name: product.name ?? "Sản phẩm không tên",
+    img: `${BASE_API_URL}${avatarPath}`,
+    price: firstItem?.price ?? null,
+    promotionPrice: null,
+    rating: product.rating ?? 0,
+    sold: product.productItems?.reduce((sum, pi) => sum + (pi.sold || 0), 0) ?? 0, // ✅ Sửa ở đây
+    weight: product.weight ?? null,
+  };
+}) ?? [];
+
 
   return (
     <Grid alignItems="flex-start" container spacing={2}>

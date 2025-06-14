@@ -177,7 +177,7 @@ attributes: ['id', 'color_id', 'products_id', 'unitInStock', 'size_id', 'price']
           console.warn('⚠️ Sản phẩm không còn trong giỏ, bỏ qua...');
           return res.status(200).json({
             success: true,
-            message: 'Sản phẩm đã được xoá hoặc không tồn tại, bỏ qua.'
+            // message: 'Sản phẩm đã được xoá hoặc không tồn tại, bỏ qua.'
           });
         }
 

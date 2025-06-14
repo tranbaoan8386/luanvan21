@@ -14,7 +14,7 @@ const Review = sequelize.define(
     comment: {
       type: DataTypes.TEXT,
       allowNull: true,
-      field: 'content' // ✅ map đúng tên cột trong DB
+      field: 'content' // ánh xạ đúng cột trong DB
     },
     rating: {
       type: DataTypes.FLOAT,
@@ -27,7 +27,7 @@ const Review = sequelize.define(
         model: Product,
         key: 'id'
       },
-      field: 'products_id' // ✅ map đúng tên cột
+      field: 'products_id'
     },
     userId: {
       type: DataTypes.INTEGER,
@@ -36,9 +36,13 @@ const Review = sequelize.define(
         model: User,
         key: 'id'
       },
-      field: 'users_id' // ✅ map đúng tên cột
+      field: 'users_id'
+    },
+    parentId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'parent_id' // ánh xạ đúng cột trong DB
     }
-    // ❌ Không thêm parentId nếu DB chưa có, hoặc phải thêm vào DB nếu muốn hỗ trợ reply
   },
   {
     tableName: 'reviews',

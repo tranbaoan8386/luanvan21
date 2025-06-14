@@ -87,9 +87,9 @@ Review.belongsTo(User, { foreignKey: 'users_id', as: 'user' });
 Product.hasMany(Review, { foreignKey: 'products_id', as: 'reviews' });
 Review.belongsTo(Product, { foreignKey: 'products_id', as: 'product' });
 
-/* // ===== REPLY - REVIEW =====
+ // ===== REPLY - REVIEW =====
 Review.belongsTo(Review, { foreignKey: 'parent_id', as: 'parent' });
-Review.hasMany(Review, { foreignKey: 'parent_id', as: 'replies' }); */
+Review.hasMany(Review, { foreignKey: 'parent_id', as: 'replies' }); 
 
 // ===== ROLE - USER =====
 Role.hasMany(User, { foreignKey: 'roleId', as: 'users' });
