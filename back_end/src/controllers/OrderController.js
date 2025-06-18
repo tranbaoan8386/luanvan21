@@ -264,12 +264,8 @@ class OrderController {
 
 async createOrder(req, res, next) {
   try {
-    console.log('🟡 DỮ LIỆU TỪ FRONTEND:', req.body);
     const { id: userId } = req.user;
-    console.log('🟢 userId:', userId);
-
     const {
-      total,
       total_discount = 0,
       email,
       paymentMethod,
@@ -281,7 +277,7 @@ async createOrder(req, res, next) {
       throw new Error('orders_item phải là một mảng và không được rỗng');
     }
 
-    // ✅ Lấy địa chỉ của người dùng
+    // Lấy địa chỉ
     const userAddress = await Address.findOne({ where: { users_id: userId } });
     if (!userAddress) {
       throw new Error('Không tìm thấy địa chỉ của người dùng');
@@ -291,9 +287,47 @@ async createOrder(req, res, next) {
     const fullname = userAddress.name;
     const phone = userAddress.phone;
 
+    // ✅ TÍNH LẠI total từ DB
+    let total = 0;
+    const createdOrderItems = [];
+
+    for (const item of orders_item) {
+      const { productItemId, quantity } = item;
+
+      if (!productItemId || !quantity) {
+        throw new Error('Mỗi sản phẩm cần có productItemId và quantity');
+      }
+
+      const productItem = await ProductItem.findByPk(productItemId);
+      if (!productItem) {
+        throw new Error(`Không tìm thấy sản phẩm với ID: ${productItemId}`);
+      }
+
+      if (productItem.unitInStock < quantity) {
+        throw new Error(`Không đủ tồn kho cho sản phẩm ${productItemId}`);
+      }
+
+      const itemTotal = productItem.price * quantity;
+      total += itemTotal;
+
+      // Cập nhật tồn kho
+      await productItem.update({
+        unitInStock: productItem.unitInStock - quantity,
+        sold: (productItem.sold || 0) + quantity
+      });
+
+      const orderItem = await OrderItem.create({
+        orderId: null, // tạm để null, gán lại sau khi tạo order
+        productItemId,
+        quantity
+      });
+
+      createdOrderItems.push(orderItem);
+    }
+
     const total_payable = total - total_discount;
 
-    // ✅ Tạo đơn hàng
+    // ✅ Tạo đơn hàng sau khi tính total
     const order = await Order.create({
       total,
       total_discount,
@@ -309,58 +343,19 @@ async createOrder(req, res, next) {
       note
     });
 
-    const createdOrderItems = [];
-
-    // ✅ Tạo order items & cập nhật tồn kho, sold
-    for (const item of orders_item) {
-      const { productItemId, quantity } = item;
-
-      if (!productItemId || !quantity) {
-        throw new Error('Mỗi sản phẩm trong orders_item cần có productItemId và quantity');
-      }
-
-      const productItem = await ProductItem.findByPk(productItemId);
-      if (!productItem) {
-        throw new Error(`Không tìm thấy sản phẩm với ID: ${productItemId}`);
-      }
-
-      if (productItem.unitInStock < quantity) {
-        throw new Error(`Không đủ tồn kho cho sản phẩm ${productItemId}`);
-      }
-
-      await productItem.update({
-        unitInStock: productItem.unitInStock - quantity,
-        sold: (productItem.sold || 0) + quantity
-      });
-
-      const orderItem = await OrderItem.create({
-        orderId: order.id,
-        productItemId,
-        quantity
-      });
-
-      createdOrderItems.push(orderItem);
+    // ✅ Gán orderId cho các OrderItem đã tạo
+    for (const item of createdOrderItems) {
+      await item.update({ orderId: order.id });
     }
 
-    // ✅ Xoá sản phẩm trong giỏ hàng đã thanh toán
-    const cart = await Cart.findOne({
-      where: { users_id: userId, isPaid: false }
-    });
-
+    // ✅ Xoá CartItem đã mua
+    const cart = await Cart.findOne({ where: { users_id: userId, isPaid: false } });
     if (cart) {
       const productIds = orders_item.map(i => i.productItemId);
-
-      console.log('🧹 Xoá CartItem với:', {
-        carts_id: cart.id,
-        products_item_id: productIds
-      });
-
       await CartItem.destroy({
         where: {
           carts_id: cart.id,
-          products_item_id: {
-            [Op.in]: productIds
-          }
+          products_item_id: { [Op.in]: productIds }
         }
       });
     }
@@ -377,14 +372,10 @@ async createOrder(req, res, next) {
     });
   } catch (err) {
     console.error("❌ Lỗi khi tạo đơn hàng:", err.message);
-    console.error(err);
-
-    return res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    return res.status(400).json({ success: false, message: err.message });
   }
 }
+
 
       
 

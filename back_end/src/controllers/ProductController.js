@@ -421,11 +421,21 @@ class ProductController {
     }
 
     if (name) {
-      whereProduct.name = { [Op.like]: `%${name}%` };
+      const keywords = name.trim().split(/\s+/);
+      whereProduct[Op.and] = keywords.map((word) => ({
+        [Op.or]: [
+          { name: { [Op.like]: `%${word}%` } },
+          Sequelize.where(Sequelize.col('category.name'), {
+            [Op.like]: `%${word}%`
+          })
+        ]
+      }));
     }
 
     if (price_min && price_max) {
-      whereItem.price = { [Op.between]: [parseInt(price_min), parseInt(price_max)] };
+      whereItem.price = {
+        [Op.between]: [parseInt(price_min), parseInt(price_max)]
+      };
     } else if (price_min) {
       whereItem.price = { [Op.gte]: parseInt(price_min) };
     } else if (price_max) {
@@ -461,7 +471,8 @@ class ProductController {
         {
           model: Category,
           as: 'category',
-          attributes: ['name']
+          attributes: ['name'],
+          required: name ? true : false // để WHERE hoạt động đúng khi có lọc theo category.name
         },
         {
           model: Brand,
@@ -472,21 +483,21 @@ class ProductController {
       order: orderArray,
       offset: (page - 1) * limit,
       limit: parseInt(limit),
-      paranoid: true // 👈 đảm bảo không lấy sản phẩm đã bị xóa mềm
+      paranoid: true
     });
-    
 
-    // ✅ Map kết quả trả ra: tính tổng sold, lấy thumbnail và giá từ item có ảnh hoặc sold
     const mappedProducts = products.map((product) => {
       const productData = product.toJSON();
 
       const allSold = productData.productItems.reduce(
-        (sum, item) => sum + (item.sold || 0), 0
+        (sum, item) => sum + (item.sold || 0),
+        0
       );
 
-      const itemWithImageOrSold = productData.productItems.find(
-        (item) => (item.sold > 0 || (item.images && item.images.length > 0))
-      ) || productData.productItems[0];
+      const itemWithImageOrSold =
+        productData.productItems.find(
+          (item) => item.sold > 0 || (item.images && item.images.length > 0)
+        ) || productData.productItems[0];
 
       return {
         ...productData,
@@ -498,18 +509,24 @@ class ProductController {
 
     const totalCount = await Product.count({
       where: whereProduct,
-      include: Object.keys(whereItem).length
-        ? [
-            {
-              model: ProductItem,
-              as: 'productItems',
-              where: whereItem
-            }
-          ]
-        : [],
-      paranoid: true // 👈 để không tính sản phẩm đã xoá
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          required: name ? true : false
+        },
+        ...(Object.keys(whereItem).length
+          ? [
+              {
+                model: ProductItem,
+                as: 'productItems',
+                where: whereItem
+              }
+            ]
+          : [])
+      ],
+      paranoid: true
     });
-    
 
     const page_size = Math.ceil(totalCount / limit);
 
@@ -525,10 +542,12 @@ class ProductController {
       }
     });
   } catch (err) {
-    console.log(err);
+    console.log('❌ getAllProduct error:', err);
     next(err);
   }
- }
+}
+
+
 
       
   async getDetailProduct(req, res, next) {

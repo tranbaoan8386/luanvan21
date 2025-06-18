@@ -23,7 +23,7 @@ import {
   
     return (
       <Box
-        sx={{ backgroundColor: "rgb(26, 148, 255)", color: "#fff", py: 5, mt: 10 }}
+        sx={{ backgroundColor: "rgb(26, 148, 255)", color: "#fff", py: 5, mt: 20 }}
       >
         <Container>
           <Grid container spacing={4}>

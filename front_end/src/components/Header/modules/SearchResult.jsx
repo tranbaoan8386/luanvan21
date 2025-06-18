@@ -86,10 +86,28 @@ export default function SearchResult() {
     // Watch for changes in the input and trigger search
     const searchValue = watch('name')
     useEffect(() => {
-        if (searchValue !== undefined) {
-            handleSearch({ name: searchValue })
-        }
-    }, [searchValue])
+  if (searchValue !== undefined) {
+    handleSubmit((data) => {
+      const config = queryConfig.order
+        ? omit(
+            {
+              ...queryConfig,
+              name: data.name
+            },
+            ['order', 'sort_by']
+          )
+        : omit({
+            ...queryConfig,
+            name: data.name
+          });
+      navigate({
+        pathname: '/',
+        search: createSearchParams(config).toString()
+      });
+    })();
+  }
+}, [searchValue]);
+
 
     return (
         <Box component='form'>

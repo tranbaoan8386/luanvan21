@@ -16,12 +16,8 @@ function App() {
     }
   }, [reset])
 
-  return (
-    <>
-      <main>{routers}</main>
-      <Footer /> {/* 👈 Hiển thị Footer ở tất cả các trang */}
-    </>
-  )
+  return <>{routers}</>
 }
+
 
 export default App
