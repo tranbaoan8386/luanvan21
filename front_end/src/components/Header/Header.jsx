@@ -262,7 +262,7 @@ export default function PrimarySearchAppBar() {
             >
               <Link to="/">
                 <img className="
-img-fluid" src="https://invietnhat.vn/wp-content/uploads/2023/08/logo-shop-thoi-trang-nu-6.jpg" alt="logo Đức Thoại Store" width="180" height="90" style={{ marginTop: "12px" }} />
+img-fluid" src="https://insacmau.com/wp-content/uploads/2024/11/logo-shop-quan-ao-nam-1.jpg" alt="logo Áo Khoác Store" width="120" height="90" style={{ marginTop: "12px" }} />
               </Link>             
             </Typography>
 

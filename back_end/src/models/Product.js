@@ -53,8 +53,13 @@ const Product = sequelize.define(
     }
   },
   {
-    timestamps: false,             // Không tự động tạo createdAt, updatedAt
-    tableName: 'products'          // Tên bảng trong database là 'products'
+    tableName: 'products',
+    timestamps: true,         // BẮT BUỘC phải bật để Sequelize thêm deletedAt
+    createdAt: false,         // Tắt createdAt
+    updatedAt: false,         // Tắt updatedAt
+    paranoid: true,           // Bật xóa mềm
+    deletedAt: 'deletedAt'    // Đặt tên cột deletedAt
+    
   }
 );
 

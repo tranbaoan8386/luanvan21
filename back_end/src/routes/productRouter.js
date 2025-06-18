@@ -9,6 +9,23 @@ const productRouter = Router();
 // [GET] /api/v1/products
 // 👉 Lấy danh sách tất cả sản phẩm
 productRouter.get('/', ProductController.getAllProduct);
+// [GET] /api/v1/products/deleted
+// 👉 Lấy danh sách sản phẩm đã bị xoá mềm (chỉ Admin)
+productRouter.get(
+  '/deleted',
+  jwtAuthMiddleware,
+  authorizedMiddleware('Admin'),
+  ProductController.getDeletedProducts
+);
+
+// [PATCH] /api/v1/products/restore/:id
+// 👉 Khôi phục sản phẩm đã xoá mềm (chỉ Admin)
+productRouter.patch(
+  '/restore/:id',
+  jwtAuthMiddleware,
+  authorizedMiddleware('Admin'),
+  ProductController.restoreDeletedProduct
+);
 // Get product with images by ID
 productRouter.get('/:id/images', ProductController.getProductWithImages);
 
@@ -49,6 +66,7 @@ productRouter.delete(
   authorizedMiddleware('Admin'),
   ProductController.deleteProduct
 );
+
 
 
 module.exports = productRouter;

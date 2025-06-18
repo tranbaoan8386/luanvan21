@@ -35,6 +35,8 @@ import ManagerUser from "../pages/Admin/pages/ManagerUser";
 import ManagerBrand from "../pages/Admin/pages/ManagerBrand";
 import CreateBrand from "../pages/Admin/pages/ManagerBrand/modules/CreateBrand/CreateBrand";
 import UpdateBrand from "../pages/Admin/pages/ManagerBrand/modules/UpdateBrand";
+import DeletedProduct from "../pages/Admin/pages/ManagerProduct/modules/DeletedProduct";
+
 
 function ProtectedRouter() {
   const { isAuthenticated } = useContext(AppContext);
@@ -172,6 +174,14 @@ export default function routerElements() {
             </AdminLayout>
           )
         },
+        {
+          path: "admin/product/deleted",
+          element: (
+            <AdminLayout>
+              <DeletedProduct />
+            </AdminLayout>
+          )
+        },        
         {
           path: "admin/product/create",
           element: (

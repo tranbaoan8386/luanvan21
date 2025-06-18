@@ -31,6 +31,11 @@ const CartItem = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1
+    },
+    price: {
+      type: DataTypes.FLOAT, // ✅ Thêm dòng này
+      allowNull: false,
+      defaultValue: 0
     }
   },
   {
@@ -38,7 +43,5 @@ const CartItem = sequelize.define(
     timestamps: false
   }
 );
-
-
 
 module.exports = CartItem;

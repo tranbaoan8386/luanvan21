@@ -25,7 +25,7 @@ export default function Contact() {
             className="
 img-fluid"
             src="https://invietnhat.vn/wp-content/uploads/2023/08/logo-shop-thoi-trang-nu-6.jpg"
-            alt="logo Đức Thoại Store"
+            alt="logo Áo Khoác Store"
             width="134"
             height="45"
           />
@@ -33,7 +33,7 @@ img-fluid"
 
         <Grid md={6} sx={{ padding: "10px" }}>
           <Box sx={{ fontSize: 26.5, fontWeight: 500 }}>
-            Thông tin và cách thức liên hệ tới Đức Thoại Store
+            Thông tin và cách thức liên hệ tới Áo Khoác Store
           </Box>
           <Box sx={{ paddingTop: "30px" }}>
             <Box sx={{ paddingTop: "6px", display: "flex" }}>
@@ -64,8 +64,8 @@ img-fluid"
                 <AttachEmailIcon />
                 <Box sx={{ paddingLeft: "15px", fontSize: 25 }}>
                   Email:
-                  <a href="mailto:phamphuduc20102002@gmail.com" style={{ textDecoration: "none", color: "inherit" }}>
-                   &nbsp;phamphuduc20102002@gmail.com
+                  <a href="mailto:tranbaoan20102002@gmail.com" style={{ textDecoration: "none", color: "inherit" }}>
+                   &nbsp;tranbaoan20102002@gmail.com
                   </a>
                 </Box>
               </Box>

@@ -22,6 +22,8 @@ import Input from "../../../../../../components/Input";
 import categoryApi from "../../../../../../apis/category";
 import brandApi from "../../../../../../apis/brand";
 import colorApi from "../../../../../../apis/color";
+import couponApi from "../../../../../../apis/coupon"; // đường dẫn tuỳ thuộc cấu trúc dự án của bạn
+
 import materialApi from "../../../../../../apis/material"; 
 import { BASE_URL_IMAGE } from "../../../../../../constants/index";
 import sizeApi from "../../../../../../apis/size";
@@ -117,6 +119,15 @@ export default function UpdateProduct() {
   });
   const materials = materialsData?.data || [];
 
+
+  const { data: couponsData } = useQuery({
+    queryKey: ["coupons"],
+    queryFn: () => couponApi.getAllCoupon()
+  });
+  const coupons = couponsData?.data || [];
+  
+
+
   // Lấy id sản phẩm từ URL
   const { id } = useParams();
   // Lấy thông tin chi tiết sản phẩm từ server
@@ -170,7 +181,7 @@ export default function UpdateProduct() {
       reset({
         name: product.name,
         price: product.productItems?.[0]?.price || 0,
-        productCouponId: product.coupon?.id || null,
+        productCouponId: product.productItems?.[0]?.coupon?.id ?? "",
         categoryId: product.categories_id,
         brandId: product.brands_id,
         colorId: Array.from(selectedColorIdsSet),
@@ -317,7 +328,17 @@ export default function UpdateProduct() {
     setDescription(content);
   };
   
+
+  const toggleColorSection = (colorId) => {
+    setOpenColors(prev => ({
+      ...prev,
+      [colorId]: !prev[colorId] // đảo trạng thái mở/đóng
+    }));
+  };
   
+  
+  const [openColors, setOpenColors] = useState({});
+
   
   return (
     <Box>
@@ -367,80 +388,111 @@ export default function UpdateProduct() {
         defaultValue={[]}
         render={({ field }) => (
           <>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-              <input
-                style={{ marginLeft: "10px" }}
-                type="checkbox"
-                value={color.id}
-                onChange={(e) => {
-                  const selectedColors = e.target.checked
-                    ? [...field.value, color.id]
-                    : field.value.filter((id) => id !== color.id);
-                  field.onChange(selectedColors);
-                }}
-                checked={field.value.includes(color.id)}
-              />
-              <Box
-                sx={{
-                  width: "30px",
-                  height: "26px",
-                  marginLeft: "10px",
-                  borderRadius: "50%",
-                  border: "1px solid #ddd",
-                  backgroundColor: color.colorCode,
-                  padding: "5px"
-                }}
-              />
-            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 1, justifyContent: "space-between" }}>
+  <Box sx={{ display: "flex", alignItems: "center" }}>
+    <input
+      style={{ marginLeft: "10px" }}
+      type="checkbox"
+      value={color.id}
+      onChange={(e) => {
+        const selectedColors = e.target.checked
+          ? [...field.value, color.id]
+          : field.value.filter((id) => id !== color.id);
+        field.onChange(selectedColors);
+
+        // 👉 Khi check vào thì mở chi tiết luôn
+        if (e.target.checked) {
+          toggleColorSection(color.id);
+        }
+      }}
+      checked={field.value.includes(color.id)}
+    />
+    <Box
+      sx={{
+        width: "30px",
+        height: "26px",
+        marginLeft: "10px",
+        borderRadius: "50%",
+        border: "1px solid #ddd",
+        backgroundColor: color.colorCode,
+      }}
+    />
+    <Typography sx={{ ml: 2 }}>{color.name}</Typography>
+  </Box>
+
+  {field.value.includes(color.id) && (
+    <Button
+      variant="text"
+      onClick={() => toggleColorSection(color.id)}
+      size="small"
+    >
+      {openColors[color.id] ? "Ẩn chi tiết" : "Hiện chi tiết"}
+    </Button>
+  )}
+</Box>
+
 
             {/* 👇 Chọn chất liệu cho từng màu */}
-            <FormControl
-              size="small"
-              sx={{ minWidth: 160, ml: 2, mb: 2 }}
-              disabled={!field.value.includes(color.id)}
-            >
-              <Select
-                displayEmpty
-                value={materialIds[color.id] || ""}
-                onChange={(e) => handleMaterialChange(color.id, e.target.value)}
-              >
-                <MenuItem value="">Chọn chất liệu</MenuItem>
-                {materials.map((m) => (
-                  <MenuItem key={m.id} value={m.id}>
-                    {m.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            {openColors[color.id] && field.value.includes(color.id) && (
+  <>
+    {/* Chất liệu */}
+    <FormControl
+      size="small"
+      sx={{ minWidth: 160, ml: 2, mb: 2 }}
+    >
+      <Select
+  displayEmpty
+  value={
+    Object.prototype.hasOwnProperty.call(materialIds, color.id)
+      ? materialIds[color.id]
+      : ""
+  }
+  onChange={(e) => handleMaterialChange(color.id, e.target.value)}
+>
+  <MenuItem value="">Chọn chất liệu</MenuItem>
+  {materials.map((m) => (
+    <MenuItem key={m.id} value={m.id}>
+      {m.name}
+    </MenuItem>
+  ))}
+</Select>
 
-            {/* ✅ Thêm chọn ảnh chi tiết tại đây */}
-            <Box sx={{ ml: 2, mb: 2 }}>
-              <Typography variant="caption">Chọn ảnh chi tiết cho màu {color.name}</Typography>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={(e) => handleColorImagesChange(color.id, e.target.files)}
-                disabled={!field.value.includes(color.id)}
-              />
-            </Box>
+    </FormControl>
 
-            {/* 👇 Số lượng theo size */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-              {sizes.map((size) => (
-                <Box key={size.id} sx={{ display: "flex", alignItems: "center" }}>
-                  <Typography sx={{ fontSize: "14px", mr: 1 }}>{size.name}</Typography>
-                  <TextField
-                    type="number"
-                    size="small"
-                    value={colorUnits[color.id]?.[size.id] ?? ""}
-                    onChange={(e) => handleColorUnitChange(color.id, size.id, e.target.value)}
-                    error={Boolean(errors.colorUnits?.[color.id]?.[size.id]?.message)}
-                    helperText={errors.colorUnits?.[color.id]?.[size.id]?.message}
-                  />
-                </Box>
-              ))}
-            </Box>
+    {/* Ảnh */}
+    <Box sx={{ ml: 2, mb: 2 }}>
+      <Typography variant="caption">Chọn ảnh chi tiết cho màu {color.name}</Typography>
+      <input
+        type="file"
+        multiple
+        accept="image/*"
+        onChange={(e) => handleColorImagesChange(color.id, e.target.files)}
+      />
+    </Box>
+
+    {/* Số lượng theo size */}
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+      {sizes.map((size) => (
+        <Box key={size.id} sx={{ display: "flex", alignItems: "center" }}>
+          <Typography sx={{ fontSize: "14px", mr: 1 }}>{size.name}</Typography>
+          <TextField
+  type="number"
+  size="small"
+  value={
+    colorUnits[color.id] && colorUnits[color.id][size.id] !== undefined
+      ? colorUnits[color.id][size.id]
+      : ""
+  }
+  onChange={(e) => handleColorUnitChange(color.id, size.id, e.target.value)}
+  error={Boolean(errors.colorUnits?.[color.id]?.[size.id]?.message)}
+  helperText={errors.colorUnits?.[color.id]?.[size.id]?.message}
+/>
+
+        </Box>
+      ))}
+    </Box>
+  </>
+)}
           </>
         )}
       />
@@ -476,14 +528,32 @@ export default function UpdateProduct() {
               >
                 Mã khuyến mãi
               </Typography>
-              <Input
-                type="number"
-                name="productCouponId"
-                register={register}
-                errors={errors}
-                fullWidth
-                size="small"
-              />
+              <FormControl fullWidth>
+              <Controller
+  name="productCouponId"
+  control={control}
+  render={({ field }) => (
+    <Select
+      {...field}
+      size="small"
+      displayEmpty
+      value={field.value ?? ""} // sửa lỗi null
+      error={Boolean(errors.productCouponId?.message)}
+    >
+      <MenuItem value="">-- Không chọn mã --</MenuItem>
+      {coupons.map((coupon) => (
+        <MenuItem key={coupon.id} value={coupon.id}>
+          {coupon.code}
+        </MenuItem>
+      ))}
+    </Select>
+  )}
+/>
+
+                  <FormHelperText error={!!errors.productCouponId?.message}>
+                    {errors.productCouponId?.message}
+                  </FormHelperText>
+                </FormControl>
             </Box>
             
             </Grid>
@@ -496,25 +566,25 @@ export default function UpdateProduct() {
                 Danh mục
               </Typography>
               <Controller
-                name="categoryId"
-                control={control}
-                defaultValue={[]}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    size="small"
-                    error={Boolean(errors.categoryId?.message)}
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                  >
-                    {categories.map((category) => (
-                      <MenuItem value={category.id} key={category.id}>
-                        {category.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                )}
-              />
+  name="categoryId"
+  control={control}
+  defaultValue=""
+  render={({ field }) => (
+    <Select
+      {...field}
+      size="small"
+      value={field.value ?? ""} // tránh undefined
+      error={Boolean(errors.categoryId?.message)}
+    >
+      {categories.map((category) => (
+        <MenuItem key={category.id} value={category.id}>
+          {category.name}
+        </MenuItem>
+      ))}
+    </Select>
+  )}
+/>
+
               <FormHelperText error={!!errors.categoryId?.message}>
                 {errors.categoryId?.message}
               </FormHelperText>
@@ -528,25 +598,25 @@ export default function UpdateProduct() {
                 Thương hiệu
               </Typography>
               <Controller
-                name="brandId"
-                control={control}
-                defaultValue={[]}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    size="small"
-                    error={Boolean(errors.brandId?.message)}
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                  >
-                    {brands.map((brand) => (
-                      <MenuItem value={brand.id} key={brand.id}>
-                        {brand.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                )}
-              />
+  name="brandId"
+  control={control}
+  defaultValue=""
+  render={({ field }) => (
+    <Select
+      {...field}
+      size="small"
+      value={field.value ?? ""}
+      error={Boolean(errors.brandId?.message)}
+    >
+      {brands.map((brand) => (
+        <MenuItem key={brand.id} value={brand.id}>
+          {brand.name}
+        </MenuItem>
+      ))}
+    </Select>
+  )}
+/>
+
               <FormHelperText error={!!errors.brandId?.message}>
                 {errors.brandId?.message}
               </FormHelperText>

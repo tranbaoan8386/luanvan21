@@ -1,136 +1,72 @@
-import { Box, Card, Container, Grid } from "@mui/material";
-import React, { Fragment } from "react";
-import GridProduct from "../../components/GridProduct";
-import AddIcCallIcon from "@mui/icons-material/AddIcCall";
-import WrongLocationIcon from "@mui/icons-material/WrongLocation";
-import { BsPersonX } from "react-icons/bs";
-import AttachEmailIcon from "@mui/icons-material/AttachEmail";
+import React from "react";
+import {
+  Box,
+  Container,
+  Grid,
+  Typography,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText
+} from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { AiOutlineShopping } from "react-icons/ai";
+import './Introduce.css';
+
 export default function Introduce() {
   return (
-    <Container sx={{ mt: 16 }}>
-      <Grid>
-        <h1 className="
-title_page">
-          Cửa hàng Đức Thoại Store
-        </h1>
+    <Container className="intro-container">
+      <Grid container direction="column" spacing={3}>
+        <Grid item>
+          <Typography className="intro-title">
+            🧥 Cửa hàng Áo Khoác Store
+          </Typography>
+        </Grid>
 
-        <Box className="
-content-page rte py-3">
-          <Box
-            paddingTop={3}
-            sx={{
-              fontWeight: "900",
-              fontStyle: "normal",
-              // fontStyle: "oblique",
-              fontSize: "larger"
-            }}
-          >
-            Đức Thoại Store - Sản phẩm chất lượng - dịch vụ hoàn hảo - xu hướng thời trang mới mẻ và tinh tế!
-          </Box>
-          <Box paddingTop={2} pb={3}>
-            <strong
-              sx={{
-                fontWeight: "900",
-                fontStyle: "normal",
-                // fontStyle: "oblique",
-                fontSize: "larger"
-              }}
-            >
-              Đức Thoại Store là cửa hàng thời trang
-            </strong>{" "}
-            cung cấp các sản phẩm thời trang chất lượng bao gồm:&nbsp;Thời trang nam, Thời trang nữ 
-            và&nbsp;Các phụ kiện thời trang.
-          </Box>
+        <Grid item>
+          <Typography className="intro-highlight">
+            Áo Khoác Store - Sản phẩm chất lượng, dịch vụ hoàn hảo, xu hướng thời trang mới mẻ và tinh tế!
+          </Typography>
+        </Grid>
 
-          {/* <Box
-            className="
-youtube-embed-wrapper"
-            sx={{ position: "relative", paddingBottom: "56.25%" }}
-          >
-            <iframe
-              src="https://www.youtube.com/embed/_-6m8QAYhx8"
-              width={1110}
-              height={460}
-            ></iframe>
-          </Box> */}
+        <Grid item>
+          <Typography className="intro-section">
+            <strong>Áo Khoác Store</strong> là cửa hàng thời trang cung cấp các sản phẩm chất lượng bao gồm:
+            <br />– Thời trang nam
+            <br />– Thời trang nữ
+            <br />– Các phụ kiện thời trang
+          </Typography>
+        </Grid>
 
-          <Box
-            sx={{
-              paddingTop: "20px",
-              fontWeight: "900",
-              // fontStyle: "normal",
-              fontStyle: "oblique",
-              fontSize: "larger"
-            }}
-          >
-            An tâm mua sắm đồ thời trang tại Đức Thoại Store
-          </Box>
-          <Box
-            sx={{
-              paddingTop: "10px"
-            }}
-          >
-            Khách hàng ghé thăm Đức Thoại Store có thể hoàn toàn an tâm bởi các giá
-            trị và chất lượng sản phẩm mà Đức Thoại Store đem lại. Tại đây, chúng
-            tôi không chỉ cung cấp những sản phẩm có mẫu mã, kiểu dáng đẹp, độc,
-            lạ mà còn chú ý lựa chọn các sản phẩm có chất lượng tốt, tỉ mỉ trong
-            từng đường nét.
-          </Box>
-          <Box
-            sx={{
-              paddingTop: "10px"
-            }}
-          >
-            Đến với cửa hàng thời trang Đức Thoại Store, các bạn sẽ:
-          </Box>
-          <Box
-            sx={{
-              paddingTop: "10px",
-              fontWeight: "900",
-              fontStyle: "normal",
-              // fontStyle: "oblique",
-              fontSize: "medium"
-            }}
-          >
-            <Box>
-              Đảm bảo chất lượng hàng hoá với các chính sách bảo hành và chính
-              sách đổi hàng.
-            </Box>
-            <Box
-              sx={{
-                paddingTop: "10px",
-                fontWeight: "900",
-                fontStyle: "normal",
-                // fontStyle: "oblique",
-                fontSize: "larger"
-              }}
-            >
-              An tâm đống gói khi vận chuyển xa.
-            </Box>
-            <Box
-              sx={{
-                paddingTop: "10px",
-                fontWeight: "900",
-                fontStyle: "normal",
-                // fontStyle: "oblique",
-                fontSize: "larger"
-              }}
-            >
-              Mẫu mã thiết kế độc đáo.
-            </Box>
-            <Box
-              sx={{
-                paddingTop: "10px",
-                fontWeight: "900",
-                fontStyle: "normal",
-                // fontStyle: "oblique",
-                fontSize: "larger"
-              }}
-            >
-              Tư vấn về sản phẩm, màu sắc, kích thước thích hợp với mọi người.
-            </Box>
-          </Box>
-        </Box>
+        <Grid item>
+          <Typography className="intro-note">
+            🛍️ An tâm mua sắm tại Áo Khoác Store
+          </Typography>
+          <Typography className="intro-section">
+            Khách hàng ghé thăm chúng tôi có thể hoàn toàn an tâm bởi giá trị và chất lượng sản phẩm mà chúng tôi cung cấp. Không chỉ đẹp, độc, lạ – mà còn bền và chỉn chu đến từng đường may.
+          </Typography>
+        </Grid>
+
+        <Grid item>
+          <Typography className="intro-highlight" sx={{ fontSize: 18 }}>
+            Khi đến với Áo Khoác Store, bạn sẽ nhận được:
+          </Typography>
+          <List className="intro-list">
+            {[
+              "Chính sách bảo hành và đổi trả linh hoạt",
+              "Đóng gói kỹ lưỡng khi vận chuyển xa",
+              "Mẫu mã thiết kế độc đáo và đa dạng",
+              "Tư vấn chi tiết về sản phẩm, màu sắc và kích thước"
+            ].map((text, idx) => (
+              <ListItem key={idx}>
+                <ListItemIcon>
+                  <CheckCircleIcon />
+                </ListItemIcon>
+                <ListItemText primary={text} />
+              </ListItem>
+            ))}
+          </List>
+        </Grid>
       </Grid>
     </Container>
   );

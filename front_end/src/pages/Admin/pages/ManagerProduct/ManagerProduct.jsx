@@ -203,6 +203,11 @@ export default function ManagerProduct() {
           <Typography color="gray" fontSize="24px" component="p">
             Quản lý sản phẩm
           </Typography>
+          <Link to="/admin/product/deleted">
+            <Button variant="outlined" color="error">
+              Sản phẩm đã xóa
+            </Button>
+          </Link>
           <Link to="/admin/product/create">
             <Button sx={{ height: "55px" }} variant="outlined" color="success" >
               <FaPlus

@@ -134,8 +134,34 @@ class CouponController {
             next(err)
         }
     }
-
-
+    async checkCoupon(req, res, next) {
+        try {
+          const { code } = req.query;
+          if (!code) throw new ErrorResponse(400, "Thiếu mã khuyến mãi");
+      
+          const now = new Date();
+          const coupon = await Coupon.findOne({
+            where: {
+              code,
+              startDate: { [Sequelize.Op.lte]: now },
+              endDate: { [Sequelize.Op.gte]: now }
+            }
+          });
+      
+          if (!coupon) {
+            throw new ErrorResponse(400, "Mã giảm giá không tồn tại hoặc đã hết hạn!");
+          }
+      
+          return ApiResponse.success(res, {
+            status: 200,
+            data: { coupon }
+          });
+        } catch (err) {
+          next(err);
+        }
+      }
+      
+    
 }
 
 module.exports = new CouponController()

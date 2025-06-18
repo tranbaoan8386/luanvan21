@@ -24,7 +24,11 @@ const productApi = {
             }
         }),
 
-    deleteProduct: (id) => axiosClient.delete(`/products/${id}`)
+    deleteProduct: (id) => axiosClient.delete(`/products/${id}`),
+
+    // ✅ THÊM MỚI:
+    getDeletedProducts: () => axiosClient.get('/products/deleted'),
+    restoreProduct: (id) => axiosClient.patch(`/products/restore/${id}`)
 }
 
 export default productApi

@@ -423,8 +423,8 @@ export default function ManagerOrder() {
                                       <TableCell align="center">
                                         {formatCurrency(item.productItem.price)} VND
                                       </TableCell>
-                                      <TableCell align="right">
-                                        {formatCurrency(selectedOrder?.total_payable)} VND
+                                      <TableCell align="center">
+                                        {formatCurrency(item.productItem.price)} VND
                                       </TableCell>
                                     </TableRow>
                                   ))}

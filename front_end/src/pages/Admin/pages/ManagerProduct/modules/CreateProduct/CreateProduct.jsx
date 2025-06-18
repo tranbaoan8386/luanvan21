@@ -24,6 +24,8 @@ import categoryApi from "../../../../../../apis/category";
 import brandApi from "../../../../../../apis/brand";
 import colorApi from "../../../../../../apis/color";
 import sizeApi from "../../../../../../apis/size";
+import couponApi from '../../../../../../apis/coupon'; // đường dẫn chính xác đến file couponApi.js
+
 import materialApi from "../../../../../../apis/material"; 
 import productApi from "../../../../../../apis/product";
 import { createProductSchema } from "../../../../../../validation/product";
@@ -87,6 +89,15 @@ export default function CreateProduct() {
     queryFn: brandApi.getAllBrand
   });
   const brands = brandsData?.data || [];
+
+  const { data: couponsData } = useQuery({
+    queryKey: ["coupons"],
+    queryFn: couponApi.getAllCoupon 
+  });
+  const coupons = couponsData?.data || [];
+  console.log("Coupons Data:", couponsData);
+
+  
 
   const { data: colorsData } = useQuery({
     queryKey: ["colors"],
@@ -201,13 +212,20 @@ export default function CreateProduct() {
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("price", data.price);
-    formData.append("productCouponId", data.productCouponId);
+    // formData.append("productCouponId", data.productCouponId); 
     formData.append("description", description);
     formData.append("categoryId", data.categoryId);
     formData.append("brandId", data.brandId);
   
     // Thêm hình ảnh vào FormData (nếu có)
     formData.append("image", image); // 👉 ảnh avatar
+
+    if (data.productCouponId !== "" && data.productCouponId != null) {
+      formData.append("productCouponId", Number(data.productCouponId));
+    }else {
+      formData.append("productCouponId", Number(data.productCouponId));
+    }
+    
 
     // 👇 gửi ảnh chi tiết theo từng màu
     Object.keys(colorImages).forEach((colorId) => {
@@ -252,7 +270,8 @@ export default function CreateProduct() {
     createProductMutation.mutate(formData);
   });
   
-  
+  const [expandedColorId, setExpandedColorId] = useState(null);
+
   
   
 
@@ -287,23 +306,28 @@ export default function CreateProduct() {
     Màu sắc & Số lượng tồn
   </Typography>
   {colors.map((color) => (
-    <Box
-      key={color.id}
-      sx={{
-        display: "flex",
-        flexDirection: "column", // 👉 Cho gọn gàng
-        mb: 2,
-        padding: "10px",
-        borderRadius: "5px",
-        border: "1px solid #ddd"
-      }}
-    >
-      <Controller
-        name="colorId"
-        control={control}
-        defaultValue={[]}
-        render={({ field }) => (
+  <Box
+    key={color.id}
+    sx={{
+      display: "flex",
+      flexDirection: "column",
+      mb: 2,
+      padding: "10px",
+      borderRadius: "5px",
+      border: "1px solid #ddd"
+    }}
+  >
+    <Controller
+      name="colorId"
+      control={control}
+      defaultValue={[]}
+      render={({ field }) => {
+        const isChecked = field.value.includes(color.id);
+        const isExpanded = expandedColorId === color.id;
+
+        return (
           <>
+            {/* Checkbox & màu */}
             <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
               <input
                 style={{ marginLeft: "10px" }}
@@ -314,10 +338,24 @@ export default function CreateProduct() {
                     ? [...field.value, color.id]
                     : field.value.filter((id) => id !== color.id);
                   field.onChange(selectedColors);
+
+                  // Nếu tích -> mở chi tiết, nếu bỏ tích -> thu lại
+                  if (e.target.checked) {
+                    setExpandedColorId(color.id);
+                  } else if (expandedColorId === color.id) {
+                    setExpandedColorId(null);
+                  }
                 }}
-                checked={field.value.includes(color.id)}
+                checked={isChecked}
               />
               <Box
+                onClick={() => {
+                  if (isChecked) {
+                    setExpandedColorId((prev) =>
+                      prev === color.id ? null : color.id
+                    );
+                  }
+                }}
                 sx={{
                   width: "30px",
                   height: "26px",
@@ -325,66 +363,92 @@ export default function CreateProduct() {
                   borderRadius: "50%",
                   border: "1px solid #ddd",
                   backgroundColor: color.colorCode,
-                  padding: "5px"
+                  padding: "5px",
+                  cursor: isChecked ? "pointer" : "not-allowed"
                 }}
               />
             </Box>
 
-            {/* 👇 Chọn chất liệu cho từng màu */}
-            <FormControl
-              size="small"
-              sx={{ minWidth: 160, ml: 2, mb: 2 }}
-              disabled={!field.value.includes(color.id)}
-            >
-              <Select
-                displayEmpty
-                value={materialIds[color.id] || ""}
-                onChange={(e) => handleMaterialChange(color.id, e.target.value)}
-              >
-                <MenuItem value="">Chọn chất liệu</MenuItem>
-                {materials.map((m) => (
-                  <MenuItem key={m.id} value={m.id}>
-                    {m.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            {/* 👉 Chỉ hiện phần chi tiết khi được mở */}
+            {isChecked && isExpanded && (
+              <>
+                {/* Chọn chất liệu */}
+                <FormControl
+                  size="small"
+                  sx={{ minWidth: 160, ml: 2, mb: 2 }}
+                >
+                  <Select
+                    displayEmpty
+                    value={materialIds[color.id] || ""}
+                    onChange={(e) =>
+                      handleMaterialChange(color.id, e.target.value)
+                    }
+                  >
+                    <MenuItem value="">Chọn chất liệu</MenuItem>
+                    {materials.map((m) => (
+                      <MenuItem key={m.id} value={m.id}>
+                        {m.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
-            {/* ✅ Thêm chọn ảnh chi tiết tại đây */}
-            <Box sx={{ ml: 2, mb: 2 }}>
-              <Typography variant="caption">Chọn ảnh chi tiết cho màu {color.name}</Typography>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={(e) => handleColorImagesChange(color.id, e.target.files)}
-                disabled={!field.value.includes(color.id)}
-              />
-            </Box>
-
-            {/* 👇 Số lượng theo size */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-              {sizes.map((size) => (
-                <Box key={size.id} sx={{ display: "flex", alignItems: "center" }}>
-                  <Typography sx={{ fontSize: "14px", mr: 1 }}>{size.name}</Typography>
-                  <TextField
-                    type="number"
-                    size="small"
-                    value={colorUnits[color.id]?.[size.id] || ""}
-                    onChange={(e) => handleColorUnitChange(color.id, size.id, e.target.value)}
-                    disabled={!field.value.includes(color.id)}
-                    error={Boolean(errors.colorUnits?.[color.id]?.[size.id]?.message)}
-                    helperText={errors.colorUnits?.[color.id]?.[size.id]?.message}
+                {/* Chọn ảnh */}
+                <Box sx={{ ml: 2, mb: 2 }}>
+                  <Typography variant="caption">
+                    Chọn ảnh chi tiết cho màu {color.name}
+                  </Typography>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) =>
+                      handleColorImagesChange(color.id, e.target.files)
+                    }
                   />
                 </Box>
-              ))}
-            </Box>
+
+                {/* Số lượng theo size */}
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                  {sizes.map((size) => (
+                    <Box
+                      key={size.id}
+                      sx={{ display: "flex", alignItems: "center" }}
+                    >
+                      <Typography sx={{ fontSize: "14px", mr: 1 }}>
+                        {size.name}
+                      </Typography>
+                      <TextField
+                        type="number"
+                        size="small"
+                        value={colorUnits[color.id]?.[size.id] || ""}
+                        onChange={(e) =>
+                          handleColorUnitChange(
+                            color.id,
+                            size.id,
+                            e.target.value
+                          )
+                        }
+                        error={Boolean(
+                          errors.colorUnits?.[color.id]?.[size.id]?.message
+                        )}
+                        helperText={
+                          errors.colorUnits?.[color.id]?.[size.id]?.message
+                        }
+                      />
+                    </Box>
+                  ))}
+                </Box>
+              </>
+            )}
           </>
-        )}
-      />
-    </Box>
-  ))}
-</Box>
+        );
+      }}
+    />
+  </Box>
+))}
+
+  </Box>
 
 
             <Box sx={{ mt: 2 }}>
@@ -408,21 +472,38 @@ export default function CreateProduct() {
               />
             </Box>
             <Box sx={{ mt: 2 }}>
-              <Typography
-                sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
-                component="p"
-              >
-                Mã khuyến mãi
-              </Typography>
-              <Input
-                type="number"
-                name="productCouponId"
-                register={register}
-                errors={errors}
-                fullWidth
-                size="small"
-              />
-            </Box>
+  <Typography
+    sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
+    component="p"
+  >
+    Mã khuyến mãi
+  </Typography>
+  <FormControl fullWidth>
+    <Controller
+      name="productCouponId"
+      control={control}
+      render={({ field }) => (
+        <Select
+          {...field}
+          size="small"
+          displayEmpty
+          error={Boolean(errors.productCouponId?.message)}
+        >
+          <MenuItem value="">-- Không chọn mã --</MenuItem>
+          {coupons.map((coupon) => (
+            <MenuItem key={coupon.id} value={coupon.id}>
+              {coupon.code}
+            </MenuItem>
+          ))}
+        </Select>
+      )}
+    />
+    <FormHelperText error={!!errors.productCouponId?.message}>
+      {errors.productCouponId?.message}
+    </FormHelperText>
+  </FormControl>
+</Box>
+
             
             </Grid>
           <Grid item md={6} xs={12}>

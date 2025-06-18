@@ -244,17 +244,15 @@ export default function Cart() {
   const calculateTotalCart = () => {
     if (carts && carts.length > 0) {
       return carts.reduce((total, cart) => {
-        const productPrice = cart.productItem?.price
- || 0;
-        const couponDiscount =
-          cart.productItem?.product?.productCoupon?.price || 0;
+        const itemPrice = Number(cart.price) || 0; // ✅ GIÁ ĐÃ ÁP DỤNG KHUYẾN MÃI (NẾU CÓ)
         const quantity = quantities[cart.productItem.id] || cart.quantity;
-        return total + (productPrice - couponDiscount) * quantity;
+        return total + itemPrice * quantity;
       }, 0);
     }
     return 0;
   };
   const totalCart = calculateTotalCart();
+  
 
   const { data: coupon, status } = useQuery({
     queryKey: ["coupon", debouncedValue],
@@ -300,32 +298,43 @@ export default function Cart() {
   const addCoupon = async () => {
     if (code.trim() === "") {
       toast.warning("Vui lòng nhập mã giảm giá");
-    } else {
-      setCouponValue(null);
-      if (coupon) {
-        if (status === "success") {
-          const couponData = coupon?.data?.coupon;
-          console.log("Value of coupon:", couponData);
-
-          if (couponData) {
-            const { price } = couponData;
-            console.log("Price of coupon:", price);
-
-
-            setCouponValue(price);
-
-            console.log("Value of coupon:", price);
-
-            toast.success("Áp dụng mã giảm giá thành công!");
-          } else {
-            toast.error("Mã giảm giá không tồn tại hoặc hết hạn!");
-          }
-        } else if (status === "error") {
-          toast.error("Áp dụng mã giảm giá thất bại!");
-        }
+      return;
+    }
+  
+    try {
+      const res = await couponApi.applyCoupon(code); // 🎯 Gửi code đến BE
+      const couponData = res?.data?.coupon;
+  
+      if (!couponData) {
+        toast.error("Mã giảm giá không tồn tại hoặc đã hết hạn!");
+        return;
       }
+  
+      // 👉 Log dữ liệu carts để debug
+      console.log("🛒 Carts debug (productItem):", carts.map((item) => item.productItem));
+  
+      // ⚠️ Nếu trong giỏ hàng có sản phẩm đã có coupon sẵn, không cho áp thêm
+      const hasDiscountedItem = carts.some(
+        (item) =>
+          item.productItem?.coupons_id ||
+          item.productItem?.coupon_id || // Nếu backend trả về coupon_id
+          item.productItem?.coupon       // Nếu include quan hệ coupon
+      );
+  
+      if (hasDiscountedItem) {
+        toast.error("Có sản phẩm đã giảm giá sẵn. Không thể áp thêm mã.");
+        return;
+      }
+  
+      const { price } = couponData;
+      setCouponValue(price);
+      toast.success("Áp dụng mã giảm giá thành công!");
+    } catch (err) {
+      console.error("Lỗi khi áp mã:", err);
+      toast.error("Áp dụng mã giảm giá thất bại!");
     }
   };
+  
 
   const addpaypal = async () => {
     try {
@@ -689,7 +698,7 @@ export default function Cart() {
 
                     <TableCell align="right">
                       <div className="quantity">
-                        <div
+                        <div  
                           style={{
                             pointerEvents:
                               cart.quantity <= 1 || updateCartMutation.isPending
@@ -733,19 +742,12 @@ export default function Cart() {
                       </div>
                     </TableCell>
                     <TableCell align="right">
-                     
-                      {formatCurrency(
-                       (cart.productItem?.price || 0) - (cart.productItem?.product?.productCoupon?.price || 0)
-
-                      )}
+                    {formatCurrency(Number(cart.price))}
                     </TableCell>
                     <TableCell align="right">
-                      {formatCurrency(
-  ((cart.productItem?.price || 0) -
-    (cart.productItem?.product?.productCoupon?.price || 0)) *
-    (quantities[cart.productItem.id] || cart.quantity)
-)
-}
+                    {formatCurrency(
+                      Number(cart.price) * (quantities[cart.productItem.id] || cart.quantity)
+                    )}
                     </TableCell>
                     <TableCell align="right">
                       <Button
