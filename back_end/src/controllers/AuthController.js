@@ -202,63 +202,62 @@ class AuthController {
     }
 
     async forgotPassword(req, res, next) {
-        try {
-            const { email } = req.body;
+  try {
+    const { email } = req.body;
 
+    const user = await User.findOne({ where: { email } });
+    console.log(`Kết quả tìm kiếm người dùng: ${user}`);
 
-            const user = await User.findOne({ where: { email } });
-            console.log(`Kết quả tìm kiếm người dùng: ${user}`);
-            // console.log(`Nhận yêu cầu quên mật khẩu cho email: ${email}`);
-            if (!user) {
-                throw new ErrorResponse(404, 'Người dùng không tồn tại trong hệ thống');
-            }
-
-            const existedToken = await ForgotToken.findOne({ email });
-            console.log(`Kết quả kiểm tra token hiện tại: ${existedToken}`);
-
-            if (existedToken) {
-                throw new ErrorResponse(409, 'Token đã tồn tại. Vui lòng kiểm tra email của bạn để khôi phục mật khẩu.');
-            }
-
-            // Tạo mã xác nhận gồm 4 chữ số ngẫu nhiên
-            const code = Math.floor(1000 + Math.random() * 9000);
-            console.log(`Mã xác nhận đã tạo: ${code}`);
-
-            const forgotToken = new ForgotToken({
-                email,
-                token: code,
-                expires: Date.now() + 3600000 // 1 giờ (3600000 milliseconds)
-            });
-
-            const clientUrl = process.env.CLIENT_URL || 'http://localhost:8000';
-            const message = `Mã xác nhận của bạn là: ${code}. Mã này sẽ hết hạn sau 1 giờ.`;
-            console.log(`Thông báo khôi phục mật khẩu: ${message}`);
-
-            await forgotToken.save();
-
-            await EmailService.sendMail(user.email, "Mã xác nhận khôi phục mật khẩu", `<p>${message}</p>`);
-
-            console.log('Email đã được gửi và mã xác nhận đã được lưu thành công.');
-
-            return res.status(200).json({
-                status: 200,
-                message: 'Vui lòng kiểm tra email để lấy mã xác nhận khôi phục mật khẩu'
-            });
-        } catch (err) {
-            console.error('Lỗi trong forgotPassword:', err); // Ghi nhật ký chi tiết lỗi
-
-            if (err.message && err.message.includes('invalid_client')) {
-                // Xử lý lỗi invalid client
-                return res.status(401).json({
-                    success: false,
-                    message: 'Thông tin xác thực của dịch vụ email không hợp lệ'
-                });
-            }
-
-            // Gửi lỗi không xác định về middleware
-            next(err);
-        }
+    if (!user) {
+      throw new ErrorResponse(404, 'Người dùng không tồn tại trong hệ thống');
     }
+
+    // 🔄 Nếu đã tồn tại token → xóa đi để tạo mới
+    const existedToken = await ForgotToken.findOne({ email });
+    console.log(`Kết quả kiểm tra token hiện tại: ${existedToken}`);
+
+    if (existedToken) {
+      await ForgotToken.deleteOne({ email }); // ✅ XÓA token cũ
+      console.log('Đã xóa token cũ để tạo mới.');
+    }
+
+    // ✅ Tạo mã xác nhận gồm 4 chữ số
+    const code = Math.floor(1000 + Math.random() * 9000);
+    console.log(`Mã xác nhận đã tạo: ${code}`);
+
+    const forgotToken = new ForgotToken({
+      email,
+      token: code,
+      expires: Date.now() + 3600000 // 1 giờ
+    });
+
+    const message = `Mã xác nhận của bạn là: ${code}. Mã này sẽ hết hạn sau 1 giờ.`;
+    console.log(`Thông báo khôi phục mật khẩu: ${message}`);
+
+    await forgotToken.save();
+
+    await EmailService.sendMail(user.email, "Mã xác nhận khôi phục mật khẩu", `<p>${message}</p>`);
+
+    console.log('Email đã được gửi và mã xác nhận đã được lưu thành công.');
+
+    return res.status(200).json({
+      status: 200,
+      message: 'Vui lòng kiểm tra email để lấy mã xác nhận khôi phục mật khẩu'
+    });
+  } catch (err) {
+    console.error('Lỗi trong forgotPassword:', err);
+
+    if (err.message && err.message.includes('invalid_client')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Thông tin xác thực của dịch vụ email không hợp lệ'
+      });
+    }
+
+    next(err);
+  }
+}
+
 
 
     async verifyForgotToken(req, res, next) {

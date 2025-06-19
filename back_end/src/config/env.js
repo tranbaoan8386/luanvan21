@@ -28,8 +28,8 @@ exports.env = {
     MAIL_MAILER: 'smtp',
     MAIL_HOST: 'smtp.gmail.com',
     MAIL_PORT: 587,
-    MAIL_USERNAME: 'tranbaoan20102002@gmail.com',
-    MAIL_PASSWORD: 'mhbv wjlb zbsg akso',
+    MAIL_USERNAME: 'quanghuy110303@gmail.com',
+    MAIL_PASSWORD: 'pyblqyokldgjuwxv',
     MAIL_ENCRYPTION: 'TLS',
     MAIL_FROM_ADDRESS: 'tranbaoan20@gmail.com',
     MAIL_FROM_NAME: "${APP_NAME}"

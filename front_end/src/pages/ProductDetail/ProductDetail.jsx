@@ -8,7 +8,7 @@ import {
   Alert,
   Button,
   Grid,
-  Rating
+  Rating,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -36,13 +36,11 @@ export default function ProductDetail() {
   const { isAuthenticated, profile: user } = useContext(AppContext);
 
   const navigate = useNavigate();
-  
+
   const { data: productData } = useQuery({
-  queryKey: ["product", id],
-  queryFn: () => productApi.getDetailProduct(id)
-});
-
-
+    queryKey: ["product", id],
+    queryFn: () => productApi.getDetailProduct(id),
+  });
 
   // const { data: productDa } = useQuery({
   //   queryKey: ["products", id],
@@ -53,7 +51,7 @@ export default function ProductDetail() {
   const [currentIndexImage, setCurrentIndexImage] = useState([0, 5]);
   const [activeImage, setActiveImage] = useState("");
   const [selectedColorId, setSelectedColorId] = useState(null);
-  const [selectedSizeId, setSelectedSizeId] = useState(null); 
+  const [selectedSizeId, setSelectedSizeId] = useState(null);
   const [error, setError] = useState("");
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(0);
@@ -64,52 +62,52 @@ export default function ProductDetail() {
   const [successReplyId, setSuccessReplyId] = useState(null);
   const { data: reviewData } = useQuery({
     queryKey: ["reviews", id],
-    queryFn: () => reviewApi.getAllReviewProduct(id)
+    queryFn: () => reviewApi.getAllReviewProduct(id),
   });
   const reviews = reviewData?.data || [];
 
   const product = productData?.data.product;
 
   const colors = useMemo(() => {
-  if (!product?.productItems) return [];
-  const colorMap = {};
+    if (!product?.productItems) return [];
+    const colorMap = {};
 
-  product.productItems.forEach((item) => {
-    const colorId = item.color?.id;
-    const sizeId = item.size?.id;
-    if (!colorId || !sizeId) return;
+    product.productItems.forEach((item) => {
+      const colorId = item.color?.id;
+      const sizeId = item.size?.id;
+      if (!colorId || !sizeId) return;
 
-    if (!colorMap[colorId]) {
-      colorMap[colorId] = {
-        id: colorId,
-        name: item.color.name,
-        colorCode: item.color.colorCode,
-        sizes: []
-      };
-    }
+      if (!colorMap[colorId]) {
+        colorMap[colorId] = {
+          id: colorId,
+          name: item.color.name,
+          colorCode: item.color.colorCode,
+          sizes: [],
+        };
+      }
 
-    colorMap[colorId].sizes.push({
-      sizeId,
-      sizeName: item.size.name,
-      stock: item.unitInStock,
-      productItemId: item.id
+      colorMap[colorId].sizes.push({
+        sizeId,
+        sizeName: item.size.name,
+        stock: item.unitInStock,
+        productItemId: item.id,
+      });
     });
-  });
 
-  return Object.values(colorMap);
-}, [product]);
+    return Object.values(colorMap);
+  }, [product]);
 
   const images = useMemo(() => product?.images || [], [product?.images]);
 
-// const images = useMemo(
-//   () => productDa?.data?.images || [],
-//   [productDa?.data?.images]
-// );
+  // const images = useMemo(
+  //   () => productDa?.data?.images || [],
+  //   [productDa?.data?.images]
+  // );
 
- const image = useMemo(
-  () => (product?.avatar ? [product.avatar] : []),
-  [product?.avatar]
-);
+  const image = useMemo(
+    () => (product?.avatar ? [product.avatar] : []),
+    [product?.avatar]
+  );
 
   const imageRef = useRef(null);
 
@@ -156,23 +154,20 @@ export default function ProductDetail() {
   };
 
   const handleZoom = (e) => {
-  const image = imageRef.current;
-  if (!image) return;
+    const image = imageRef.current;
+    if (!image) return;
 
-  const rect = image.getBoundingClientRect(); // 👈 sửa lại cho đúng
-  const { naturalHeight, naturalWidth } = image;
-  const { offsetX, offsetY } = e.nativeEvent;
+    const rect = image.getBoundingClientRect(); // 👈 sửa lại cho đúng
+    const { naturalHeight, naturalWidth } = image;
+    const { offsetX, offsetY } = e.nativeEvent;
 
-  const top = offsetY * (1 - naturalHeight / rect.height);
-  const left = offsetX * (1 - naturalWidth / rect.width);
+    const top = offsetY * (1 - naturalHeight / rect.height);
+    const left = offsetX * (1 - naturalWidth / rect.width);
 
-  image.style.transform = `scale(2) translate(${left / 2}px, ${top / 2}px)`;
-  image.style.transformOrigin = "top left";
-};
+    image.style.transform = `scale(2) translate(${left / 2}px, ${top / 2}px)`;
+    image.style.transformOrigin = "top left";
+  };
 
-
- 
-   
   const handleRemoveZoom = () => {
     imageRef.current.removeAttribute("style");
   };
@@ -189,7 +184,7 @@ export default function ProductDetail() {
       } else {
         setError("An error occurred. Please try again.");
       }
-    }
+    },
   });
 
   const handleColorClick = (colorId) => {
@@ -201,8 +196,8 @@ export default function ProductDetail() {
   };
   const handleAddToCart = () => {
     if (!isAuthenticated) {
-        navigate("/login");
-        return;
+      navigate("/login");
+      return;
     }
 
     console.log("Selected Color ID:", selectedColorId);
@@ -210,78 +205,82 @@ export default function ProductDetail() {
     console.log("Products Detail:", product.productsDetail);
 
     if (!selectedColorId || !selectedSizeId) {
-        alert("Vui lòng chọn màu và kích thước sản phẩm.");
-        return;
+      alert("Vui lòng chọn màu và kích thước sản phẩm.");
+      return;
     }
 
-const selectedColor = colors.find((color) => color.id === selectedColorId);
+    const selectedColor = colors.find((color) => color.id === selectedColorId);
     // Tìm productItem dựa trên colorId
     const productItem = selectedColor?.sizes.find(
-  (size) => size.sizeId === selectedSizeId
-);
-
+      (size) => size.sizeId === selectedSizeId
+    );
 
     if (!productItem) {
-        alert("Không tìm thấy sản phẩm với màu đã chọn.");
-        return;
+      alert("Không tìm thấy sản phẩm với màu đã chọn.");
+      return;
     }
 
     // Kiểm tra tồn kho
-    
 
-    const selectedSize = selectedColor?.sizes.find((size) => size.sizeId === selectedSizeId);
-    
+    const selectedSize = selectedColor?.sizes.find(
+      (size) => size.sizeId === selectedSizeId
+    );
+
     if (!selectedSize || selectedSize.stock <= 0) {
-        alert("Sản phẩm này đã hết hàng.");
-        return;
+      alert("Sản phẩm này đã hết hàng.");
+      return;
     }
 
     // Gọi API thêm vào giỏ hàng với productItem.id và size được chọn
     addToCartMutation.mutate(
-        {
-            products_item_id: productItem.productItemId, // ✅ đúng tên backend
-            quantity,
-            color_id: selectedColorId,
-            size_id: selectedSizeId
+      {
+        products_item_id: productItem.productItemId, // ✅ đúng tên backend
+        quantity,
+        color_id: selectedColorId,
+        size_id: selectedSizeId,
+      },
+      {
+        onSuccess: (data) => {
+          console.log("Thêm vào giỏ hàng thành công:", data);
+          toast.success(`Đã thêm sản phẩm vào giỏ hàng!`);
+          queryClient.invalidateQueries({ queryKey: ["carts"] });
         },
-        {
-            onSuccess: (data) => {
-                console.log("Thêm vào giỏ hàng thành công:", data);
-                toast.success(`Đã thêm sản phẩm vào giỏ hàng!`);
-                queryClient.invalidateQueries({ queryKey: ["carts"] });
-            },
-            onError: (error) => {
-                console.error("Thêm vào giỏ hàng thất bại:", error.response?.data?.message);
-                toast.error(error.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.");
-            },
-        }
+        onError: (error) => {
+          console.error(
+            "Thêm vào giỏ hàng thất bại:",
+            error.response?.data?.message
+          );
+          toast.error(
+            error.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại."
+          );
+        },
+      }
     );
   };
 
-
-  
   const getStockQuantity = (colorId, sizeId) => {
-   const selectedColor = colors.find((color) => color.id === colorId);
+    const selectedColor = colors.find((color) => color.id === colorId);
 
-    const selectedSize = selectedColor?.sizes.find((size) => size.sizeId === sizeId);
+    const selectedSize = selectedColor?.sizes.find(
+      (size) => size.sizeId === sizeId
+    );
     return selectedSize?.stock || 0;
   };
-  
-  
 
   const createReviewMutation = useMutation({
     mutationFn: (newReview) => reviewApi.createReview(newReview),
     onSuccess: (data) => {
-        toast.success("Đánh giá sản phẩm thành công");
-        setComment("");
-        setRating(0);
-        queryClient.invalidateQueries("reviews");
+      toast.success("Đánh giá sản phẩm thành công");
+      setComment("");
+      setRating(0);
+      queryClient.invalidateQueries("reviews");
     },
     onError: (error) => {
-        // Hiển thị thông báo lỗi từ server
-        const errorMessage = error.response?.data?.message || "Có lỗi xảy ra khi đánh giá";
-        toast.error(errorMessage);
-    }
+      // Hiển thị thông báo lỗi từ server
+      const errorMessage =
+        error.response?.data?.message || "Có lỗi xảy ra khi đánh giá";
+      toast.error(errorMessage);
+    },
   });
 
   const createReplyMutation = useMutation({
@@ -297,32 +296,32 @@ const selectedColor = colors.find((color) => color.id === selectedColorId);
     onError: (error) => {
       setReplyError("Có lỗi xảy ra. Vui lòng thử lại!");
       setReplySuccess("");
-    }
+    },
   });
 
   const handleReviewSubmit = (e) => {
     e.preventDefault();
 
     if (!isAuthenticated) {
-        toast.error("Vui lòng đăng nhập để đánh giá");
-        navigate("/login");
-        return;
+      toast.error("Vui lòng đăng nhập để đánh giá");
+      navigate("/login");
+      return;
     }
 
     if (!rating) {
-        toast.error("Vui lòng chọn số sao đánh giá");
-        return;
+      toast.error("Vui lòng chọn số sao đánh giá");
+      return;
     }
 
     if (!comment.trim()) {
-        toast.error("Vui lòng nhập nội dung đánh giá");
-        return;
+      toast.error("Vui lòng nhập nội dung đánh giá");
+      return;
     }
 
     const newReview = {
-        comment,
-        rating,
-        productId: product.id
+      comment,
+      rating,
+      productId: product.id,
     };
 
     createReviewMutation.mutate(newReview);
@@ -334,7 +333,7 @@ const selectedColor = colors.find((color) => color.id === selectedColorId);
     const newReply = {
       comment: reply[reviewId],
       reviewId,
-      userId: user.id
+      userId: user.id,
     };
     console.log("Sending reply data:", newReply);
 
@@ -343,19 +342,26 @@ const selectedColor = colors.find((color) => color.id === selectedColorId);
 
   if (!product) return null;
 
- const firstProductItem = product?.productItems?.[0];
-const originalPrice = firstProductItem?.price || 0;
-const discountPrice = firstProductItem?.coupon?.price || 0;
-const finalPrice = originalPrice - discountPrice;
+  const firstProductItem = product?.productItems?.[0];
+  const originalPrice = firstProductItem?.price || 0;
+  const discountPrice = firstProductItem?.coupon?.price || 0;
+  const finalPrice = originalPrice - discountPrice;
 
   const selectedColor = colors.find((color) => color.id === selectedColorId);
-
 
   const sizesForSelectedColor = selectedColor ? selectedColor.sizes : [];
   return (
     <Container sx={{ mt: 2 }}>
       <Breadcrumb page="Chi tiết" title={product.name} />
-      <Box sx={{ mt: 2, background: "#fff", borderRadius: "5px", p: 3 }}>
+      <Box
+        sx={{
+          mt: 2,
+          background: "#fff",
+          borderRadius: "10px",
+          p: 3,
+          boxShadow: 3,
+        }}
+      >
         <Grid
           direction="row"
           justifyContent="center"
@@ -371,7 +377,6 @@ const finalPrice = originalPrice - discountPrice;
               onMouseLeave={handleMouseLeave}
             >
               <img ref={imageRef} src={BASE_URL_IMAGE + activeImage} alt="" />
-
             </div>
             <div className="product-image">
               {currentImages.length > 1 && (
@@ -411,7 +416,7 @@ const finalPrice = originalPrice - discountPrice;
                   color: "#000000CC",
                   mb: 2,
                   lineHeight: 1.5,
-                  letterSpacing: "0.02em"
+                  letterSpacing: "0.02em",
                 }}
               >
                 {product.name}
@@ -425,38 +430,41 @@ const finalPrice = originalPrice - discountPrice;
                   p: 1,
                   backgroundColor: "#FAFAFA",
                   borderRadius: "10px",
-                  marginTop: "10px"
+                  marginTop: "10px",
                 }}
               >
                 <Typography
-  sx={{
-    textDecoration: discountPrice > 0 ? "line-through" : "none",
-    fontSize: "18px",
-    ml: 1,
-    color: discountPrice > 0 ? "#707070" : "#D70018",
-    marginTop: "10px",
-    fontWeight: "500",
-    height: "30px"
-  }}
-  component="span"
->
-  Giá: {originalPrice > 0 ? formatCurrency(originalPrice) + " VND" : "Liên hệ"}
-</Typography>
-{discountPrice > 0 && (
-  <Typography
-    sx={{
-      fontSize: "20px",
-      ml: 1,
-      color: "#D70018",
-      marginTop: "10px",
-      fontWeight: "500",
-      height: "30px"
-    }}
-    component="span"
-  >
-    Giá khuyến mãi: {formatCurrency(finalPrice)} VND
-  </Typography>
-)}
+                  sx={{
+                    textDecoration: discountPrice > 0 ? "line-through" : "none",
+                    fontSize: "18px",
+                    ml: 1,
+                    color: discountPrice > 0 ? "#707070" : "#D70018",
+                    marginTop: "10px",
+                    fontWeight: "500",
+                    height: "30px",
+                  }}
+                  component="span"
+                >
+                  Giá:{" "}
+                  {originalPrice > 0
+                    ? formatCurrency(originalPrice) + " VND"
+                    : "Liên hệ"}
+                </Typography>
+                {discountPrice > 0 && (
+                  <Typography
+                    sx={{
+                      fontSize: "20px",
+                      ml: 1,
+                      color: "#D70018",
+                      marginTop: "10px",
+                      fontWeight: "500",
+                      height: "30px",
+                    }}
+                    component="span"
+                  >
+                    Giá khuyến mãi: {formatCurrency(finalPrice)} VND
+                  </Typography>
+                )}
               </Box>
               <Divider sx={{ mt: 2 }} component="p" />
               <Typography display="flex" color="gray">
@@ -498,9 +506,9 @@ const finalPrice = originalPrice - discountPrice;
                   </Typography>
                 </Typography>
               </Typography>
-      
-              <div style={{display:'flex'}}>
-                <Typography 
+
+              <div style={{ display: "flex" }}>
+                <Typography
                   color="#757575"
                   component="span"
                   display="flex"
@@ -512,31 +520,35 @@ const finalPrice = originalPrice - discountPrice;
                 {/* Render color buttons */}
                 <div>
                   {colors.length > 0 &&
- colors.map((color) => (
-
-    <Button
-      key={color.id} // ✅ nên thêm key để tránh warning React
-      variant="outlined"
-      style={{
-        backgroundColor: color.colorCode,
-        margin: '5px',
-        marginTop: '20px',
-        minWidth: '23px',
-        height: '23px',
-        borderRadius: '5',
-      }}
-      onClick={() => handleColorClick(color.id)}
-      disabled={selectedColorId === color.id}
-    >
-    </Button>
-))}
-
+                    colors.map((color) => (
+                      <Button
+                        key={color.id}
+                        variant={
+                          selectedColorId === color.id
+                            ? "contained"
+                            : "outlined"
+                        }
+                        sx={{
+                          backgroundColor: color.colorCode,
+                          borderRadius: "50%",
+                          minWidth: "30px",
+                          height: "30px",
+                          margin: "5px",
+                          border:
+                            selectedColorId === color.id
+                              ? "2px solid #000"
+                              : "1px solid #ccc",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleColorClick(color.id)}
+                      />
+                    ))}
                 </div>
               </div>
 
               {/* Render sizes for selected color */}
               {selectedColorId !== null && (
-                <Typography 
+                <Typography
                   color="#757575"
                   component="span"
                   display="flex"
@@ -549,91 +561,116 @@ const finalPrice = originalPrice - discountPrice;
                     .map((size) => (
                       <Button
                         key={size.sizeId}
-                        variant="outlined"
+                        variant={
+                          selectedSizeId === size.sizeId
+                            ? "contained"
+                            : "outlined"
+                        }
                         onClick={() => handleSizeClick(size.sizeId)}
-                        style={{
-                          margin: '0px',
-                          padding: '10px',
-                          minWidth:'30px',
-                          height:'30px',
-                          borderRadius:'5',
-                          border: selectedSizeId === size.sizeId ? '1px solid #000' : 'none',
+                        sx={{
+                          margin: "5px",
+                          minWidth: "50px",
+                          height: "36px",
+                          fontWeight: 500,
+                          borderRadius: "6px",
+                          borderColor: "#1976d2",
                         }}
                         disabled={size.stock === 0}
                       >
-                        Size: {size.sizeName} - {size.stock}
+                        {size.sizeName}
                       </Button>
                     ))}
                 </Typography>
               )}
 
               {selectedColorId !== null && selectedSizeId !== null && (
-                <Typography 
+                <Typography
                   color="#757575"
                   component="span"
                   display="flex"
                   fontWeight="500"
                   mt={2}
                 >
-                  Số lượng tồn kho là: {getStockQuantity(selectedColorId, selectedSizeId)}
+                  Số lượng tồn kho là:{" "}
+                  {getStockQuantity(selectedColorId, selectedSizeId)}
                 </Typography>
               )}
               {error && <Alert severity="error">{error}</Alert>}
-              {selectedColorId !== null && selectedSizeId !== null && getStockQuantity(selectedColorId, selectedSizeId) > 0 && (
-                <Box>
-                  <Typography 
-                    color="#757575"
-                    component="span"
-                    display="flex"
-                    fontWeight="500"
-                    mt={2}
-                  >
-                    Số lượng:
-                  </Typography>
-                  <Button
-                    onClick={() => setQuantity((prev) => Math.max(prev - 1, 1))}
-                    disabled={quantity <= 1 || selectedColorId === null || selectedSizeId === null}
-                  >
-                    <RemoveIcon />
-                  </Button>
-                  <TextField
-                    inputProps={{ min: 1 }}
-                    value={quantity}
-                    onChange={(e) => {
-                      let value = parseInt(e.target.value);
-                      if (value < 1) {
-                        value = 1;
+              {selectedColorId !== null &&
+                selectedSizeId !== null &&
+                getStockQuantity(selectedColorId, selectedSizeId) > 0 && (
+                  <Box>
+                    <Typography
+                      color="#757575"
+                      component="span"
+                      display="flex"
+                      fontWeight="500"
+                      mt={2}
+                    >
+                      Số lượng:
+                    </Typography>
+                    <Button
+                      onClick={() =>
+                        setQuantity((prev) => Math.max(prev - 1, 1))
                       }
-                      const stock = getStockQuantity(selectedColorId, selectedSizeId);
-                      if (value > stock) {
-                        setError("Số lượng vượt quá số lượng tồn kho");
-                        setQuantity(stock);
-                      } else {
-                        setQuantity(value);
-                        setError("");
+                      disabled={
+                        quantity <= 1 ||
+                        selectedColorId === null ||
+                        selectedSizeId === null
                       }
-                    }}
-                    sx={{ width: "60px", mx: 2 }}
-                    size="small"
-                    type="number"
-                  />
-                  <Button
-                    onClick={() => {
-                      if (quantity < getStockQuantity(selectedColorId, selectedSizeId)) {
-                        setQuantity((prev) => prev + 1);
-                        setError("");
-                      } else {
-                        setError("Số lượng vượt quá số lượng tồn kho");
+                    >
+                      <RemoveIcon />
+                    </Button>
+                    <TextField
+                      inputProps={{ min: 1 }}
+                      value={quantity}
+                      onChange={(e) => {
+                        let value = parseInt(e.target.value);
+                        if (value < 1) {
+                          value = 1;
+                        }
+                        const stock = getStockQuantity(
+                          selectedColorId,
+                          selectedSizeId
+                        );
+                        if (value > stock) {
+                          setError("Số lượng vượt quá số lượng tồn kho");
+                          setQuantity(stock);
+                        } else {
+                          setQuantity(value);
+                          setError("");
+                        }
+                      }}
+                      sx={{ width: "60px", mx: 2 }}
+                      size="small"
+                      type="number"
+                    />
+                    <Button
+                      onClick={() => {
+                        if (
+                          quantity <
+                          getStockQuantity(selectedColorId, selectedSizeId)
+                        ) {
+                          setQuantity((prev) => prev + 1);
+                          setError("");
+                        } else {
+                          setError("Số lượng vượt quá số lượng tồn kho");
+                        }
+                      }}
+                      disabled={
+                        quantity >=
+                          getStockQuantity(selectedColorId, selectedSizeId) ||
+                        selectedColorId === null ||
+                        selectedSizeId === null
                       }
-                    }}
-                      disabled={quantity >= getStockQuantity(selectedColorId, selectedSizeId) || selectedColorId === null || selectedSizeId === null}
                     >
                       <AddIcon />
                     </Button>
-                </Box>
-              )}
-              
-              {selectedColorId !== null && selectedSizeId !==null &&
+                  </Box>
+                )}
+
+              {selectedColorId !== null &&
+                selectedSizeId !== null &&
                 getStockQuantity(selectedColorId, selectedSizeId) > 0 && (
                   <MyButton
                     onClick={handleAddToCart}
@@ -650,7 +687,7 @@ const finalPrice = originalPrice - discountPrice;
           </Grid>
         </Grid>
       </Box>
-      
+
       <Box
         sx={{
           display: "flex",
@@ -660,7 +697,7 @@ const finalPrice = originalPrice - discountPrice;
           mb: 2,
           p: 3,
           borderRadius: "5px",
-          background: "#fff"
+          background: "#fff",
         }}
       >
         <Tabs product={product} />
@@ -672,30 +709,30 @@ const finalPrice = originalPrice - discountPrice;
       >
         <Typography variant="h6">Viết đánh giá</Typography>
         <TextField
-            label="Nhận xét"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            fullWidth
-            multiline
-            rows={4}
-            margin="normal"
-            error={createReviewMutation.isError}
+          label="Nhận xét"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          fullWidth
+          multiline
+          rows={4}
+          margin="normal"
+          error={createReviewMutation.isError}
         />
         <Box component="fieldset" borderColor="transparent">
-            <Typography component="legend">Đánh giá</Typography>
-            <Rating
-                name="rating"
-                value={rating}
-                onChange={(event, newValue) => setRating(newValue)}
-            />
+          <Typography component="legend">Đánh giá</Typography>
+          <Rating
+            name="rating"
+            value={rating}
+            onChange={(event, newValue) => setRating(newValue)}
+          />
         </Box>
-        <Button 
-            type="submit" 
-            variant="contained" 
-            color="primary"
-            disabled={createReviewMutation.isLoading}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={createReviewMutation.isLoading}
         >
-            {createReviewMutation.isLoading ? 'Đang gửi...' : 'Gửi đánh giá'}
+          {createReviewMutation.isLoading ? "Đang gửi..." : "Gửi đánh giá"}
         </Button>
       </Box>
       <Box
@@ -707,15 +744,13 @@ const finalPrice = originalPrice - discountPrice;
           mb: 2,
           p: 3,
           borderRadius: "5px",
-          background: "#fff"
+          background: "#fff",
         }}
       >
         <Tabs product={product} />
       </Box>
-      
 
       {/* Display reviews */}
-      
 
       <Box sx={{ mt: 4, background: "#fff", borderRadius: "5px", p: 3 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
@@ -723,12 +758,20 @@ const finalPrice = originalPrice - discountPrice;
         </Typography>
         {reviews.length > 0 ? (
           reviews.map((review) => (
-            <Box key={review.id} sx={{ mb: 2 }}> 
-              <Box style={{borderBottom: '1px solid #ccc'}}>
-                <Typography style={{fontWeight: 'bold'}} variant="body1">{review.users?.name}</Typography>
-                <Box style={{padding: '10px'}}>
-                  <Rating style={{fontSize: '15px'}} value={review.rating} readOnly />
-                  <Typography style={{fontSize: '15px'}} variant="body1">{review.comment}</Typography>
+            <Box key={review.id} sx={{ mb: 2 }}>
+              <Box style={{ borderBottom: "1px solid #ccc" }}>
+                <Typography style={{ fontWeight: "bold" }} variant="body1">
+                  {review.users?.name}
+                </Typography>
+                <Box style={{ padding: "10px" }}>
+                  <Rating
+                    style={{ fontSize: "15px" }}
+                    value={review.rating}
+                    readOnly
+                  />
+                  <Typography style={{ fontSize: "15px" }} variant="body1">
+                    {review.comment}
+                  </Typography>
                 </Box>
               </Box>
               {review.replies && review.replies.length > 0 && (
@@ -746,15 +789,13 @@ const finalPrice = originalPrice - discountPrice;
                           marginBottom: "10px",
                           padding: "10px",
                           borderRadius: "9px",
-                          textTransform: "capitalize"
+                          textTransform: "capitalize",
                         }}
                       >
                         Phản hồi: {reply.comment}
                       </Box>
                       <Typography component="span" color="gray">
-
                         {/* {reply.user.name}  */}
-
                       </Typography>
                     </Typography>
                   </Box>
@@ -797,7 +838,7 @@ const finalPrice = originalPrice - discountPrice;
         ) : (
           <Typography>Chưa có bình luận nào.</Typography>
         )}
-      </Box>         
+      </Box>
     </Container>
   );
 }

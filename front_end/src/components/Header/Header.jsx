@@ -205,7 +205,7 @@ export default function PrimarySearchAppBar() {
 
   return (
     <Box sx={{ flexGrow: 1, mb: { md: "75px", xs: "55px" } }}>
-      <AppBar position="fixed" sx={{ background: "rgb(26, 148, 255)" }}>
+      <AppBar position="fixed" sx={{ background: "rgb(188, 189, 148)" }}>
         <Container sx={{ p: 0 }}> 
           <Toolbar>
             <Box

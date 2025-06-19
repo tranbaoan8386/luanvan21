@@ -444,11 +444,14 @@ class ProductController {
 
     const orderArray = [];
 
-    if (sort_by === 'price') {
-      orderArray.push([{ model: ProductItem, as: 'productItems' }, 'price', order]);
-    } else {
-      orderArray.push([sort_by, order]);
-    }
+if (sort_by === 'price' || sort_by === 'sold') {
+  // Nếu muốn sắp xếp theo giá hoặc số lượng bán, phải đi qua bảng products_item
+  orderArray.push([{ model: ProductItem, as: 'productItems' }, sort_by, order]);
+} else {
+  // Còn lại sắp xếp theo bảng products
+  orderArray.push([sort_by, order]);
+}
+
 
     const products = await Product.findAll({
       where: whereProduct,

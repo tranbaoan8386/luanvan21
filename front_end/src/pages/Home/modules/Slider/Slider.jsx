@@ -13,7 +13,7 @@ import { Container } from '@mui/material'
 
 export default function Slider() {
     return (
-        <Container sx={{ mt: 2, mb: 4 }}>
+        <Container sx={{ mt: 15, mb: 4 }}>
             <Swiper
                 slidesPerView={1}
                 loop={true}

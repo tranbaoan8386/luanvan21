@@ -4,16 +4,16 @@ const mailConfig = require('../config/mail.config');
 require('dotenv').config();
 exports.sendMail = (to, subject, htmlContent) => {
 
-    const transport = nodemailer.createTransport({
+   const transport = nodemailer.createTransport({
+  host: mailConfig.HOST,
+  port: mailConfig.PORT,
+  secure: mailConfig.SECURITY, // giờ đã đúng boolean
+  auth: {
+    user: mailConfig.USERNAME,
+    pass: mailConfig.PASSWORD
+  }
+});
 
-        host: mailConfig.HOST,
-        port: mailConfig.PORT,
-        secure: mailConfig.SECURITY === true,
-        auth: {
-            user: mailConfig.USERNAME,
-            pass: mailConfig.PASSWORD
-        }
-    })
 
 
     const options = {

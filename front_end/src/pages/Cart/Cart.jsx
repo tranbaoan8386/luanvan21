@@ -28,7 +28,7 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
-  Alert
+  Alert,
 } from "@mui/material";
 import { BASE_URL_IMAGE } from "../../constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -80,45 +80,68 @@ export default function Cart() {
 
   useEffect(() => {
     axios
-      .get(
-        "https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json"
-      )
-      .then((response) => {
-        setCities(response.data);
+      .get("https://mocki.io/v1/f68f7d17-81fd-4e27-a4aa-38b1a4ce4d2c")
+      .then((res) => {
+        setCities(res.data);
       })
-      .catch((error) => {
-        console.error("Error fetching data: ", error);
+      .catch((err) => {
+        console.error("❌ Lỗi tải tỉnh/thành:", err);
       });
   }, []);
 
-  const handleCityChange = (event) => {
-    const cityId = event.target.value;
-    setSelectedCity(cityId);
-    setSelectedDistrict("");
-    setSelectedWard("");
-    const selectedCity = cities.find((city) => city.Id === cityId);
-    setDistricts(selectedCity ? selectedCity.Districts : []);
-    setWards([]);
-    setAddress((prev) => ({ ...prev, province: selectedCity.Name }));
-  };
 
-  const handleDistrictChange = (event) => {
-    const districtId = event.target.value;
-    setSelectedDistrict(districtId);
-    setSelectedWard("");
-    const selectedDistrict = districts.find(
-      (district) => district.Id === districtId
-    );
-    setWards(selectedDistrict ? selectedDistrict.Wards : []);
-    setAddress((prev) => ({ ...prev, district: selectedDistrict.Name }));
-    setDistrictError("");
-  };
 
-  const handleWardChange = (event) => {
-    const wardId = event.target.value;
-    const selectedWard = wards.find((ward) => ward.Id === wardId);
+  const handleCityChange = (e) => {
+  const cityId = e.target.value;
+  setSelectedCity(cityId);
+  setSelectedDistrict("");
+  setSelectedWard("");
+  setDistricts([]);
+  setWards([]);
+
+ const selected = cities.find((c) => String(c.idProvince) === String(cityId));
+
+  setAddress((prev) => ({ ...prev, province: selected?.name || "" }));
+
+  axios
+    .get("https://mocki.io/v1/f2bb7857-9b8c-4b77-87c9-1a7e7fffa9fa")
+    .then((res) => {
+      // ⚠️ Lọc huyện thuộc tỉnh được chọn
+      const filtered = res.data.filter((d) => String(d.idProvince) === String(cityId));
+      setDistricts(filtered);
+    })
+    .catch((err) => console.error("Lỗi khi tải huyện:", err));
+};
+
+
+  //   setAddress((prev) => ({ ...prev, district: selectedDistrict.Name }));
+  //   setDistrictError("");
+  // };
+
+  const handleDistrictChange = (e) => {
+  const districtId = e.target.value;
+  setSelectedDistrict(districtId);
+  setSelectedWard("");
+  setWards([]);
+
+  const selected = districts.find((d) => d.id === districtId);
+  setAddress((prev) => ({ ...prev, district: selected?.name || "" }));
+
+  axios
+    .get("https://mocki.io/v1/cf3193c6-24e0-465c-bdb4-4de5f26782f1")
+    .then((res) => {
+      const filtered = res.data.filter((w) => w.idDistrict === districtId);
+      setWards(filtered);
+    })
+    .catch((err) => console.error("Lỗi khi tải phường/xã:", err));
+};
+
+
+  const handleWardChange = (e) => {
+    const wardId = e.target.value;
+    const selected = wards.find((w) => w.id === wardId);
     setSelectedWard(wardId);
-    setAddress((prev) => ({ ...prev, village: selectedWard.Name }));
+    setAddress((prev) => ({ ...prev, village: selected?.name || "" }));
     setWardError("");
   };
 
@@ -153,32 +176,32 @@ export default function Cart() {
       } else {
         setError("An error occurred. Please try again.");
       }
-    }
+    },
   });
 
- const deleteProductFromCartMutation = useMutation({
-  mutationFn: (body) => cartApi.deleteProductCart(body),
-  onSuccess: (data) => {
-    if (data?.success) {
-      handleRefetchCart();
-      const msg = data?.data?.message || data?.message;
-      if (msg) toast.success(msg);
-    } else {
-      const msg = data?.data?.message || data?.message || 'Không rõ lý do';
-      console.warn('Xoá thất bại:', msg);
-      toast.warn(msg);
-    }
-  },
-  onError: (error) => {
-    const message =
-      error?.response?.data?.message || error?.message || 'Không thể xoá sản phẩm.';
-  
-    console.warn('Không thể kết nối server khi xoá sản phẩm:', message);
-    toast.error(`❌ ${message}`);
-  }  
-});
+  const deleteProductFromCartMutation = useMutation({
+    mutationFn: (body) => cartApi.deleteProductCart(body),
+    onSuccess: (data) => {
+      if (data?.success) {
+        handleRefetchCart();
+        const msg = data?.data?.message || data?.message;
+        if (msg) toast.success(msg);
+      } else {
+        const msg = data?.data?.message || data?.message || "Không rõ lý do";
+        console.warn("Xoá thất bại:", msg);
+        toast.warn(msg);
+      }
+    },
+    onError: (error) => {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Không thể xoá sản phẩm.";
 
-
+      console.warn("Không thể kết nối server khi xoá sản phẩm:", message);
+      toast.error(`❌ ${message}`);
+    },
+  });
 
   const handleQuantityChange = (productItemId, newQuantity) => {
     const productItem = carts.find(
@@ -196,7 +219,7 @@ export default function Cart() {
     }
     setQuantities((prevQuantities) => ({
       ...prevQuantities,
-      [productItemId]: newQuantity
+      [productItemId]: newQuantity,
     }));
     updateCartMutation.mutate({ productItemId, quantity: newQuantity });
   };
@@ -217,7 +240,7 @@ export default function Cart() {
       updateCartMutation.mutate({ productItemId, quantity: newQuantity });
       return {
         ...prevQuantities,
-        [productItemId]: newQuantity
+        [productItemId]: newQuantity,
       };
     });
   };
@@ -230,7 +253,7 @@ export default function Cart() {
       updateCartMutation.mutate({ productItemId, quantity: newQuantity });
       return {
         ...prevQuantities,
-        [productItemId]: newQuantity
+        [productItemId]: newQuantity,
       };
     });
   };
@@ -252,80 +275,84 @@ export default function Cart() {
     return 0;
   };
   const totalCart = calculateTotalCart();
-  
 
   const { data: coupon, status } = useQuery({
     queryKey: ["coupon", debouncedValue],
-    queryFn: () => couponApi.getCoupon(debouncedValue)
+    queryFn: () => couponApi.getCoupon(debouncedValue),
   });
 
   const paypalAmount = ((totalCart - couponValue) / 30000).toFixed(2);
   const [paypalPaid, setPaypalPaid] = useState(false);
   const onSuccessPaypal = (details, data) => {
     let fullAddress = `${profile?.data?.profile?.Address?.address_line}, ${profile?.data?.profile?.Address?.ward}, ${profile?.data?.profile?.Address?.district}, ${profile?.data?.profile?.Address?.city}`;
-  
+
     const orderData = {
       total: totalCart - couponValue,
-      phone: profile?.data?.profile?.Address?.phone || profile?.data?.profile?.phone,
+      phone:
+        profile?.data?.profile?.Address?.phone || profile?.data?.profile?.phone,
       email: profile?.data?.profile?.email,
       fullname: profile?.data?.profile?.name,
       address: fullAddress,
       orders_item: carts.map((cart) => ({
         productItemId: cart.productItem.id,
-        quantity: quantities[cart.productItem.id] || cart.quantity
+        quantity: quantities[cart.productItem.id] || cart.quantity,
       })),
       note,
-      paymentMethod
+      paymentMethod,
     };
-  
+
     createOrderMutation.mutate(orderData, {
       onSuccess: () => {
         setPaypalPaid(true);
         handleRefetchCart();
         carts.forEach((cart) => {
-          deleteProductFromCartMutation.mutate({ productItemId: cart.productItem.id });
+          deleteProductFromCartMutation.mutate({
+            productItemId: cart.productItem.id,
+          });
         });
         navigate("/");
       },
       onError: (error) => {
         toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
         console.error("Error creating order:", error);
-      }
+      },
     });
   };
-  
 
   const addCoupon = async () => {
     if (code.trim() === "") {
       toast.warning("Vui lòng nhập mã giảm giá");
       return;
     }
-  
+
     try {
       const res = await couponApi.applyCoupon(code); // 🎯 Gửi code đến BE
       const couponData = res?.data?.coupon;
-  
+
       if (!couponData) {
         toast.error("Mã giảm giá không tồn tại hoặc đã hết hạn!");
         return;
       }
-  
+
       // 👉 Log dữ liệu carts để debug
-      console.log("🛒 Carts debug (productItem):", carts.map((item) => item.productItem));
-  
+      console.log(
+        "🛒 Carts debug (productItem):",
+        carts.map((item) => item.productItem)
+      );
+
       // ⚠️ Nếu trong giỏ hàng có sản phẩm đã có coupon sẵn, không cho áp thêm
       const hasDiscountedItem = carts.some(
         (item) =>
           item.productItem?.coupons_id ||
           item.productItem?.coupon_id || // Nếu backend trả về coupon_id
-          item.productItem?.coupon       // Nếu include quan hệ coupon
+          item.productItem?.coupon // Nếu include quan hệ coupon
       );
-  
+
       if (hasDiscountedItem) {
         toast.error("Có sản phẩm đã giảm giá sẵn. Không thể áp thêm mã.");
         return;
       }
-  
+
       const { price } = couponData;
       setCouponValue(price);
       toast.success("Áp dụng mã giảm giá thành công!");
@@ -334,7 +361,6 @@ export default function Cart() {
       toast.error("Áp dụng mã giảm giá thất bại!");
     }
   };
-  
 
   const addpaypal = async () => {
     try {
@@ -362,52 +388,75 @@ export default function Cart() {
   const {
     data: profile,
     isLoading,
-    refetch
+    refetch,
   } = useQuery({
     queryKey: ["profile"],
-    queryFn: () => userApi.getMe()
+    queryFn: () => userApi.getMe(),
   });
 
-  const handleOpenOrder = () => {
-    // Load existing address and set form fields
+  const handleOpenOrder = async () => {
     if (profile?.data?.profile?.Address) {
       const { street, village, district, province } =
         profile.data.profile.Address;
 
-      // Set city
-      const selectedCity = cities.find((city) => city.Name === province);
-      setSelectedCity(selectedCity?.Id || "");
+      const selectedCityObj = cities.find(
+        (city) => city.name?.trim() === province?.trim()
+      );
+      if (selectedCityObj) {
+        setSelectedCity(selectedCityObj.idProvince);
+        setAddress((prev) => ({ ...prev, province }));
 
-      // Set districts and wards based on selected city
-      if (selectedCity) {
-        const selectedDistricts = selectedCity.Districts;
-        setDistricts(selectedDistricts);
+        try {
+          const districtRes = await axios.get(
+            "https://mocki.io/v1/f2bb7857-9b8c-4b77-87c9-1a7e7fffa9fa"
+          );
+          const districtsData = districtRes.data.filter(
+            (d) => String(d.idProvince) === String(selectedCityObj.idProvince)
+          );
+          setDistricts(districtsData);
 
-        const selectedDistrict = selectedDistricts.find(
-          (d) => d.Name === district
-        );
-        setSelectedDistrict(selectedDistrict?.Id || "");
+          const selectedDistrictObj = districtsData.find(
+            (d) => d.name?.trim() === district?.trim()
+          );
+          if (selectedDistrictObj) {
+            setSelectedDistrict(selectedDistrictObj.id);
+            setAddress((prev) => ({ ...prev, district }));
 
-        if (selectedDistrict) {
-          const selectedWards = selectedDistrict.Wards;
-          setWards(selectedWards);
+            const wardRes = await axios.get(
+              "https://mocki.io/v1/cf3193c6-24e0-465c-bdb4-4de5f26782f1"
+            );
+            const wardsData = wardRes.data.filter(
+              (w) => w.idDistrict === selectedDistrictObj.id
+            );
+            setWards(wardsData);
 
-          const selectedWard = selectedWards.find((w) => w.Name === village);
-          setSelectedWard(selectedWard?.Id || "");
+            const selectedWardObj = wardsData.find(
+              (w) => w.name?.trim() === village?.trim()
+            );
+            if (selectedWardObj) {
+              setSelectedWard(selectedWardObj.id);
+              setAddress((prev) => ({ ...prev, village }));
+            }
+          }
+        } catch (err) {
+          console.error("Lỗi khi load địa chỉ:", err);
         }
       }
 
-      setAddress({ street, village, district, province });
+      setAddress((prev) => ({ ...prev, street }));
+      setPhone(profile?.data?.profile?.Address?.phone || "");
     }
-    setPhone(profile?.data?.profile?.Address?.phone || "");
+
     setOpen(true);
   };
+
+
   const addCouponMutation = useMutation({
-    mutationFn: (body) => couponApi.addCoupon(body)
+    mutationFn: (body) => couponApi.addCoupon(body),
   });
 
   const createOrderMutation = useMutation({
-    mutationFn: (body) => orderApi.createOrder(body)
+    mutationFn: (body) => orderApi.createOrder(body),
   });
 
   const createAddressMutation = useMutation({
@@ -419,7 +468,7 @@ export default function Cart() {
     },
     onError: (error) => {
       toast.error("Lỗi khi thêm địa chỉ. Vui lòng thử lại.");
-    }
+    },
   });
 
   const updateAddressMutation = useMutation({
@@ -431,7 +480,7 @@ export default function Cart() {
     },
     onError: (error) => {
       toast.error("Lỗi khi thêm địa chỉ. Vui lòng thử lại.");
-    }
+    },
   });
 
   const handleAddAddress = (e) => {
@@ -472,15 +521,14 @@ export default function Cart() {
     if (hasError) {
       return;
     }
-   createAddressMutation.mutate({
-  address_line: address.street,
-  ward: address.village,
-  district: address.district,
-  city: address.province,
-  phone: phone,
-  name: profile?.data?.profile?.name || "Khách hàng"
-});
-
+    createAddressMutation.mutate({
+      address_line: address.street,
+      ward: address.village,
+      district: address.district,
+      city: address.province,
+      phone: phone,
+      name: profile?.data?.profile?.name || "Khách hàng",
+    });
   };
 
   const handleUpdateAddress = (e) => {
@@ -523,12 +571,12 @@ export default function Cart() {
     }
 
     updateAddressMutation.mutate({
-     address_line: address.street,
-  ward: address.village,
-  district: address.district,
-  city: address.province,
-  phone: phone,
-  name: profile?.data?.profile?.name || "Khách hàng"
+      address_line: address.street,
+      ward: address.village,
+      district: address.district,
+      city: address.province,
+      phone: phone,
+      name: profile?.data?.profile?.name || "Khách hàng",
     });
   };
 
@@ -539,10 +587,9 @@ export default function Cart() {
     // Kiểm tra nếu user chưa có địa chỉ
     if (
       !profile?.data?.profile?.Address?.address_line ||
-!profile?.data?.profile?.Address?.ward ||
-!profile?.data?.profile?.Address?.city ||
-!profile?.data?.profile?.Address?.district
-
+      !profile?.data?.profile?.Address?.ward ||
+      !profile?.data?.profile?.Address?.city ||
+      !profile?.data?.profile?.Address?.district
     ) {
       toast.error("Vui lòng thêm địa chỉ trước khi đặt hàng.");
       return;
@@ -559,48 +606,49 @@ export default function Cart() {
     }
     let fullAddress = `${profile?.data?.profile?.Address?.address_line}, ${profile?.data?.profile?.Address?.ward}, ${profile?.data?.profile?.Address?.district}, ${profile?.data?.profile?.Address?.city}`;
 
-
-   try {
-  const discount = couponValue || 0;
-  const total = totalCart;
-  const totalPayable = total - discount;
-
-  await createOrderMutation.mutateAsync({
-    total,
-    total_discount: discount,
-    total_payable: totalPayable,
-    phone: profile?.data?.profile?.Address?.phone || profile?.data?.profile?.phone,
-    email: profile?.data?.profile?.email,
-    fullname: profile?.data?.profile?.name,
-    address: fullAddress,
-    orders_item: carts.map((cart) => ({
-      productItemId: cart.productItem.id,
-      quantity: quantities[cart.productItem.id]
-    })),
-    note,
-    paymentMethod
-  });
-  
-
-
-  // ✅ Không để việc xóa giỏ ảnh hưởng toast chính
-  for (const cart of carts) {
     try {
-      await deleteProductFromCartMutation.mutateAsync({
-        productItemId: cart.productItem.id
-      });
-    } catch (err) {
-      console.warn(`⚠️ Không thể xoá sản phẩm ID ${cart.productItem.id}:`, err);
-    }
-  }
-  //Cập nhật lại giao diện giỏ hàng
-  await handleRefetchCart();
-  toast.success("Đặt hàng thành công!"); // ✅ Đặt ở đây
-  navigate("/");
-} catch (error) {
-  toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
-}
+      const discount = couponValue || 0;
+      const total = totalCart;
+      const totalPayable = total - discount;
 
+      await createOrderMutation.mutateAsync({
+        total,
+        total_discount: discount,
+        total_payable: totalPayable,
+        phone:
+          profile?.data?.profile?.Address?.phone ||
+          profile?.data?.profile?.phone,
+        email: profile?.data?.profile?.email,
+        fullname: profile?.data?.profile?.name,
+        address: fullAddress,
+        orders_item: carts.map((cart) => ({
+          productItemId: cart.productItem.id,
+          quantity: quantities[cart.productItem.id],
+        })),
+        note,
+        paymentMethod,
+      });
+
+      // ✅ Không để việc xóa giỏ ảnh hưởng toast chính
+      for (const cart of carts) {
+        try {
+          await deleteProductFromCartMutation.mutateAsync({
+            productItemId: cart.productItem.id,
+          });
+        } catch (err) {
+          console.warn(
+            `⚠️ Không thể xoá sản phẩm ID ${cart.productItem.id}:`,
+            err
+          );
+        }
+      }
+      //Cập nhật lại giao diện giỏ hàng
+      await handleRefetchCart();
+      toast.success("Đặt hàng thành công!"); // ✅ Đặt ở đây
+      navigate("/");
+    } catch (error) {
+      toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
+    }
 
     setOpen(false);
   };
@@ -656,49 +704,52 @@ export default function Cart() {
                     key={cart.id}
                     sx={{
                       height: "100px",
-                      "&:last-child td, &:last-child th": { border: 0 }
+                      "&:last-child td, &:last-child th": { border: 0 },
                     }}
                   >
                     <TableCell width="500px" component="th" scope="row">
-  <div className="cart-product">
-    <img
-      src={BASE_URL_IMAGE + cart.productItem.product?.avatar}
+                      <div className="cart-product">
+                        <img
+                          src={
+                            BASE_URL_IMAGE + cart.productItem.product?.avatar
+                          }
+                          alt={
+                            cart.productItem.product?.name || "Product Image"
+                          }
+                        />
+                        <div className="cart-product-content">
+                          <span className="cart-product-name">
+                            {cart.productItem?.product?.name || "Product Name"}
+                          </span>
+                          <div className="cart-product-color">
+                            <div style={{ color: "#c50e0e" }}>Màu sắc:</div>
+                            {cart.productItem.color && (
+                              <Typography
+                                sx={{
+                                  backgroundColor:
+                                    cart.productItem.color.colorCode,
+                                  width: "20px",
+                                  height: "20px",
+                                  borderRadius: "50%",
+                                  border: "1px solid #ddd",
+                                  display: "inline-block",
+                                  marginTop: "0px",
+                                  marginLeft: "5px",
+                                }}
+                              ></Typography>
+                            )}
+                          </div>
 
-      alt={cart.productItem.product?.name || "Product Image"}
-    />
-    <div className="cart-product-content">
-      <span className="cart-product-name">
-        {cart.productItem?.product?.name || "Product Name"}
-      </span>
-      <div className="cart-product-color">
-  <div style={{ color: "#c50e0e" }}>Màu sắc:</div>
-  {cart.productItem.color && (
-    <Typography
-      sx={{
-        backgroundColor: cart.productItem.color.colorCode,
-        width: "20px",
-        height: "20px",
-        borderRadius: "50%",
-        border: "1px solid #ddd",
-        display: "inline-block",
-        marginTop: "0px",
-        marginLeft: "5px"
-      }}
-    ></Typography>
-  )}
-</div>
-
-      <div className="cart-product-size">
-  Size: {cart.productItem.size?.name}
-</div>
-
-    </div>
-  </div>
-</TableCell>
+                          <div className="cart-product-size">
+                            Size: {cart.productItem.size?.name}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
 
                     <TableCell align="right">
                       <div className="quantity">
-                        <div  
+                        <div
                           style={{
                             pointerEvents:
                               cart.quantity <= 1 || updateCartMutation.isPending
@@ -707,7 +758,7 @@ export default function Cart() {
                             opacity:
                               cart.quantity <= 1 || updateCartMutation.isPending
                                 ? 0.5
-                                : 1
+                                : 1,
                           }}
                           onClick={() => handleDecrement(cart.productItem.id)}
                           className="quantity-decrement"
@@ -732,7 +783,7 @@ export default function Cart() {
                             pointerEvents: updateCartMutation.isPending
                               ? "none"
                               : "auto",
-                            opacity: updateCartMutation.isPending ? 0.5 : 1
+                            opacity: updateCartMutation.isPending ? 0.5 : 1,
                           }}
                           onClick={() => handleIncrement(cart.productItem.id)}
                           className="quantity-increment"
@@ -742,12 +793,13 @@ export default function Cart() {
                       </div>
                     </TableCell>
                     <TableCell align="right">
-                    {formatCurrency(Number(cart.price))}
+                      {formatCurrency(Number(cart.price))}
                     </TableCell>
                     <TableCell align="right">
-                    {formatCurrency(
-                      Number(cart.price) * (quantities[cart.productItem.id] || cart.quantity)
-                    )}
+                      {formatCurrency(
+                        Number(cart.price) *
+                          (quantities[cart.productItem.id] || cart.quantity)
+                      )}
                     </TableCell>
                     <TableCell align="right">
                       <Button
@@ -809,8 +861,8 @@ export default function Cart() {
               width: "499px",
               "@media screen and (max-width: 600px)": {
                 width: "100%",
-                display: "block"
-              }
+                display: "block",
+              },
             }}
           >
             <Box sx={{ fontSize: "18px" }}>
@@ -818,15 +870,15 @@ export default function Cart() {
               {profile?.data?.profile?.Address ? (
                 <Box sx={{ display: "flex" }}>
                   <Box sx={{ fontSize: "15px", width: "250px" }}>
-                    {profile?.data?.profile?.Address?.street}, 
-                    {profile?.data?.profile?.Address?.village}, 
-                    {profile?.data?.profile?.Address?.district}, 
+                    {profile?.data?.profile?.Address?.street},
+                    {profile?.data?.profile?.Address?.village},
+                    {profile?.data?.profile?.Address?.district},
                     {profile?.data?.profile?.Address?.province}
                   </Box>
                   <Box
                     sx={{
                       fontSize: "13px",
-                      color: "blue"
+                      color: "blue",
                     }}
                     onClick={handleOpenOrder}
                   >
@@ -838,17 +890,18 @@ export default function Cart() {
                   sx={{
                     fontSize: "13px",
                     color: "blue",
-                    cursor: "pointer"
+                    cursor: "pointer",
                   }}
                   onClick={handleOpenOrder}
                 >
                   Thêm mới
                 </Box>
               )}
-            </Box><br></br>
+            </Box>
+            <br></br>
             <Box
               sx={{
-                display: "flex"
+                display: "flex",
               }}
             >
               <Box>
@@ -876,14 +929,14 @@ export default function Cart() {
                     mt: 4,
                     display: "flex",
                     flexDirection: "column",
-                    gap: "10px"
+                    gap: "10px",
                   }}
                 >
                   <Box
                     sx={{
                       display: "flex",
                       justifyContent: "space-between",
-                      alignItems: "center"
+                      alignItems: "center",
                     }}
                   >
                     <Typography
@@ -901,7 +954,7 @@ export default function Cart() {
                     sx={{
                       display: "flex",
                       justifyContent: "space-between",
-                      alignItems: "center"
+                      alignItems: "center",
                     }}
                   >
                     <Typography
@@ -922,7 +975,7 @@ export default function Cart() {
                     sx={{
                       display: "flex",
                       justifyContent: "space-between",
-                      alignItems: "center"
+                      alignItems: "center",
                     }}
                   >
                     <Typography
@@ -995,7 +1048,7 @@ export default function Cart() {
             position: "absolute",
             right: 8,
             top: 8,
-            color: (theme) => theme.palette.grey[500]
+            color: (theme) => theme.palette.grey[500],
           }}
         >
           <CloseIcon />
@@ -1014,17 +1067,23 @@ export default function Cart() {
               <InputLabel id="city-label">Tỉnh / Thành phố</InputLabel>
               <Select
                 labelId="city-label"
-                value={selectedCity}
+                value={selectedCity || ""}
                 onChange={handleCityChange}
               >
                 <MenuItem value="">
                   <em>Chọn Tỉnh / Thành phố</em>
                 </MenuItem>
-                {cities.map((city) => (
-                  <MenuItem key={city.Id} value={city.Id}>
-                    {city.Name}
-                  </MenuItem>
-                ))}
+                {Array.isArray(cities) &&
+  cities
+    .filter((city) => city?.idProvince && city?.name)
+    .map((city) => (
+      <MenuItem key={`city-${city.idProvince}`} value={city.idProvince}>
+        {city.name}
+      </MenuItem>
+    ))}
+
+
+
               </Select>
               {cityError && <Alert severity="error">{cityError}</Alert>}
             </FormControl>
@@ -1032,40 +1091,47 @@ export default function Cart() {
               <InputLabel id="district-label">Quận / Huyện</InputLabel>
               <Select
                 labelId="district-label"
-                value={selectedDistrict}
+                value={selectedDistrict || ""}
                 onChange={handleDistrictChange}
               >
                 <MenuItem value="">
                   <em>Chọn Quận / Huyện</em>
                 </MenuItem>
-                {districts.map((district) => (
-                  <MenuItem key={district.Id} value={district.Id}>
-                    {district.Name}
-                  </MenuItem>
-                ))}
+                {districts
+  .filter((d) => d?.id !== undefined && d?.id !== null && d?.name)
+  .map((district) => (
+    <MenuItem key={`district-${district.id}`} value={district.id}>
+      {district.name}
+    </MenuItem>
+))}
+
               </Select>
               {districtError && <Alert severity="error">{districtError}</Alert>}
             </FormControl>
             {selectedDistrict && (
-  <FormControl fullWidth margin="normal">
-    <InputLabel id="ward-label">Phường / Xã</InputLabel>
-    <Select
-      labelId="ward-label"
-      value={selectedWard}
-      onChange={handleWardChange}
-    >
-      <MenuItem value="">
-        <em>Chọn Phường / Xã</em>
-      </MenuItem>
-      {wards.map((ward) => (
-        <MenuItem key={ward.Id} value={ward.Id}>
-          {ward.Name}
-        </MenuItem>
-      ))}
-    </Select>
-    {wardError && <Alert severity="error">{wardError}</Alert>}
-  </FormControl>
-)}
+              <FormControl fullWidth margin="normal">
+                <InputLabel id="ward-label">Phường / Xã</InputLabel>
+                <Select
+                  labelId="ward-label"
+                  value={selectedWard || ""}
+                  onChange={handleWardChange}
+                >
+                  <MenuItem value="">
+                    <em>Chọn Phường / Xã</em>
+                  </MenuItem>
+                  {wards
+  .filter((w) => w?.id !== undefined && w?.id !== null && w?.name)
+  .map((ward) => (
+    <MenuItem key={`ward-${ward.id}`} value={ward.id}>
+      {ward.name}
+    </MenuItem>
+))}
+
+
+                </Select>
+                {wardError && <Alert severity="error">{wardError}</Alert>}
+              </FormControl>
+            )}
 
             <TextField
               sx={{ mt: 3 }}
@@ -1073,9 +1139,9 @@ export default function Cart() {
               id="outlined-helperText"
               label="Số nhà, tên đường..."
               inputProps={{
-                readOnly: false
+                readOnly: false,
               }}
-              value={address.street ?? ''}
+              value={address.street ?? ""}
               onChange={handleStreetChange}
             />
             {error && <Alert severity="error">{error}</Alert>}
@@ -1085,9 +1151,9 @@ export default function Cart() {
               id="outlined-helperText"
               label="Số điện thoại"
               inputProps={{
-                readOnly: false
+                readOnly: false,
               }}
-              value={phone ?? ''}
+              value={phone ?? ""}
               onChange={handlePhoneChange}
             />
             {phoneError && <Alert severity="error">{phoneError}</Alert>}
@@ -1131,7 +1197,7 @@ export default function Cart() {
                 my: 3,
                 fontSize: "20px",
                 fontWeight: "500",
-                color: "#ee4d2d"
+                color: "#ee4d2d",
               }}
             >
               Tổng cộng: {formatCurrency(totalCart - couponValue) + " VND"}
