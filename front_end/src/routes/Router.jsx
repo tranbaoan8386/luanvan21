@@ -36,6 +36,11 @@ import ManagerBrand from "../pages/Admin/pages/ManagerBrand";
 import CreateBrand from "../pages/Admin/pages/ManagerBrand/modules/CreateBrand/CreateBrand";
 import UpdateBrand from "../pages/Admin/pages/ManagerBrand/modules/UpdateBrand";
 import DeletedProduct from "../pages/Admin/pages/ManagerProduct/modules/DeletedProduct";
+import ManagerCoupon from "../pages/Admin/pages/ManagerCoupon";
+import CreateCoupon from "../pages/Admin/pages/ManagerCoupon/modules/CouponCreate";
+import UpdateCoupon from "../pages/Admin/pages/ManagerCoupon/modules/CouponUpdate";
+
+
 
 
 function ProtectedRouter() {
@@ -299,6 +304,30 @@ export default function routerElements() {
           element: (
             <AdminLayout>
               <ManagerOrder />
+            </AdminLayout>
+          )
+        },
+        {
+          path: "admin/coupon",
+          element: (
+            <AdminLayout>
+              <ManagerCoupon />
+            </AdminLayout>
+          )
+        },    
+        {
+          path: "admin/coupon/create",
+          element: (
+            <AdminLayout>
+              <CreateCoupon />
+            </AdminLayout>
+          )
+        },
+        {
+          path: "admin/coupon/update/:id",
+          element: (
+            <AdminLayout>
+              <UpdateCoupon />
             </AdminLayout>
           )
         },

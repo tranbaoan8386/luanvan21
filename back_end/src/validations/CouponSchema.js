@@ -5,20 +5,23 @@ class CouponSchema {
             code: Joi.string().required().messages({
                 'string.base': 'Mã khuyến mãi phải là chuỗi',
                 'string.empty': 'Mã khuyến mãi không được để trống',
-                'any.required': 'Mã khuyến mãi trường bắt buộc'
+                'any.required': 'Mã khuyến mãi là trường bắt buộc'
             }),
             startDate: Joi.string().required().messages({
-                'string.base': 'ngày là kiểu date',
-
+                'string.base': 'Ngày bắt đầu phải là chuỗi',
+                'string.empty': 'Ngày bắt đầu không được để trống',
+                'any.required': 'Ngày bắt đầu là trường bắt buộc'
             }),
-
+            endDate: Joi.string().optional().messages({
+                'string.base': 'Ngày kết thúc phải là chuỗi'
+            }),
             price: Joi.number().required().messages({
                 'number.base': 'Giá trị phải là số',
-                'string.empty': 'Giá trị không được để trống',
-                'any.required': 'Giá trị trường bắt buộc'
+                'any.required': 'Giá trị là trường bắt buộc'
             })
-        })
+        });
     }
+    
 
     get updateCoupon() {
         return Joi.object({

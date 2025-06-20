@@ -14,41 +14,58 @@ import { useResponsive } from "../../../hooks/useResponsive";
 import { Link } from "react-router-dom";
 import ScrollBar from "../ScrollBar";
 import { AppContext } from "../../../contexts/App";
+import { MdDashboard, MdCategory, MdDiscount, MdPeople, MdShoppingCart } from "react-icons/md";
+import { FaShirt } from "react-icons/fa6";
+import { GiLargeDress } from "react-icons/gi";
 
 const navConfig = [
   {
     title: "Tổng quan",
-    path: "/admin"
+    path: "/admin",
+    icon: <MdDashboard />
   },
   {
     title: "Quản lý sản phẩm",
-    path: "/admin/product"
+    path: "/admin/product",
+    icon: <FaShirt />
   },
   {
     title: "Quản lý danh mục",
-    path: "/admin/category"
+    path: "/admin/category",
+    icon: <MdCategory />
   },
   {
     title: "Quản lý thương hiệu",
-    path: "/admin/brand"
+    path: "/admin/brand",
+    icon: <GiLargeDress />
   },
   {
     title: "Quản lý màu",
-    path: "/admin/color"
+    path: "/admin/color",
+    icon: <GiLargeDress />
   },
   {
     title: "Quản lý size",
-    path: "/admin/size"
+    path: "/admin/size",
+    icon: <GiLargeDress />
   },
   {
     title: "Quản lý đơn hàng",
-    path: "/admin/order"
+    path: "/admin/order",
+    icon: <MdShoppingCart />
   },
   {
     title: "Quản lý người dùng",
-    path: "/admin/users"
+    path: "/admin/users",
+    icon: <MdPeople />
+  },
+  {
+    title: "Quản lý mã khuyến mãi",
+    path: "/admin/coupon",
+    icon: <MdDiscount />
   }
 ];
+
 
 export default function Nav({ openNav, onCloseNav }) {
   const pathname = usePathname();

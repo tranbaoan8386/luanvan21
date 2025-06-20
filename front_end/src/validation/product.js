@@ -48,7 +48,13 @@ export const searchSchema = yup
 export const createProductSchema = yup.object().shape({
     name: yup.string().required("Tên sản phẩm là bắt buộc"),
     price: yup.number().required("Giá tiền là bắt buộc").positive("Giá tiền phải lớn hơn 0"),
-    productCouponId: yup.number().required("Mã khuyến mãi là bắt buộc"),
+    
+    productCouponId: yup
+    .number()
+    // Chuyển "" (chuỗi rỗng) thành null để không lỗi NaN
+    .transform((value, originalValue) => originalValue === "" ? null : Number(originalValue))
+    .nullable() // Cho phép null (không chọn mã)
+    .typeError("Mã khuyến mãi không hợp lệ"),
     categoryId: yup.string().required("Loại sản phẩm là bắt buộc"),
     brandId: yup.string().required("Thương hiệu là bắt buộc"),
     colorId: yup.array().of(yup.string()),

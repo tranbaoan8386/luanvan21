@@ -324,43 +324,57 @@ export default function Cart() {
       toast.warning("Vui lòng nhập mã giảm giá");
       return;
     }
-
+  
     try {
-      const res = await couponApi.applyCoupon(code); // 🎯 Gửi code đến BE
+      const res = await couponApi.applyCoupon(code,totalCart); // 🎯 Gửi code đến BE
       const couponData = res?.data?.coupon;
-
+  
       if (!couponData) {
         toast.error("Mã giảm giá không tồn tại hoặc đã hết hạn!");
         return;
       }
-
-      // 👉 Log dữ liệu carts để debug
+  
       console.log(
         "🛒 Carts debug (productItem):",
         carts.map((item) => item.productItem)
       );
-
-      // ⚠️ Nếu trong giỏ hàng có sản phẩm đã có coupon sẵn, không cho áp thêm
+  
+      //Nếu trong giỏ hàng có sản phẩm đã có coupon sẵn, không cho áp thêm
       const hasDiscountedItem = carts.some(
         (item) =>
           item.productItem?.coupons_id ||
-          item.productItem?.coupon_id || // Nếu backend trả về coupon_id
-          item.productItem?.coupon // Nếu include quan hệ coupon
+          item.productItem?.coupon_id || 
+          item.productItem?.coupon
       );
-
+  
       if (hasDiscountedItem) {
         toast.error("Có sản phẩm đã giảm giá sẵn. Không thể áp thêm mã.");
         return;
       }
-
+  
       const { price } = couponData;
+  
+      //Không cho áp mã nếu giá trị mã > tổng giỏ hàng
+      if (price > totalCart) {
+        toast.warning(
+          `Mã giảm giá là ${formatCurrency(price)} nhưng tổng giỏ hàng chỉ có ${formatCurrency(
+            totalCart
+          )}. Không thể áp dụng.`
+        );
+        return;
+      }
+  
       setCouponValue(price);
       toast.success("Áp dụng mã giảm giá thành công!");
-    } catch (err) {
+    } 
+    catch (err) {
       console.error("Lỗi khi áp mã:", err);
-      toast.error("Áp dụng mã giảm giá thất bại!");
-    }
+      const message = err?.response?.data?.message || "Áp dụng mã giảm giá thất bại!";
+      toast.error(message);
+    } 
   };
+  
+  
 
   const addpaypal = async () => {
     try {
@@ -992,7 +1006,7 @@ export default function Cart() {
                       color="#000000CC"
                       component="span"
                     >
-                      {formatCurrency(totalCart - couponValue) + " VND"}
+                      {formatCurrency(totalCart - (couponValue || 0)) + " VND"}
                     </Typography>
                   </Box>
                   <ButtonCustom onClick={handlePayment} sx={{ mt: 2, mb: 5 }}>
