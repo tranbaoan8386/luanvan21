@@ -1,0 +1,27 @@
+[
+  {
+    "id": "Q1",
+    "name": "Quận 1",
+    "idProvince": "79"
+  },
+  {
+    "id": "Q7",
+    "name": "Quận 7",
+    "idProvince": "79"
+  },
+  {
+    "id": "HK",
+    "name": "Quận Hoàn Kiếm",
+    "idProvince": "01"
+  },
+  {
+    "id": "HB",
+    "name": "Quận Hồng Bàng",
+    "idProvince": "31"
+  },
+  {
+    "id": "NH",
+    "name": "Quận Ngũ Hành Sơn",
+    "idProvince": "48"
+  }
+]

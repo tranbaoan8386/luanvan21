@@ -1,0 +1,32 @@
+[
+  {
+    "id": "P001",
+    "name": "Phường Tân Quy",
+    "idDistrict": "Q7",
+    "idProvince": "79"
+  },
+  {
+    "id": "P002",
+    "name": "Phường Tân Phong",
+    "idDistrict": "Q7",
+    "idProvince": "79"
+  },
+  {
+    "id": "P003",
+    "name": "Phường Bến Nghé",
+    "idDistrict": "Q1",
+    "idProvince": "79"
+  },
+  {
+    "id": "P004",
+    "name": "Phường Bến Thành",
+    "idDistrict": "Q1",
+    "idProvince": "79"
+  },
+  {
+    "id": "P005",
+    "name": "Phường Hàng Trống",
+    "idDistrict": "HK",
+    "idProvince": "01"
+  }
+]

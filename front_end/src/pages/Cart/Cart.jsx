@@ -80,62 +80,82 @@ export default function Cart() {
 
   useEffect(() => {
     axios
-      .get("https://mocki.io/v1/f68f7d17-81fd-4e27-a4aa-38b1a4ce4d2c")
+      .get("/provinces_2025_demo.json")
       .then((res) => {
-        setCities(res.data);
+        setCities(res.data); // Đảm bảo res.data là mảng
       })
-      .catch((err) => {
-        console.error("❌ Lỗi tải tỉnh/thành:", err);
-      });
+      .catch((err) => console.error(err));
   }, []);
 
-
-
   const handleCityChange = (e) => {
-  const cityId = e.target.value;
-  setSelectedCity(cityId);
-  setSelectedDistrict("");
-  setSelectedWard("");
-  setDistricts([]);
-  setWards([]);
+    const cityCode = e.target.value;
+    console.log("🎯 Đã chọn tỉnh/thành phố:", cityCode);
 
- const selected = cities.find((c) => String(c.idProvince) === String(cityId));
+    setSelectedCity(cityCode);
+    setSelectedDistrict("");
+    setSelectedWard("");
+    setDistricts([]);
+    setWards([]);
 
-  setAddress((prev) => ({ ...prev, province: selected?.name || "" }));
+    const selectedCity = cities.find(
+      (c) =>
+        String(c.code).padStart(2, "0") === String(cityCode).padStart(2, "0")
+    );
+    setAddress((prev) => ({
+      ...prev,
+      province: selectedCity?.name || "",
+    }));
 
-  axios
-    .get("https://mocki.io/v1/f2bb7857-9b8c-4b77-87c9-1a7e7fffa9fa")
-    .then((res) => {
-      // ⚠️ Lọc huyện thuộc tỉnh được chọn
-      const filtered = res.data.filter((d) => String(d.idProvince) === String(cityId));
-      setDistricts(filtered);
-    })
-    .catch((err) => console.error("Lỗi khi tải huyện:", err));
-};
+    axios
+      .get("/districts_2025_demo.json")
+      .then((res) => {
+        console.log("✅ Danh sách quận huyện:", res.data);
+        console.log("🔍 cityCode:", cityCode);
 
+        const filtered = res.data.filter(
+          (district) =>
+            String(district.idProvince).padStart(2, "0") ===
+            String(cityCode).padStart(2, "0")
+        );
+        console.log("📌 Quận huyện đã lọc:", filtered);
+
+        setDistricts(filtered);
+      })
+      .catch((err) => console.error(err));
+  };
 
   //   setAddress((prev) => ({ ...prev, district: selectedDistrict.Name }));
   //   setDistrictError("");
   // };
 
   const handleDistrictChange = (e) => {
-  const districtId = e.target.value;
-  setSelectedDistrict(districtId);
-  setSelectedWard("");
-  setWards([]);
+    const districtCode = e.target.value;
+    setSelectedDistrict(districtCode);
+    setSelectedWard("");
+    setWards([]);
 
-  const selected = districts.find((d) => d.id === districtId);
-  setAddress((prev) => ({ ...prev, district: selected?.name || "" }));
+    const selectedDistrict = districts.find((d) => d.id === districtCode);
+    setAddress((prev) => ({
+      ...prev,
+      district: selectedDistrict?.name || "",
+    }));
 
-  axios
-    .get("https://mocki.io/v1/cf3193c6-24e0-465c-bdb4-4de5f26782f1")
-    .then((res) => {
-      const filtered = res.data.filter((w) => w.idDistrict === districtId);
-      setWards(filtered);
-    })
-    .catch((err) => console.error("Lỗi khi tải phường/xã:", err));
-};
+    axios
+      .get("/wards_2025_demo.json")
+      .then((res) => {
+        const wardList = Array.isArray(res.data)
+          ? res.data
+          : res.data?.data || [];
+        console.log("✅ Danh sách phường/xã:", wardList);
 
+        const filtered = wardList.filter(
+          (ward) => ward.idDistrict === districtCode
+        );
+        console.log("📌 Phường/xã đã lọc:", filtered);
+        setWards(filtered);
+      })
+      .catch((err) => console.error("Lỗi khi load phường/xã:", err));
+  };
 
   const handleWardChange = (e) => {
     const wardId = e.target.value;
@@ -324,57 +344,57 @@ export default function Cart() {
       toast.warning("Vui lòng nhập mã giảm giá");
       return;
     }
-  
+
     try {
-      const res = await couponApi.applyCoupon(code,totalCart); // 🎯 Gửi code đến BE
+      const res = await couponApi.applyCoupon(code, totalCart); // 🎯 Gửi code đến BE
       const couponData = res?.data?.coupon;
-  
+
       if (!couponData) {
         toast.error("Mã giảm giá không tồn tại hoặc đã hết hạn!");
         return;
       }
-  
+
       console.log(
         "🛒 Carts debug (productItem):",
         carts.map((item) => item.productItem)
       );
-  
+
       //Nếu trong giỏ hàng có sản phẩm đã có coupon sẵn, không cho áp thêm
       const hasDiscountedItem = carts.some(
         (item) =>
           item.productItem?.coupons_id ||
-          item.productItem?.coupon_id || 
+          item.productItem?.coupon_id ||
           item.productItem?.coupon
       );
-  
+
       if (hasDiscountedItem) {
         toast.error("Có sản phẩm đã giảm giá sẵn. Không thể áp thêm mã.");
         return;
       }
-  
+
       const { price } = couponData;
-  
+
       //Không cho áp mã nếu giá trị mã > tổng giỏ hàng
       if (price > totalCart) {
         toast.warning(
-          `Mã giảm giá là ${formatCurrency(price)} nhưng tổng giỏ hàng chỉ có ${formatCurrency(
+          `Mã giảm giá là ${formatCurrency(
+            price
+          )} nhưng tổng giỏ hàng chỉ có ${formatCurrency(
             totalCart
           )}. Không thể áp dụng.`
         );
         return;
       }
-  
+
       setCouponValue(price);
       toast.success("Áp dụng mã giảm giá thành công!");
-    } 
-    catch (err) {
+    } catch (err) {
       console.error("Lỗi khi áp mã:", err);
-      const message = err?.response?.data?.message || "Áp dụng mã giảm giá thất bại!";
+      const message =
+        err?.response?.data?.message || "Áp dụng mã giảm giá thất bại!";
       toast.error(message);
-    } 
+    }
   };
-  
-  
 
   const addpaypal = async () => {
     try {
@@ -416,37 +436,38 @@ export default function Cart() {
       const selectedCityObj = cities.find(
         (city) => city.name?.trim() === province?.trim()
       );
+
       if (selectedCityObj) {
-        setSelectedCity(selectedCityObj.idProvince);
+        setSelectedCity(selectedCityObj.code);
         setAddress((prev) => ({ ...prev, province }));
 
         try {
-          const districtRes = await axios.get(
-            "https://mocki.io/v1/f2bb7857-9b8c-4b77-87c9-1a7e7fffa9fa"
-          );
+          const districtRes = await axios.get("/districts_2025_demo.json"); // 🆕 local
           const districtsData = districtRes.data.filter(
-            (d) => String(d.idProvince) === String(selectedCityObj.idProvince)
+            (d) => d.idProvince === selectedCityObj.code
           );
+
           setDistricts(districtsData);
 
           const selectedDistrictObj = districtsData.find(
             (d) => d.name?.trim() === district?.trim()
           );
+
           if (selectedDistrictObj) {
             setSelectedDistrict(selectedDistrictObj.id);
             setAddress((prev) => ({ ...prev, district }));
 
-            const wardRes = await axios.get(
-              "https://mocki.io/v1/cf3193c6-24e0-465c-bdb4-4de5f26782f1"
-            );
+            const wardRes = await axios.get("/wards_2025_demo.json"); // 🆕 local
             const wardsData = wardRes.data.filter(
               (w) => w.idDistrict === selectedDistrictObj.id
             );
+
             setWards(wardsData);
 
             const selectedWardObj = wardsData.find(
               (w) => w.name?.trim() === village?.trim()
             );
+
             if (selectedWardObj) {
               setSelectedWard(selectedWardObj.id);
               setAddress((prev) => ({ ...prev, village }));
@@ -460,10 +481,8 @@ export default function Cart() {
       setAddress((prev) => ({ ...prev, street }));
       setPhone(profile?.data?.profile?.Address?.phone || "");
     }
-
     setOpen(true);
   };
-
 
   const addCouponMutation = useMutation({
     mutationFn: (body) => couponApi.addCoupon(body),
@@ -880,38 +899,62 @@ export default function Cart() {
             }}
           >
             <Box sx={{ fontSize: "18px" }}>
-              Địa chỉ:
-              {profile?.data?.profile?.Address ? (
-                <Box sx={{ display: "flex" }}>
-                  <Box sx={{ fontSize: "15px", width: "250px" }}>
-                    {profile?.data?.profile?.Address?.street},
-                    {profile?.data?.profile?.Address?.village},
-                    {profile?.data?.profile?.Address?.district},
-                    {profile?.data?.profile?.Address?.province}
-                  </Box>
-                  <Box
-                    sx={{
-                      fontSize: "13px",
-                      color: "blue",
-                    }}
-                    onClick={handleOpenOrder}
-                  >
-                    Thay đổi
-                  </Box>
-                </Box>
-              ) : (
-                <Box
-                  sx={{
-                    fontSize: "13px",
-                    color: "blue",
-                    cursor: "pointer",
-                  }}
-                  onClick={handleOpenOrder}
-                >
-                  Thêm mới
-                </Box>
-              )}
-            </Box>
+  Địa chỉ:
+  {profile?.data?.profile?.Address ? (
+    <Box
+      sx={{
+        backgroundColor: "#f9f9f9",
+        border: "1px solid #ccc",
+        borderRadius: "8px",
+        padding: "12px",
+        lineHeight: "1.6",
+        marginTop: "8px",
+        fontSize: "15px",
+      }}
+    >
+      <strong style={{ fontSize: "16px" }}>
+         Địa chỉ nhận hàng
+      </strong>
+      <div>
+        Tỉnh/Thành phố: {profile?.data?.profile?.Address?.city}
+      </div>
+      <div>
+        Quận/Huyện: {profile?.data?.profile?.Address?.district}
+      </div>
+      <div>
+        Phường/Xã: {profile?.data?.profile?.Address?.ward}
+      </div>
+      <div>
+        Số nhà: {profile?.data?.profile?.Address?.address_line}
+      </div>
+      <Box
+        sx={{
+          fontSize: "13px",
+          color: "blue",
+          cursor: "pointer",
+          marginTop: "8px",
+        }}
+        onClick={handleOpenOrder}
+      >
+        Thay đổi
+      </Box>
+    </Box>
+  ) : (
+    <Box
+      sx={{
+        fontSize: "13px",
+        color: "blue",
+        cursor: "pointer",
+        marginTop: "8px",
+      }}
+      onClick={handleOpenOrder}
+    >
+      Thêm mới
+    </Box>
+  )}
+</Box>
+
+
             <br></br>
             <Box
               sx={{
@@ -1087,18 +1130,13 @@ export default function Cart() {
                 <MenuItem value="">
                   <em>Chọn Tỉnh / Thành phố</em>
                 </MenuItem>
-                {Array.isArray(cities) &&
-  cities
-    .filter((city) => city?.idProvince && city?.name)
-    .map((city) => (
-      <MenuItem key={`city-${city.idProvince}`} value={city.idProvince}>
-        {city.name}
-      </MenuItem>
-    ))}
-
-
-
+                {cities.map((city) => (
+                  <MenuItem key={city.code} value={city.code}>
+                    {city.name}
+                  </MenuItem>
+                ))}
               </Select>
+
               {cityError && <Alert severity="error">{cityError}</Alert>}
             </FormControl>
             <FormControl fullWidth margin="normal" disabled={!selectedCity}>
@@ -1111,15 +1149,20 @@ export default function Cart() {
                 <MenuItem value="">
                   <em>Chọn Quận / Huyện</em>
                 </MenuItem>
-                {districts
-  .filter((d) => d?.id !== undefined && d?.id !== null && d?.name)
-  .map((district) => (
-    <MenuItem key={`district-${district.id}`} value={district.id}>
-      {district.name}
-    </MenuItem>
-))}
 
+                {districts && districts.length > 0 ? (
+                  districts.map((district) => (
+                    <MenuItem key={district.id} value={district.id}>
+                      {district.name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>
+                    <em>Không có quận/huyện</em>
+                  </MenuItem>
+                )}
               </Select>
+
               {districtError && <Alert severity="error">{districtError}</Alert>}
             </FormControl>
             {selectedDistrict && (
@@ -1133,16 +1176,13 @@ export default function Cart() {
                   <MenuItem value="">
                     <em>Chọn Phường / Xã</em>
                   </MenuItem>
-                  {wards
-  .filter((w) => w?.id !== undefined && w?.id !== null && w?.name)
-  .map((ward) => (
-    <MenuItem key={`ward-${ward.id}`} value={ward.id}>
-      {ward.name}
-    </MenuItem>
-))}
-
-
+                  {wards.map((ward) => (
+                    <MenuItem key={ward.id} value={ward.id}>
+                      {ward.name}
+                    </MenuItem>
+                  ))}
                 </Select>
+
                 {wardError && <Alert severity="error">{wardError}</Alert>}
               </FormControl>
             )}
