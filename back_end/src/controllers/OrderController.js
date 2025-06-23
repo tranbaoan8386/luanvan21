@@ -20,103 +20,90 @@ class OrderController {
 
     async getAllOrder(req, res, next) {
         try {
-            const { id: userId, role } = req.user;
-            let orders;
-            console.log('User gửi request:', req.user);
-
-
-            // Nếu là admin/owner thì lấy tất cả đơn hàng
-            if (role === 'Admin') {
-                orders = await Order.findAll({
-                    include: [
-                        {
-                            model: OrderItem,
-                            as: 'items',
-                            include: [{
-                                model: ProductItem,
-                                as: 'productItem',
-                                include: [
-                                    {
-                                        model: Product,
-                                        as: 'product',
-                                        attributes: ['id', 'name']
-                                    },
-                                    {
-                                        model: Color,
-                                        as: 'color',
-                                        attributes: ['name']
-                                    },
-                                    {
-                                        model: Size,
-                                        as: 'size',
-                                        attributes: ['name']
-                                    }
-                                ]
-                            }]
-                        },
-                        {
-                            model: User,
-                            attributes: ['id', 'name', 'email'],
-                            as: 'user'
-                        }
-                    ],
-                    order: [['createDate', 'DESC']]
-                });
-                // ✅ Log kết quả đơn đầu tiên để kiểm tra
-                console.log(JSON.stringify(orders[0], null, 2));
-            } else {
-                // Nếu là customer thì chỉ lấy đơn hàng của họ
-                orders = await Order.findAll({
-                    where: {
-                        userId: userId
+          const { id: userId, role } = req.user;
+          let orders;
+      
+          console.log("User gửi request:", req.user);
+      
+          const includeOptions = [
+            {
+              model: OrderItem,
+              as: "items",
+              include: [
+                {
+                  model: ProductItem,
+                  as: "productItem",
+                  include: [
+                    {
+                      model: Product,
+                      as: "product",
+                      attributes: ["id", "name"],
                     },
-                    include: [
-                        {
-                            model: OrderItem,
-                            as: 'items',
-                            include: [{
-                                model: ProductItem,
-                                as: 'productItem',
-                                include: [
-                                    {
-                                        model: Product,
-                                        as: 'product',
-                                        attributes: ['id', 'name']
-                                    },
-                                    {
-                                        model: Color,
-                                        as: 'color',
-                                        attributes: ['name']
-                                    },
-                                    {
-                                        model: Size,
-                                        as: 'size',
-                                        attributes: ['name']
-                                    }
-                                ]
-                            }]
-                        },
-                        {
-                            model: User,
-                            attributes: ['id', 'name', 'email'],
-                            as: 'user'
-                        }
-                    ],
-                    order: [['createDate', 'DESC']]
-                });
-            }
-
-            return ApiResponse.success(res, {
-                status: 200,
-                data: {
-                    orders
-                }
+                    {
+                      model: Color,
+                      as: "color",
+                      attributes: ["name"],
+                    },
+                    {
+                      model: Size,
+                      as: "size",
+                      attributes: ["name"],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              model: User,
+              as: "user",
+              attributes: ["id", "name", "email"],
+            },
+          ];
+      
+          if (role === "Admin") {
+            orders = await Order.findAll({
+              include: includeOptions,
+              order: [["createDate", "DESC"]],
             });
+          } else {
+            orders = await Order.findAll({
+              where: { userId },
+              include: includeOptions,
+              order: [["createDate", "DESC"]],
+            });
+          }
+      
+          // ✅ Gắn thêm price/final_price vào từng item
+          const mappedOrders = orders.map((order) => {
+            const orderJson = order.toJSON();
+            orderJson.items = orderJson.items.map((item) => {
+              const productItem = item.productItem;
+      
+              const price = productItem?.price || 0;
+              const quantity = item.quantity || 0;
+      
+              return {
+                ...item,
+                price, // ✅ fix lỗi null
+                price_coupon: null, // ⚠️ nếu có mã giảm thì bạn xử lý riêng
+                final_price: price * quantity,
+              };
+            });
+      
+            return orderJson;
+          });
+      
+          return ApiResponse.success(res, {
+            status: 200,
+            data: {
+              orders: mappedOrders, // ✅ dùng bản đã xử lý
+            },
+          });
         } catch (error) {
-            console.log('🔴 ERROR:', error);
-            next(error);
+          console.log("🔴 ERROR:", error);
+          next(error);
         }
-    }
+      }      
     async getOrderById(req, res, next) {
         try {
             const { id: userId, role } = req.user;
@@ -347,7 +334,7 @@ async createOrder(req, res, next) {
     for (const item of createdOrderItems) {
       await item.update({ orderId: order.id });
     }
-
+    
     // ✅ Xoá CartItem đã mua
     const cart = await Cart.findOne({ where: { users_id: userId, isPaid: false } });
     if (cart) {

@@ -15,10 +15,18 @@ const initAppContext = {
   reset: () => null
 }
 
+
 export const AppProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(initAppContext.isAuthenticated)
   const [profile, setProfile] = useState(initAppContext.profile)
   const [carts, setCarts] = useState([])
+
+  const logout = () => {
+    localStorage.removeItem('accessToken')
+    setIsAuthenticated(false)
+    setProfile(null)
+    setCarts([])
+  }
 
   // ✅ Thêm log để kiểm tra
   useEffect(() => {
@@ -67,8 +75,10 @@ export const AppProvider = ({ children }) => {
     carts,
     setCarts,
     handleRefetchCart,
-    reset
+    reset,
+    logout
   }
+  
 
   return (
     <AppContext.Provider value={contextValue}>

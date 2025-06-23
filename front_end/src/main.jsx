@@ -37,7 +37,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           theme="light"
         />
       </AppProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </BrowserRouter>
 );

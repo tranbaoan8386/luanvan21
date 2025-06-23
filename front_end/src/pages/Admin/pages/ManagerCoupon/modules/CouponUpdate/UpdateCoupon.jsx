@@ -9,7 +9,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import * as yup from 'yup'
 import couponApi from '../../../../../../apis/coupon'
 
-// Schema validate giống khi tạo
 const updateCouponSchema = yup.object({
   code: yup.string().required('Vui lòng nhập mã'),
   price: yup
@@ -58,8 +57,17 @@ export default function UpdateCoupon() {
     }
   })
 
+  // ✅ Sửa ở đây
   const onSubmit = handleSubmit((data) => {
-    updateCouponMutation.mutate({ id, body: data })
+    const payload = {
+      code: data.code,
+      price: Number(data.price),
+      startDate: new Date(data.startDate).toISOString(),
+      endDate: new Date(data.endDate).toISOString()
+    }
+    console.log('⏳ Sending payload:', payload);
+
+    updateCouponMutation.mutate({ id, body: payload })
   })
 
   return (

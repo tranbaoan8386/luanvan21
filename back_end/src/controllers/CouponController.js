@@ -128,27 +128,31 @@ class CouponController {
     try {
       const { id: couponId } = req.params;
       const { code, price, startDate, endDate } = req.body;
-
+  
       const coupon = await Coupon.findOne({ where: { id: couponId } });
       if (!coupon) {
-        throw new ErrorResponse(404, 'Không tìm thấy khuyến mãi');
+        return res.status(404).json({ message: 'Không tìm thấy khuyến mãi' });
       }
-
+  
       coupon.code = code;
       coupon.price = price;
       coupon.startDate = startDate;
       coupon.endDate = endDate;
-
+  
       await coupon.save();
-
-      return new ApiResponse(res, {
-        status: 200,
-        data: coupon
-      });
+  
+      return res.status(200).json({ success: true, data: coupon });
     } catch (err) {
-      next(err);
+      // ✅ In chi tiết lỗi Sequelize validation
+      console.error("🔥 Sequelize Error:", err);
+      if (err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError') {
+        return res.status(422).json({ message: err.errors?.[0]?.message || 'Lỗi dữ liệu không hợp lệ' });
+      }
+      return res.status(500).json({ message: 'Lỗi máy chủ không xác định' });
     }
   }
+  
+  
 
   // Xoá mã
   async deleteCoupon(req, res, next) {

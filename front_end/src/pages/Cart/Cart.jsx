@@ -344,36 +344,18 @@ export default function Cart() {
       toast.warning("Vui lòng nhập mã giảm giá");
       return;
     }
-
+  
     try {
       const res = await couponApi.applyCoupon(code, totalCart); // 🎯 Gửi code đến BE
       const couponData = res?.data?.coupon;
-
+  
       if (!couponData) {
         toast.error("Mã giảm giá không tồn tại hoặc đã hết hạn!");
         return;
       }
-
-      console.log(
-        "🛒 Carts debug (productItem):",
-        carts.map((item) => item.productItem)
-      );
-
-      //Nếu trong giỏ hàng có sản phẩm đã có coupon sẵn, không cho áp thêm
-      const hasDiscountedItem = carts.some(
-        (item) =>
-          item.productItem?.coupons_id ||
-          item.productItem?.coupon_id ||
-          item.productItem?.coupon
-      );
-
-      if (hasDiscountedItem) {
-        toast.error("Có sản phẩm đã giảm giá sẵn. Không thể áp thêm mã.");
-        return;
-      }
-
+  
       const { price } = couponData;
-
+  
       //Không cho áp mã nếu giá trị mã > tổng giỏ hàng
       if (price > totalCart) {
         toast.warning(
@@ -385,7 +367,7 @@ export default function Cart() {
         );
         return;
       }
-
+  
       setCouponValue(price);
       toast.success("Áp dụng mã giảm giá thành công!");
     } catch (err) {
@@ -395,6 +377,7 @@ export default function Cart() {
       toast.error(message);
     }
   };
+  
 
   const addpaypal = async () => {
     try {
