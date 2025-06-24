@@ -27,31 +27,35 @@ class CouponController {
   async getCoupon(req, res, next) {
     try {
       const currentDate = new Date();
-      const { id: code } = req.params; // code được truyền ở URL như /check/SALE10K
+      const { id: code } = req.params; // mã giảm giá: /check/S50
       const { totalCart } = req.query;
-
+  
       const validCoupon = await Coupon.findOne({
         where: {
           code,
-          endDate: { [Sequelize.Op.gte]: currentDate },
-          startDate: { [Sequelize.Op.lte]: currentDate }
+          startDate: { [Sequelize.Op.lte]: currentDate },
+          endDate: { [Sequelize.Op.gte]: currentDate }
         }
       });
-
+  
       if (!validCoupon) {
         return ApiResponse.error(res, {
           status: 400,
           message: "Mã giảm giá không tồn tại hoặc đã hết hạn!"
         });
       }
-
-      if (totalCart && validCoupon.price > Number(totalCart)) {
+  
+      // ✅ Kiểm tra đơn hàng có đạt điều kiện tối thiểu
+      if (
+        validCoupon.minimumAmount &&
+        Number(totalCart) < validCoupon.minimumAmount
+      ) {
         return ApiResponse.error(res, {
           status: 400,
-          message: `Mã giảm ${validCoupon.price} lớn hơn tổng giỏ hàng ${totalCart}`
+          message: `Mã chỉ áp dụng cho đơn từ ${validCoupon.minimumAmount} VNĐ`
         });
       }
-
+  
       return ApiResponse.success(res, {
         status: 200,
         data: { coupon: validCoupon }
@@ -60,6 +64,7 @@ class CouponController {
       next(err);
     }
   }
+  
 
   // Lấy mã khuyến mãi theo ID (dùng cho admin)
   async getCouponById(req, res, next) {
@@ -94,26 +99,29 @@ class CouponController {
   // Tạo mã mới
   async createCoupon(req, res, next) {
     try {
-      const { code, price, startDate } = req.body;
+      const { code, price, startDate, minimumAmount } = req.body;
       let endDate = req.body.endDate;
-
+  
+      // Kiểm tra mã đã tồn tại chưa
       const existedCode = await Coupon.findOne({ where: { code } });
       if (existedCode) {
         throw new ErrorResponse(400, 'Mã khuyến mãi đã tồn tại');
       }
-
+  
+      // Nếu không có endDate thì mặc định +3 ngày
       if (!endDate) {
         endDate = new Date();
         endDate.setDate(endDate.getDate() + 3);
       }
-
+  
       const newCoupon = await Coupon.create({
         code,
         price,
         startDate: startDate || new Date(),
-        endDate
+        endDate,
+        minimumAmount: minimumAmount ?? 0   // ✅ fallback nếu không nhập
       });
-
+  
       return new ApiResponse(res, {
         status: 201,
         data: newCoupon
@@ -122,12 +130,13 @@ class CouponController {
       next(err);
     }
   }
+  
 
   // Cập nhật mã
   async updateCoupon(req, res, next) {
     try {
       const { id: couponId } = req.params;
-      const { code, price, startDate, endDate } = req.body;
+      const { code, price, startDate, endDate, minimumAmount } = req.body;
   
       const coupon = await Coupon.findOne({ where: { id: couponId } });
       if (!coupon) {
@@ -138,6 +147,7 @@ class CouponController {
       coupon.price = price;
       coupon.startDate = startDate;
       coupon.endDate = endDate;
+      coupon.minimumAmount = minimumAmount;
   
       await coupon.save();
   

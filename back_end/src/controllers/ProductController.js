@@ -569,11 +569,6 @@ if (sort_by === 'price' || sort_by === 'sold') {
           as: 'brand',
           attributes: ['id', 'name']
         },
-        // {
-        //   model: Coupon,
-        //   as: 'productCoupon',
-        //   attributes: ['id', 'price']
-        // },
         {
           model: ProductItem,
           as: 'productItems',

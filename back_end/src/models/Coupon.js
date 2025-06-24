@@ -11,12 +11,12 @@ const Coupon = sequelize.define(
     },
     code: {
       type: DataTypes.STRING(255),
-      allowNull: true,       // ✅ Phù hợp với DB
+      allowNull: true,
       unique: true
     },
     price: {
       type: DataTypes.FLOAT,
-      allowNull: true        // ✅ Phù hợp với DB
+      allowNull: true
     },
     startDate: {
       type: DataTypes.DATE,
@@ -25,6 +25,12 @@ const Coupon = sequelize.define(
     endDate: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    // ✅ THÊM DÒNG NÀY
+    minimumAmount: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      defaultValue: 0
     }
   },
   {

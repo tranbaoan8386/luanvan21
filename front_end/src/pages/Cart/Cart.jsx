@@ -77,6 +77,23 @@ export default function Cart() {
   const [phoneError, setPhoneError] = useState("");
   const [cityError, setCityError] = useState("");
   const [currentAddress, setCurrentAddress] = useState(null);
+  const [availableCoupons, setAvailableCoupons] = useState([]); // ✅ Danh sách mã có sẵn\
+  const [showCouponList, setShowCouponList] = useState(false)
+
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const res = await couponApi.getAllCoupon();
+        console.log("🎯 Mã khuyến mãi trả về:", res);
+        setAvailableCoupons(res.data); // tùy backend, có thể là res.data.data
+      } catch (error) {
+        console.error("Lỗi lấy mã khuyến mãi:", error);
+      }
+    };
+    fetchCoupons();
+  }, []);
+
+  
 
   useEffect(() => {
     axios
@@ -877,6 +894,9 @@ export default function Cart() {
             )}
           </Table>
         </TableContainer>
+
+        
+
         {carts && carts.length > 0 && (
           <Box
             sx={{
@@ -963,9 +983,59 @@ export default function Cart() {
 
             {/* PHẦN CÒN LẠI - căn giữa */}
             <Box sx={{ textAlign: "center", width: "100%" }}>
-              <Typography mb={1} fontSize="15px" fontWeight="500">
-                Mã khuyến mãi (nếu có)
+
+            <Box sx={{ mt: 2 }}>
+  <Button
+    variant="outlined"
+    size="small"
+    onClick={() => setShowCouponList(!showCouponList)}
+    sx={{ mb: 2 }}
+  >
+    {showCouponList ? "Ẩn mã khuyến mãi" : "Áp dụng mã khuyến mãi"}
+  </Button>
+
+  {showCouponList && (
+    <>
+      {availableCoupons.length > 0 ? (
+        availableCoupons.map((coupon) => (
+          <Box
+            key={coupon.id}
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              background: "#f4f4f4",
+              borderRadius: "6px",
+              padding: "10px",
+              mb: 1,
+              border: "1px solid #ccc",
+            }}
+          >
+            <Box>
+              <Typography fontWeight={600}>{coupon.code}</Typography>
+              <Typography fontSize="14px" color="red">
+                Giảm {formatCurrency(coupon.price)} VND cho đơn từ {formatCurrency(coupon.minimumAmount || 0)} VND
               </Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              onClick={() => setCode(coupon.code)}
+              size="small"
+            >
+              Áp dụng
+            </Button>
+          </Box>
+        ))
+      ) : (
+        <Typography fontSize="14px" color="GrayText">
+          Không có mã nào khả dụng
+        </Typography>
+      )}
+    </>
+  )}
+</Box>
+
+
 
               {/* ✅ Sửa thành Box căn giữa */}
               <Box

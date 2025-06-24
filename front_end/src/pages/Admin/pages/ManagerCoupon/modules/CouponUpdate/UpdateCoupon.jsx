@@ -17,7 +17,13 @@ const updateCouponSchema = yup.object({
     .min(1, 'Giá trị phải lớn hơn 0')
     .required('Vui lòng nhập giá trị'),
   startDate: yup.string().required('Vui lòng chọn ngày bắt đầu'),
-  endDate: yup.string().required('Vui lòng chọn ngày kết thúc')
+  endDate: yup.string().required('Vui lòng chọn ngày kết thúc'),
+  minimumAmount: yup
+    .number()
+    .typeError('Giá trị phải là số')
+    .min(0, 'Không được nhỏ hơn 0')
+    .nullable()
+    .transform((value, originalValue) => (originalValue === '' ? null : value))
 })
 
 export default function UpdateCoupon() {
@@ -33,7 +39,6 @@ export default function UpdateCoupon() {
     resolver: yupResolver(updateCouponSchema)
   })
 
-  // Lấy dữ liệu mã cần sửa
   const { data: couponData } = useQuery({
     queryKey: ['coupon', id],
     queryFn: () => couponApi.getCouponById(id)
@@ -47,6 +52,7 @@ export default function UpdateCoupon() {
       setValue('price', coupon.price)
       setValue('startDate', coupon.startDate?.slice(0, 10))
       setValue('endDate', coupon.endDate?.slice(0, 10))
+      setValue('minimumAmount', coupon.minimumAmount)
     }
   }, [coupon])
 
@@ -57,15 +63,14 @@ export default function UpdateCoupon() {
     }
   })
 
-  // ✅ Sửa ở đây
   const onSubmit = handleSubmit((data) => {
     const payload = {
       code: data.code,
       price: Number(data.price),
       startDate: new Date(data.startDate).toISOString(),
-      endDate: new Date(data.endDate).toISOString()
+      endDate: new Date(data.endDate).toISOString(),
+      minimumAmount: Number(data.minimumAmount)
     }
-    console.log('⏳ Sending payload:', payload);
 
     updateCouponMutation.mutate({ id, body: payload })
   })
@@ -102,6 +107,12 @@ export default function UpdateCoupon() {
               Ngày kết thúc
             </Typography>
             <Input name="endDate" type="date" register={register} errors={errors} fullWidth size="small" />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Typography component="p" sx={{ mb: 1 }}>
+              Đơn hàng tối thiểu (VND)
+            </Typography>
+            <Input name="minimumAmount" type="number" register={register} errors={errors} fullWidth size="small" />
           </Grid>
         </Grid>
         <Button variant="contained" type="submit" sx={{ mt: 3 }}>
