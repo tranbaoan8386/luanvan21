@@ -726,10 +726,10 @@ export default function Cart() {
 
     <Box
       sx={{
-        flex: 1,                       // ✅ phần chính chiếm toàn bộ không gian còn lại
+        flex: 1,                        
         width: "100%",
         mt: 2,
-        maxWidth: "1600px",
+        maxWidth: "1300px",
         mx: "auto",
         px: 3,
       }}
@@ -737,7 +737,14 @@ export default function Cart() {
 
       {/* <Breadcrumb page="Giỏ hàng" /> */}
       {error && <Alert severity="error">{error}</Alert>}
-      <Box sx={{ display: "flex", flex: 1 }}>
+      <Box  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", md: "row" }, // responsive
+                    gap: 3,
+                    alignItems: "flex-start",
+                    mt: 5,
+                  }}
+                >
         <TableContainer sx={{ mt: 5, height: "100%" }} component={Paper}>
           <Table sx={{ minWidth: 800 }} aria-label="simple table">
             <TableHead>
@@ -985,56 +992,66 @@ export default function Cart() {
             <Box sx={{ textAlign: "center", width: "100%" }}>
 
             <Box sx={{ mt: 2 }}>
-  <Button
-    variant="outlined"
-    size="small"
-    onClick={() => setShowCouponList(!showCouponList)}
-    sx={{ mb: 2 }}
-  >
-    {showCouponList ? "Ẩn mã khuyến mãi" : "Áp dụng mã khuyến mãi"}
-  </Button>
+    <Button
+      variant="outlined"
+      size="small"
+      onClick={() => setShowCouponList(!showCouponList)}
+      sx={{ mb: 2 }}
+    >
+      {showCouponList ? "Ẩn mã khuyến mãi" : "Áp dụng mã khuyến mãi"}
+    </Button>
 
-  {showCouponList && (
-    <>
-      {availableCoupons.length > 0 ? (
-        availableCoupons.map((coupon) => (
-          <Box
-            key={coupon.id}
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              background: "#f4f4f4",
-              borderRadius: "6px",
-              padding: "10px",
-              mb: 1,
-              border: "1px solid #ccc",
-            }}
-          >
-            <Box>
-              <Typography fontWeight={600}>{coupon.code}</Typography>
-              <Typography fontSize="14px" color="red">
-                Giảm {formatCurrency(coupon.price)} VND cho đơn từ {formatCurrency(coupon.minimumAmount || 0)} VND
-              </Typography>
-            </Box>
-            <Button
-              variant="outlined"
-              onClick={() => setCode(coupon.code)}
-              size="small"
-            >
-              Áp dụng
-            </Button>
-          </Box>
-        ))
-      ) : (
-        <Typography fontSize="14px" color="GrayText">
-          Không có mã nào khả dụng
-        </Typography>
-      )}
-    </>
-  )}
-</Box>
+    {showCouponList && (
+      <>
+        {availableCoupons.length > 0 ? (
+          availableCoupons.map((coupon) => {
+            const isEligible = totalCart >= (coupon.minimumAmount || 0);
 
+            return (
+              <Box
+                key={coupon.id}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  background: "#f4f4f4",
+                  borderRadius: "6px",
+                  padding: "10px",
+                  mb: 1,
+                  border: "1px solid #ccc",
+                  opacity: isEligible ? 1 : 0.5, // 👈 Làm mờ nếu không đủ điều kiện
+                  pointerEvents: isEligible ? "auto" : "none", // 👈 Vô hiệu hóa click
+                }}
+              >
+                <Box>
+                  <Typography fontWeight={600}>{coupon.code}</Typography>
+                  <Typography fontSize="14px" color="red">
+                    Giảm {formatCurrency(coupon.price)} VND cho đơn từ{" "}
+                    {formatCurrency(coupon.minimumAmount || 0)} VND
+                  </Typography>
+                </Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  disabled={!isEligible} // 👈 Tùy chọn: disable nút thay vì dùng pointerEvents
+                  onClick={() => {
+                    setCode(coupon.code);
+                    addCoupon(); // Gọi hàm áp mã
+                  }}
+                >
+                  Áp dụng
+                </Button>
+              </Box>
+            );
+          })
+        ) : (
+          <Typography fontSize="14px" color="GrayText">
+            Không có mã nào khả dụng
+          </Typography>
+        )}
+      </>
+    )}
+  </Box>
 
 
               {/* ✅ Sửa thành Box căn giữa */}
