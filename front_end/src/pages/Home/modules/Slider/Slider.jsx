@@ -30,7 +30,7 @@ export default function Slider() {
                 className='mySwiper'
             >
                 <SwiperSlide>
-                    <img srcSet='https://vitimex.com.vn/images/products/cat/2023/08/original/banner-ao-khoac_1692413192.jpg' alt='' />
+                    <img srcSet='https://th.bing.com/th/id/R.bc54705d2d8666539acb1136a31938ad?rik=YlU0lopyR4MtCg&riu=http%3a%2f%2ffile.hstatic.net%2f1000058447%2fcollection%2fbanner.aokhoac.shop.paltal.vn_461fee93cd7c44d08c2779cabf7c2f10.jpg&ehk=B2SIQJK56idtIowQiXntS249JzvPEMNzzaCekkw3zeg%3d&risl=&pid=ImgRaw&r=0' alt='' />
                 </SwiperSlide>
                 <SwiperSlide>
                     <img

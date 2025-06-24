@@ -344,18 +344,18 @@ export default function Cart() {
       toast.warning("Vui lòng nhập mã giảm giá");
       return;
     }
-  
+
     try {
       const res = await couponApi.applyCoupon(code, totalCart); // 🎯 Gửi code đến BE
       const couponData = res?.data?.coupon;
-  
+
       if (!couponData) {
         toast.error("Mã giảm giá không tồn tại hoặc đã hết hạn!");
         return;
       }
-  
+
       const { price } = couponData;
-  
+
       //Không cho áp mã nếu giá trị mã > tổng giỏ hàng
       if (price > totalCart) {
         toast.warning(
@@ -367,7 +367,7 @@ export default function Cart() {
         );
         return;
       }
-  
+
       setCouponValue(price);
       toast.success("Áp dụng mã giảm giá thành công!");
     } catch (err) {
@@ -377,7 +377,6 @@ export default function Cart() {
       toast.error(message);
     }
   };
-  
 
   const addpaypal = async () => {
     try {
@@ -698,10 +697,30 @@ export default function Cart() {
   };
 
   return (
-    <Container sx={{ mt: 2 }}>
-      <Breadcrumb page="Giỏ hàng" />
+  <Box
+  sx={{
+    display: "flex",
+    flexDirection: "column",
+    minHeight: carts?.length > 0 ? "100vh" : "auto", // 🔥 Tự điều chỉnh theo giỏ hàng
+    flex: 1,
+  }}
+>
+
+
+    <Box
+      sx={{
+        flex: 1,                       // ✅ phần chính chiếm toàn bộ không gian còn lại
+        width: "100%",
+        mt: 2,
+        maxWidth: "1600px",
+        mx: "auto",
+        px: 3,
+      }}
+    >
+
+      {/* <Breadcrumb page="Giỏ hàng" /> */}
       {error && <Alert severity="error">{error}</Alert>}
-      <Box sx={{ display: "flex" }}>
+      <Box sx={{ display: "flex", flex: 1 }}>
         <TableContainer sx={{ mt: 5, height: "100%" }} component={Paper}>
           <Table sx={{ minWidth: 800 }} aria-label="simple table">
             <TableHead>
@@ -861,197 +880,201 @@ export default function Cart() {
         {carts && carts.length > 0 && (
           <Box
             sx={{
-              justifyContent: "end",
-              alignItems: "center",
-              background: "#fff",
               mt: 9,
               mb: 2,
               marginLeft: "30px",
-              // alignItems: "center",
-              textAlign: "center",
-              // justifyContent: "center",
               padding: "10px 0px",
-              height: "100%",
+              width: "499px",
               display: "flex",
               flexDirection: "column",
-              width: "499px",
+              gap: 4,
+              minHeight: "100%", // ✅ Kích hoạt căn chiều cao đầy đủ theo cha
+              height: "auto", // ✅ Đảm bảo co giãn đúng
               "@media screen and (max-width: 600px)": {
                 width: "100%",
-                display: "block",
               },
             }}
           >
-            <Box sx={{ fontSize: "18px" }}>
-  Địa chỉ:
-  {profile?.data?.profile?.Address ? (
-    <Box
-      sx={{
-        backgroundColor: "#f9f9f9",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        padding: "12px",
-        lineHeight: "1.6",
-        marginTop: "8px",
-        fontSize: "15px",
-      }}
-    >
-      <strong style={{ fontSize: "16px" }}>
-         Địa chỉ nhận hàng
-      </strong>
-      <div>
-        Tỉnh/Thành phố: {profile?.data?.profile?.Address?.city}
-      </div>
-      <div>
-        Quận/Huyện: {profile?.data?.profile?.Address?.district}
-      </div>
-      <div>
-        Phường/Xã: {profile?.data?.profile?.Address?.ward}
-      </div>
-      <div>
-        Số nhà: {profile?.data?.profile?.Address?.address_line}
-      </div>
-      <Box
-        sx={{
-          fontSize: "13px",
-          color: "blue",
-          cursor: "pointer",
-          marginTop: "8px",
-        }}
-        onClick={handleOpenOrder}
-      >
-        Thay đổi
-      </Box>
-    </Box>
-  ) : (
-    <Box
-      sx={{
-        fontSize: "13px",
-        color: "blue",
-        cursor: "pointer",
-        marginTop: "8px",
-      }}
-      onClick={handleOpenOrder}
-    >
-      Thêm mới
-    </Box>
-  )}
-</Box>
-
-
-            <br></br>
-            <Box
-              sx={{
-                display: "flex",
-              }}
-            >
-              <Box>
-                <Typography
-                  mb={1}
-                  fontSize="15px"
-                  fontWeight="500"
-                  component="div"
+            {/* PHẦN ĐỊA CHỈ - căn trái */}
+            <Box sx={{ textAlign: "left", fontSize: "16px", width: "100%" }}>
+              {profile?.data?.profile?.Address ? (
+                <Box
+                  sx={{
+                    backgroundColor: "#fffefa",
+                    border: "1px solid #f0d9b5",
+                    borderRadius: "10px",
+                    padding: "16px",
+                    lineHeight: 2,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                  }}
                 >
-                  Mã khuyến mãi (nếu có)
-                </Typography>
-                <div className="cart-promotion">
-                  <div className="cart-promotion-form">
-                    <input
-                      onChange={(e) => setCode(e.target.value)}
-                      value={code}
-                      type="text"
-                    />
-                    <button onClick={addCoupon}>Xác nhận</button>
-                  </div>
-                </div>
+                  {[
+                    ["Người nhận", profile?.data?.profile?.name],
+                    ["Số điện thoại", profile?.data?.profile?.Address?.phone],
+                    ["Tỉnh/Thành phố", profile?.data?.profile?.Address?.city],
+                    ["Quận/Huyện", profile?.data?.profile?.Address?.district],
+                    ["Phường/Xã", profile?.data?.profile?.Address?.ward],
+                    ["Số nhà", profile?.data?.profile?.Address?.address_line],
+                  ].map(([label, value]) => (
+                    <Box key={label} sx={{ display: "flex" }}>
+                      <Box sx={{ width: "140px", fontWeight: "bold" }}>
+                        {label}:
+                      </Box>
+                      <Box>{value || "Chưa có"}</Box>
+                    </Box>
+                  ))}
+
+                  <Box
+                    sx={{ display: "flex", justifyContent: "center", mt: 2 }}
+                  >
+                    <Box
+                      onClick={handleOpenOrder}
+                      sx={{
+                        fontSize: "14px",
+                        color: "#1677ff",
+                        fontWeight: 500,
+                        border: "1px solid #1677ff",
+                        borderRadius: "4px",
+                        padding: "4px 10px",
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "#e6f0ff",
+                        },
+                      }}
+                    >
+                      Thay đổi địa chỉ
+                    </Box>
+                  </Box>
+                </Box>
+              ) : (
+                <Box
+                  sx={{
+                    fontSize: "14px",
+                    color: "#1677ff",
+                    cursor: "pointer",
+                    marginTop: "8px",
+                  }}
+                  onClick={handleOpenOrder}
+                >
+                  Thêm mới địa chỉ
+                </Box>
+              )}
+            </Box>
+
+            {/* PHẦN CÒN LẠI - căn giữa */}
+            <Box sx={{ textAlign: "center", width: "100%" }}>
+              <Typography mb={1} fontSize="15px" fontWeight="500">
+                Mã khuyến mãi (nếu có)
+              </Typography>
+
+              {/* ✅ Sửa thành Box căn giữa */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 1,
+                  mt: 2,
+                }}
+              >
+                <TextField
+                  size="small"
+                  placeholder="Nhập mã khuyến mãi"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  sx={{ width: "60%" }}
+                />
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={addCoupon}
+                  sx={{ height: "40px" }}
+                >
+                  Xác nhận
+                </Button>
+              </Box>
+
+              <Box
+                sx={{
+                  mt: 4,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                  width: "100%",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography fontSize="14px" color="GrayText">
+                    Tổng giỏ hàng
+                  </Typography>
+                  <Typography color="Highlight">
+                    {formatCurrency(totalCart) + " VND"}
+                  </Typography>
+                </Box>
 
                 <Box
                   sx={{
-                    mt: 4,
                     display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
+                    justifyContent: "space-between",
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography
-                      fontSize="14px"
-                      color="GrayText"
-                      component="span"
-                    >
-                      Tổng giỏ hàng
-                    </Typography>
-                    <Typography color="Highlight" component="span">
-                      {formatCurrency(totalCart) + " VND"}
-                    </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography
-                      fontSize="14px"
-                      color="GrayText"
-                      component="span"
-                    >
-                      Khuyến mãi
-                    </Typography>
-                    <Typography color="error" component="span">
-                      {couponValue
-                        ? formatCurrency(couponValue) + " VND"
-                        : "Chưa áp dụng"}
-                    </Typography>
-                  </Box>
-                  <Divider sx={{ mt: 3, mb: 1 }} component="li" />
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography
-                      fontWeight="500"
-                      fontSize="25px"
-                      color="#000000CC"
-                      component="span"
-                    >
-                      TỔNG
-                    </Typography>
-                    <Typography
-                      fontWeight="800"
-                      fontSize="25px"
-                      color="#000000CC"
-                      component="span"
-                    >
-                      {formatCurrency(totalCart - (couponValue || 0)) + " VND"}
-                    </Typography>
-                  </Box>
-                  <ButtonCustom onClick={handlePayment} sx={{ mt: 2, mb: 5 }}>
-                    Đặt hàng
-                  </ButtonCustom>
+                  <Typography fontSize="14px" color="GrayText">
+                    Khuyến mãi
+                  </Typography>
+                  <Typography color="error">
+                    {couponValue
+                      ? formatCurrency(couponValue) + " VND"
+                      : "Chưa áp dụng"}
+                  </Typography>
                 </Box>
+
+                <Divider sx={{ mt: 3, mb: 1 }} />
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography
+                    fontWeight="500"
+                    fontSize="25px"
+                    color="#000000CC"
+                    component="span"
+                  >
+                    TỔNG
+                  </Typography>
+                  <Typography
+                    fontWeight="800"
+                    fontSize="25px"
+                    color="#000000CC"
+                    component="span"
+                  >
+                    {formatCurrency(totalCart - (couponValue || 0)) + " VND"}
+                  </Typography>
+                </Box>
+
+                <ButtonCustom onClick={handlePayment} sx={{ mt: 2, mb: 3 }}>
+                  Đặt hàng
+                </ButtonCustom>
+
+                {paymentMethod === "paypal" &&
+                  sdkReady &&
+                  handlePaypalPayment() && (
+                    <PayPalButton
+                      amount={paypalAmount}
+                      onSuccess={onSuccessPaypal}
+                      onError={() => {
+                        toast.error("Lỗi trong quá trình thanh toán PayPal");
+                      }}
+                    />
+                  )}
               </Box>
             </Box>
-            {paymentMethod === "paypal" && sdkReady && handlePaypalPayment() ? (
-              <PayPalButton
-                amount={paypalAmount}
-                onSuccess={onSuccessPaypal}
-                onError={() => {
-                  toast.error("Lỗi trong quá trình thanh toán PayPal");
-                }}
-              />
-            ) : (
-              <Box></Box>
-            )}
           </Box>
         )}
       </Box>
@@ -1242,6 +1265,7 @@ export default function Cart() {
           </Box>
         </DialogContent>
       </Dialog>
-    </Container>
+    </Box>
+    </Box> 
   );
 }
