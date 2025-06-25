@@ -1,17 +1,21 @@
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { Button, TextField } from "@mui/material";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Paper from "@mui/material/Paper";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Toolbar from "@mui/material/Toolbar";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
+import ClearIcon from "@mui/icons-material/Clear";
+import {
+  Box,
+  Button,
+  TextField,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { FaPlus } from "react-icons/fa6";
@@ -21,36 +25,32 @@ import ConfirmDelete from "../../../../components/Admin/ConfirmDelete";
 import { toast } from "react-toastify";
 
 const headCells = [
-  {
-    id: "stt",
-    numeric: false,
-    disablePadding: true,
-    label: "STT"
-  },
-  {
-    id: "name",
-    numeric: true,
-    disablePadding: false,
-    label: "Tên thương hiệu"
-  },
-  {
-    id: "action",
-    numeric: true,
-    disablePadding: false,
-    label: "Hành động"
-  }
+  { id: "stt", label: "STT", width: "10%" },
+  { id: "name", label: "Tên thương hiệu", width: "60%" },
+  { id: "action", label: "Hành động", width: "30%" },
 ];
 
 function EnhancedTableHead() {
   return (
-    <TableHead sx={{ backgroundColor: "#F4F6F8" }}>
-      <TableRow>
-        <TableCell padding="checkbox"></TableCell>
+    <TableHead>
+      <TableRow
+        sx={{
+          backgroundColor: "#f5f5f7",
+          position: "sticky",
+          top: 0,
+          zIndex: 1,
+        }}
+      >
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
             align="left"
-            padding={headCell.disablePadding ? "none" : "normal"}
+            sx={{
+              fontWeight: "700",
+              fontSize: 15,
+              width: headCell.width,
+              borderBottom: "2px solid #ddd",
+            }}
           >
             {headCell.label}
           </TableCell>
@@ -61,30 +61,41 @@ function EnhancedTableHead() {
 }
 
 function EnhancedTableToolbar({ searchQuery, setSearchQuery }) {
+  const handleClear = () => setSearchQuery("");
+
   return (
     <Toolbar
       sx={{
         py: 2,
-        pl: { sm: 2 },
-        pr: { xs: 1, sm: 1 }
+        px: 3,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#fafafa",
+        borderRadius: "8px",
+        mb: 2,
+        boxShadow: "inset 0 0 5px #ddd",
       }}
     >
-      <Typography
-        sx={{ flex: "1 1 100%" }}
-        variant="h6"
-        id="tableTitle"
-        component="div"
-      >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1 }}>
         <TextField
-          placeholder="Tìm kiếm thương hiệu"
-          size="medium"
-          sx={{ width: "450px" }}
+          placeholder="Tìm kiếm thương hiệu"
+          size="small"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          fullWidth
+          sx={{ backgroundColor: "white", borderRadius: 1 }}
+          InputProps={{
+            endAdornment: searchQuery ? (
+              <IconButton onClick={handleClear} size="small" edge="end">
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            ) : null,
+          }}
         />
-      </Typography>
-      <Tooltip title="Filter list">
-        <IconButton>
+      </Box>
+      <Tooltip title="Lọc danh sách">
+        <IconButton color="primary" sx={{ ml: 1 }}>
           <FilterListIcon />
         </IconButton>
       </Tooltip>
@@ -95,13 +106,11 @@ function EnhancedTableToolbar({ searchQuery, setSearchQuery }) {
 export default function ManagerBrand() {
   const refId = React.useRef(null);
   const [open, setOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState(""); // Thêm trạng thái tìm kiếm
+  const [searchQuery, setSearchQuery] = React.useState("");
   const { data: brandsData, refetch } = useQuery({
     queryKey: ["brands"],
-    queryFn: () => {
-      return brandApi.getAllBrand();
-    },
-    keepPreviousData: true
+    queryFn: () => brandApi.getAllBrand(),
+    keepPreviousData: true,
   });
   const brands = brandsData?.data || [];
 
@@ -114,9 +123,11 @@ export default function ManagerBrand() {
     mutationFn: (id) => brandApi.delete(id),
     onSuccess: () => {
       refetch();
-    }, onError: () => {
-      toast.error('Không thể xóa vì thương hiệu có sản phẩm')
-    }
+      toast.success("Xóa thương hiệu thành công");
+    },
+    onError: () => {
+      toast.error("Không thể xóa vì thương hiệu có sản phẩm");
+    },
   });
 
   const handleConfirm = () => {
@@ -126,96 +137,104 @@ export default function ManagerBrand() {
     setOpen(false);
   };
 
-  // Lọc danh sách thương hiệu sản phẩm dựa trên từ khóa tìm kiếm
   const filteredBrands = brands.filter((brand) =>
     brand.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <React.Fragment>
+    <>
       <ConfirmDelete onConfirm={handleConfirm} open={open} setOpen={setOpen} />
-      <Box sx={{ width: "100%" }}>
+      <Box
+        sx={{
+          width: "100%",
+          p: 3,
+          bgcolor: "#fff",
+          borderRadius: 3,
+          boxShadow: "0 3px 12px rgba(0,0,0,0.1)",
+        }}
+      >
         <Box
           sx={{
-            width: "100%",
-            mb: 2,
-            px: 4,
-            py: 2,
-            backgroundColor: "#fff",
+            mb: 3,
             display: "flex",
+            justifyContent: "space-between",
             alignItems: "center",
-            justifyContent: "space-between"
+            flexWrap: "wrap",
+            gap: 2,
           }}
         >
-          <Typography fontSize="24px" component="p">
-            Quản lý thương hiệu
+          <Typography variant="h5" fontWeight={700} color="text.primary">
+            Quản lý thương hiệu
           </Typography>
-          <Link to="/admin/brand/create">
-            <Button sx={{ height: "55px" }} variant="outlined" color="success">
-              <FaPlus
-                style={{ marginBottom: "4px", marginRight: "5px" }}
-                fontSize="18px"
-              />
-              Thêm thương hiệu
+          <Link to="/admin/brand/create" style={{ textDecoration: "none" }}>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<FaPlus />}
+              sx={{ height: 45 }}
+            >
+              Thêm thương hiệu
             </Button>
           </Link>
         </Box>
-        <Paper sx={{ width: "100%", mb: 2 }}>
+
+        <Paper elevation={2} sx={{ borderRadius: 2, p: 2 }}>
           <EnhancedTableToolbar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
           />
-          <TableContainer>
-            <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
+
+          <TableContainer sx={{ maxHeight: 520, borderRadius: 2, overflow: "auto" }}>
+            <Table stickyHeader aria-label="brands table" size="medium">
               <EnhancedTableHead />
               <TableBody>
-                {filteredBrands.map((brand, index) => {
-                  const labelId = `enhanced-table-checkbox-${index}`;
-                  return (
+                {filteredBrands.length > 0 ? (
+                  filteredBrands.map((brand, index) => (
                     <TableRow
-                      hover
-                      role="checkbox"
-                      tabIndex={-1}
                       key={brand.id}
-                      sx={{ cursor: "pointer" }}
+                      hover
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover": { backgroundColor: "#f9f9f9" },
+                      }}
                     >
-                      <TableCell padding="checkbox"></TableCell>
-                      <TableCell
-                        sx={{ width: "30%" }}
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                      >
+                      <TableCell align="left" sx={{ fontWeight: 600 }}>
                         {index + 1}
                       </TableCell>
                       <TableCell align="left">{brand.name}</TableCell>
                       <TableCell align="left">
                         <Button
-                          onClick={() => handleDelete(brand.id)}
                           variant="outlined"
                           color="error"
+                          size="small"
+                          onClick={() => handleDelete(brand.id)}
+                          sx={{ mr: 1 }}
                         >
                           Xóa
                         </Button>
-                        <Link to={`/admin/brand/update/${brand.id}`}>
-                          <Button
-                            sx={{ ml: 1 }}
-                            variant="outlined"
-                            color="primary"
-                          >
-                            Sửa
+                        <Link
+                          to={`/admin/brand/update/${brand.id}`}
+                          style={{ textDecoration: "none" }}
+                        >
+                          <Button variant="outlined" color="primary" size="small">
+                            Sửa
                           </Button>
                         </Link>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center" sx={{ py: 6 }}>
+                      Không tìm thấy thương hiệu phù hợp
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
         </Paper>
       </Box>
-    </React.Fragment>
+    </>
   );
 }

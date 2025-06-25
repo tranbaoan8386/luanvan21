@@ -102,16 +102,16 @@ function EnhancedTableHead() {
 
 function EnhancedTableToolbar() {
   const navigate = useNavigate();
-
   const queryConfig = useQuertConfig();
-  const { register, handleSubmit, setValue } = useForm();
+  const { register, handleSubmit } = useForm();
+
   const handleSearch = handleSubmit((data) => {
     navigate({
       pathname: "/admin/product",
       search: createSearchParams({
         ...queryConfig,
-        name: data.name
-      }).toString()
+        name: data.name,
+      }).toString(),
     });
   });
 
@@ -119,33 +119,34 @@ function EnhancedTableToolbar() {
     <Toolbar
       sx={{
         py: 2,
-        pl: { sm: 2 },
-        pr: { xs: 1, sm: 1 }
+        px: 3,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#fafafa",
+        borderRadius: "8px",
+        mb: 2,
+        boxShadow: "inset 0 0 5px #ddd",
       }}
+      component="form"
+      onSubmit={handleSearch}
     >
-      <Box
-        onSubmit={handleSearch}
-        sx={{ flex: "1 1 100%" }}
-        variant="h6"
-        id="tableTitle"
-        component="form"
-      >
-        <TextField
-          {...register("name")}
-          placeholder="Tìm kiếm sản phẩm"
-          size="medium"
-          sx={{ width: "450px" }}
-        />
-      </Box>
-
-      <Tooltip title="Filter list">
-        <IconButton>
+      <TextField
+        {...register("name")}
+        placeholder="Tìm kiếm sản phẩm"
+        size="small"
+        fullWidth
+        sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1}}
+      />
+      <Tooltip title="Lọc danh sách">
+        <IconButton color="primary" sx={{ ml: 1 }}>
           <FilterListIcon />
         </IconButton>
       </Tooltip>
     </Toolbar>
   );
 }
+
 
 export default function ManagerProduct() {
   const refId = React.useRef(null);
@@ -185,121 +186,115 @@ export default function ManagerProduct() {
   };
 
   return (
-    <React.Fragment>
+    <>
       <ConfirmDelete open={open} setOpen={setOpen} onConfirm={handleConfirm} />
-      <Box sx={{ width: "100%" }}>
+      <Box
+        sx={{
+          width: "100%",
+          p: 3,
+          bgcolor: "#fff",
+          borderRadius: 3,
+          boxShadow: "0 3px 12px rgba(0,0,0,0.1)",
+        }}
+      >
         <Box
           sx={{
-            width: "100%",
-            mb: 2,
-            px: 4,
-            py: 2,
-            backgroundColor: "#fff",
+            mb: 3,
             display: "flex",
+            justifyContent: "space-between",
             alignItems: "center",
-            justifyContent: "space-between"
+            flexWrap: "wrap",
+            gap: 2,
           }}
         >
-          <Typography color="gray" fontSize="24px" component="p">
+          <Typography variant="h5" fontWeight={700} color="text.primary">
             Quản lý sản phẩm
           </Typography>
-          <Link to="/admin/product/deleted">
-            <Button variant="outlined" color="error">
-              Sản phẩm đã xóa
-            </Button>
-          </Link>
-          <Link to="/admin/product/create">
-            <Button sx={{ height: "55px" }} variant="outlined" color="success" >
-              <FaPlus
-                style={{ marginBottom: "4px", marginRight: "5px" }}
-                fontSize="18px"
-              />
-              Thêm sản phẩm
-            </Button>
-          </Link>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Link to="/admin/product/deleted" style={{ textDecoration: "none" }}>
+              <Button  
+                variant="contained"
+                color="error"
+                startIcon={<FaPlus />}
+                sx={{ height: 45 }}>
+                Sản phẩm đã xóa
+              </Button>
+            </Link>
+            <Link to="/admin/product/create" style={{ textDecoration: "none" }}>
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<FaPlus />}
+                sx={{ height: 45 }}
+              >
+                Thêm sản phẩm
+              </Button>
+            </Link>
+          </Box>
         </Box>
-        <Paper sx={{ width: "100%", mb: 2 }}>
+  
+        <Paper elevation={2} sx={{ borderRadius: 2, p: 2 }}>
           <EnhancedTableToolbar />
-          <TableContainer>
-            <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
-              <EnhancedTableHead rowCount={rows.length} />
+          <TableContainer sx={{ maxHeight: 600, borderRadius: 2 }}>
+            <Table stickyHeader sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
+              <EnhancedTableHead />
               <TableBody>
-                {products &&
-                  products.map((product, index) => {
-                    const labelId = `enhanced-table-checkbox-${index}`;
-
-                    return (
-                      <TableRow
-                        hover
-                        role="checkbox"
-                        tabIndex={-1}
-                        key={product.id}
-                        sx={{ cursor: "pointer" }}
+                {products?.map((product, index) => (
+                  <TableRow
+                    hover
+                    key={product.id}
+                    sx={{ cursor: "pointer", "&:hover": { backgroundColor: "#f9f9f9" } }}
+                  >
+                    <TableCell align="center">{product.name}</TableCell>
+                    <TableCell align="center">
+                      <img
+                        width="70"
+                        src={
+                          product?.avatar?.startsWith("http")
+                            ? product.avatar
+                            : BASE_URL_IMAGE + product.avatar
+                        }
+                        alt="Ảnh"
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      {typeof product.price === "number"
+                        ? `${formatCurrency(product.price)} VND`
+                        : "Không rõ"}
+                    </TableCell>
+                    <TableCell align="center">{product.category?.name || "Không rõ"}</TableCell>
+                    <TableCell align="center">{product.brand?.name || "Không rõ"}</TableCell>
+                    <TableCell align="center">
+                      <Button
+                        onClick={() => handleDelete(product.id)}
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        sx={{ mr: 1 }}
                       >
-                        <TableCell
-                          sx={{ width: "16%" }}
-                          component="th"
-                          id={labelId}
-                          scope="row"
-                          padding="none"
-                          align="center"
-                        >
-                          {product.name}
-                        </TableCell>
-                        <TableCell sx={{ width: "16%" }} align="center">
-                          <img
-                            width="70"
-                            src={
-                              product?.avatar
-                                ? product.avatar.startsWith("http")
-                                  ? product.avatar
-                                  : BASE_URL_IMAGE + product.avatar
-                                : "/default-image.png"
-                            }
-                            alt=""
-                          />
-                        </TableCell>
-                        <TableCell sx={{ width: "16%" }} align="center">
-                          {typeof product.price === 'number'
-                            ? `${formatCurrency(product.price)} VND`
-                            : "Không rõ"}
-                        </TableCell>
-
-                        <TableCell sx={{ width: "16%" }} align="center">
-                          {product?.category?.name || "Không rõ"}
-                        </TableCell>
-                        <TableCell sx={{ width: "16%" }} align="center">
-                          {product?.brand?.name || "Không rõ"}
-                        </TableCell>
-                        <TableCell sx={{ width: "16%" }} align="center">
-                          <Button
-                            onClick={() => handleDelete(product.id)}
-                            variant="outlined"
-                            color="error"
-                          >
-                            Xóa
-                          </Button>
-                          <Link to={`/admin/product/update/${product.id}`}>
-                            <Button
-                              sx={{ ml: 1 }}
-                              variant="outlined"
-                              color="primary"
-                            >
-                              Sửa
-                            </Button>
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                        Xóa
+                      </Button>
+                      <Link
+                        to={`/admin/product/update/${product.id}`}
+                        style={{ textDecoration: "none" }}
+                      >
+                        <Button variant="outlined" color="primary" size="small">
+                          Sửa
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>
-          <Box sx={{ display: "flex", justifyContent: "end", py: 3 }}>
+  
+          <Box sx={{ display: "flex", justifyContent: "end", pt: 3 }}>
             <Pagination pageSize={pageSize} queryConfig={queryConfig} />
           </Box>
         </Paper>
       </Box>
-    </React.Fragment>
+    </>
   );
+  
 }

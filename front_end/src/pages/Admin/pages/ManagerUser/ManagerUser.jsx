@@ -1,66 +1,55 @@
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { Button, TextField } from "@mui/material";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Paper from "@mui/material/Paper";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Toolbar from "@mui/material/Toolbar";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
+import ClearIcon from "@mui/icons-material/Clear";
+import {
+  Box,
+  Button,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import * as React from "react";
+import React, { useRef, useState } from "react";
 import userApi from "../../../../apis/user";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 const headCells = [
-  {
-    id: "st",
-    numeric: false,
-    disablePadding: true,
-    label: "STT"
-  },
-  {
-    id: "name",
-    numeric: true,
-    disablePadding: false,
-    label: "Tên khách hàng"
-  },
-  {
-    id: "email",
-    numeric: true,
-    disablePadding: false,
-    label: "Email"
-  },
-  {
-    id: "verified",
-    numeric: true,
-    disablePadding: false,
-    label: "Trạng thái"
-  },
-  {
-    id: "Hành động",
-    numeric: true,
-    disablePadding: false,
-    label: "Hành động"
-  }
+  { id: "stt", label: "STT", width: "10%" },
+  { id: "name", label: "Tên khách hàng", width: "25%" },
+  { id: "email", label: "Email", width: "30%" },
+  { id: "verified", label: "Trạng thái", width: "15%" },
+  { id: "action", label: "Hành động", width: "20%" },
 ];
 
 function EnhancedTableHead() {
   return (
-    <TableHead sx={{ backgroundColor: "#F4F6F8" }}>
-      <TableRow>
-        <TableCell padding="checkbox"></TableCell>
+    <TableHead>
+      <TableRow
+        sx={{
+          backgroundColor: "#f5f5f7",
+          position: "sticky",
+          top: 0,
+          zIndex: 1,
+        }}
+      >
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
             align="left"
-            padding={headCell.disablePadding ? "none" : "normal"}
+            sx={{
+              fontWeight: "700",
+              fontSize: 15,
+              width: headCell.width,
+              borderBottom: "2px solid #ddd",
+            }}
           >
             {headCell.label}
           </TableCell>
@@ -70,32 +59,41 @@ function EnhancedTableHead() {
   );
 }
 
-function EnhancedTableToolbar({ search, onSearchChange }) {
+function EnhancedTableToolbar({ search, setSearch }) {
+  const handleClear = () => setSearch("");
   return (
     <Toolbar
       sx={{
         py: 2,
-        pl: { sm: 2 },
-        pr: { xs: 1, sm: 1 }
+        px: 3,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#fafafa",
+        borderRadius: "8px",
+        mb: 2,
+        boxShadow: "inset 0 0 5px #ddd",
       }}
     >
-      <Typography
-        sx={{ flex: "1 1 100%" }}
-        variant="h6"
-        id="tableTitle"
-        component="div"
-      >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1 }}>
         <TextField
-          placeholder="Tìm kiếm người dùng"
-          size="medium"
-          sx={{ width: "450px" }}
+          placeholder="Tìm kiếm người dùng"
+          size="small"
           value={search}
-          onChange={onSearchChange}
+          onChange={(e) => setSearch(e.target.value)}
+          fullWidth
+          sx={{ backgroundColor: "white", borderRadius: 1 }}
+          InputProps={{
+            endAdornment: search ? (
+              <IconButton onClick={handleClear} size="small" edge="end">
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            ) : null,
+          }}
         />
-      </Typography>
-
-      <Tooltip title="Filter list">
-        <IconButton>
+      </Box>
+      <Tooltip title="Lọc danh sách">
+        <IconButton color="primary" sx={{ ml: 1 }}>
           <FilterListIcon />
         </IconButton>
       </Tooltip>
@@ -104,146 +102,106 @@ function EnhancedTableToolbar({ search, onSearchChange }) {
 }
 
 export default function ManagerUser() {
-  const [page, setPage] = React.useState(0);
-  const [dense, setDense] = React.useState(false);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [search, setSearch] = React.useState("");
-
+  const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
 
-  const { data: usersData, refetch } = useQuery({
+  const { data: usersData } = useQuery({
     queryKey: ["users"],
-    queryFn: () => {
-      return userApi.getAll();
-    },
-    keepPreviousData: true
-  });
-
-  const deleteUser = useMutation({
-    mutationFn: (id) => userApi.deleteUser(id),
-    onError: (error) => {
-      // Check if the error is related to foreign key constraints
-      if (error.response?.data?.message) {
-        toast.error(` ${error.response.data.message}`);
-      }
-      queryClient.invalidateQueries(["users"]);
-    },
-    onSuccess: () => {
-      toast.success("Xóa thành công user");
-      queryClient.invalidateQueries(["users"]);
-    }
+    queryFn: () => userApi.getAll(),
+    keepPreviousData: true,
   });
 
   const toggleUserActive = useMutation({
     mutationFn: (id) => userApi.toggleActive(id),
-    onSuccess: () => {  
+    onSuccess: () => {
+      toast.success("Cập nhật trạng thái thành công");
       queryClient.invalidateQueries(["users"]);
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Có lỗi xảy ra");
-    }
+    },
   });
-
-  const handleDelete = (id) => {
-    deleteUser.mutate(id);
-    refetch();
-  };
 
   const handleToggleActive = (id) => {
     toggleUserActive.mutate(id);
   };
 
-  const handleSearchChange = (event) => {
-    setSearch(event.target.value);
-  };
-
-  const users = usersData?.data.users;
-  const filteredUsers = users?.filter((user) =>
+  const filteredUsers = usersData?.data?.users?.filter((user) =>
     user.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  console.log("users", usersData);
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box
+      sx={{
+        width: "100%",
+        p: 3,
+        bgcolor: "#fff",
+        borderRadius: 3,
+        boxShadow: "0 3px 12px rgba(0,0,0,0.1)",
+      }}
+    >
       <Box
         sx={{
-          width: "100%",
-          mb: 2,
-          px: 4,
-          py: 2,
-          backgroundColor: "#fff",
+          mb: 3,
           display: "flex",
+          justifyContent: "space-between",
           alignItems: "center",
-          justifyContent: "space-between"
+          flexWrap: "wrap",
+          gap: 2,
         }}
       >
-        <Typography fontSize="24px" component="p">
-          Quản lý người dùng
+        <Typography variant="h5" fontWeight={700} color="text.primary">
+          Quản lý người dùng
         </Typography>
       </Box>
-      <Paper sx={{ width: "100%", mb: 2 }}>
-        <EnhancedTableToolbar
-          search={search}
-          onSearchChange={handleSearchChange}
-        />
-        <TableContainer>
-          <Table
-            sx={{ minWidth: 750 }}
-            aria-labelledby="tableTitle"
-            size={dense ? "small" : "medium"}
-          >
+
+      <Paper elevation={2} sx={{ borderRadius: 2, p: 2 }}>
+        <EnhancedTableToolbar search={search} setSearch={setSearch} />
+
+        <TableContainer sx={{ maxHeight: 520, borderRadius: 2, overflow: "auto" }}>
+          <Table stickyHeader aria-label="users table" size="medium">
             <EnhancedTableHead />
             <TableBody>
-              {filteredUsers &&
-                filteredUsers.map((user, index) => {
-                  const labelId = `enhanced-table-checkbox-${index}`;
-
-                  return (
-                    <TableRow
-                      hover
-                      role="checkbox"
-                      tabIndex={-1}
-                      key={user.id}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      <TableCell padding="checkbox"></TableCell>
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
+              {filteredUsers?.length > 0 ? (
+                filteredUsers.map((user, index) => (
+                  <TableRow
+                    key={user.id}
+                    hover
+                    sx={{ cursor: "pointer", "&:hover": { backgroundColor: "#f9f9f9" } }}
+                  >
+                    <TableCell align="left" sx={{ fontWeight: 600 }}>
+                      {index + 1}
+                    </TableCell>
+                    <TableCell align="left">{user.name}</TableCell>
+                    <TableCell align="left">{user.email}</TableCell>
+                    <TableCell align="left">
+                      <Button
+                        variant="outlined"
+                        color={user.isActive ? "success" : "warning"}
+                        size="small"
                       >
-                        {index + 1}
-                      </TableCell>
-                      <TableCell align="left">{user.name}</TableCell>
-                      <TableCell align="left">{user.email}</TableCell>
-                      <TableCell align="left">
-                        {user.isActive ? (
-                          <Button color="success">Đã kích hoạt</Button>
-                        ) : (
-                          <Button color="warning">Chưa kích hoạt</Button>
-                        )}
-                      </TableCell>
-                      <TableCell align="left">
-                        {/* <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => handleDelete(user.id)}
-                          sx={{ mr: 1 }}
-                        >
-                          Xoá
-                        </Button> */}
-                        <Button
-                          variant="outlined"
-                          color={user.isActive ? "error" : "success"}
-                          onClick={() => handleToggleActive(user.id)}
-                        >
-                          {user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                        {user.isActive ? "Đã kích hoạt" : "Chưa kích hoạt"}
+                      </Button>
+                    </TableCell>
+                    <TableCell align="left">
+                      <Button
+                        variant="outlined"
+                        color={user.isActive ? "error" : "success"}
+                        size="small"
+                        onClick={() => handleToggleActive(user.id)}
+                      >
+                        {user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+                    Không tìm thấy người dùng phù hợp
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>

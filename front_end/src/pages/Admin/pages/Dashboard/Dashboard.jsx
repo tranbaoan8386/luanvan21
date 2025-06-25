@@ -203,7 +203,10 @@ export default function Dashboard() {
           borderRadius: 3,
           boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
           backgroundColor: "#fff",
-          height: 400, // cố định chiều cao để tránh layout nhảy
+          height: 400,
+          width: "100%", // hoặc ví dụ: "1200px"
+          maxWidth: "100%", // giới hạn không vượt layout cha
+          overflowX: "auto", // nếu nội dung rộng quá
         }}
         elevation={3}
       >
@@ -229,8 +232,8 @@ export default function Dashboard() {
             data={chartData}
             options={{
               responsive: true,
-              maintainAspectRatio: true, // bật lại để tránh resize không kiểm soát
-              animation: { duration: 0 }, // tắt animation
+              maintainAspectRatio: false, 
+              animation: { duration: 0 }, 
               plugins: {
                 legend: {
                   position: "top",

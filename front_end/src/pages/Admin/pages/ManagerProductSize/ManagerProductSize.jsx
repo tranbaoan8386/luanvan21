@@ -1,19 +1,23 @@
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { Button, TextField } from "@mui/material";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Paper from "@mui/material/Paper";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Toolbar from "@mui/material/Toolbar";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
+import ClearIcon from "@mui/icons-material/Clear";
+import {
+  Box,
+  Button,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import * as React from "react";
+import React, { useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import ConfirmDelete from "../../../../components/Admin/ConfirmDelete";
@@ -21,36 +25,32 @@ import sizeApi from "../../../../apis/size";
 import { toast } from "react-toastify";
 
 const headCells = [
-  {
-    id: "stt",
-    numeric: false,
-    disablePadding: true,
-    label: "STT"
-  },
-  {
-    id: "name",
-    numeric: true,
-    disablePadding: false,
-    label: "Tên size"
-  },
-  {
-    id: "action",
-    numeric: true,
-    disablePadding: false,
-    label: "Hành động"
-  }
+  { id: "stt", label: "STT", width: "10%" },
+  { id: "name", label: "Tên size", width: "60%" },
+  { id: "action", label: "Hành động", width: "30%" },
 ];
 
 function EnhancedTableHead() {
   return (
-    <TableHead sx={{ backgroundColor: "#F4F6F8" }}>
-      <TableRow>
-        <TableCell padding="checkbox"></TableCell>
+    <TableHead>
+      <TableRow
+        sx={{
+          backgroundColor: "#f5f5f7",
+          position: "sticky",
+          top: 0,
+          zIndex: 1,
+        }}
+      >
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
             align="left"
-            padding={headCell.disablePadding ? "none" : "normal"}
+            sx={{
+              fontWeight: 700,
+              fontSize: 15,
+              width: headCell.width,
+              borderBottom: "2px solid #ddd",
+            }}
           >
             {headCell.label}
           </TableCell>
@@ -61,31 +61,40 @@ function EnhancedTableHead() {
 }
 
 function EnhancedTableToolbar({ search, setSearch }) {
+  const handleClear = () => setSearch("");
   return (
     <Toolbar
       sx={{
         py: 2,
-        pl: { sm: 2 },
-        pr: { xs: 1, sm: 1 }
+        px: 3,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#fafafa",
+        borderRadius: "8px",
+        mb: 2,
+        boxShadow: "inset 0 0 5px #ddd",
       }}
     >
-      <Typography
-        sx={{ flex: "1 1 100%" }}
-        variant="h6"
-        id="tableTitle"
-        component="div"
-      >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1 }}>
         <TextField
           placeholder="Tìm kiếm size"
-          size="medium"
-          sx={{ width: "450px" }}
+          size="small"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          fullWidth
+          sx={{ backgroundColor: "white", borderRadius: 1 }}
+          InputProps={{
+            endAdornment: search ? (
+              <IconButton onClick={handleClear} size="small" edge="end">
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            ) : null,
+          }}
         />
-      </Typography>
-
-      <Tooltip title="Filter list">
-        <IconButton>
+      </Box>
+      <Tooltip title="Lọc danh sách">
+        <IconButton color="primary" sx={{ ml: 1 }}>
           <FilterListIcon />
         </IconButton>
       </Tooltip>
@@ -94,126 +103,131 @@ function EnhancedTableToolbar({ search, setSearch }) {
 }
 
 export default function ManagerProductSize() {
-  const refId = React.useRef(null);
-  const [open, setOpen] = React.useState(false);
-  const [search, setSearch] = React.useState("");
+  const refId = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
   const { data: sizesData, refetch } = useQuery({
     queryKey: ["sizes"],
-    queryFn: () => {
-      return sizeApi.getAllSize();
-    },
-    keepPreviousData: true
+    queryFn: sizeApi.getAllSize,
+    keepPreviousData: true,
   });
-  const sizes = sizesData?.data;
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => sizeApi.delete(id),
+    onSuccess: () => {
+      toast.success("Xóa size thành công");
+      refetch();
+    },
+    onError: () => toast.error("Không thể xóa vì size có sản phẩm"),
+  });
 
   const handleDelete = (id) => {
     setOpen(true);
     refId.current = id;
   };
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => sizeApi.delete(id),
-    onSuccess: () => {
-      refetch();
-    }, onError: () => {
-      toast.error('Không thể xóa vì size có sản phẩm')
-    }
-  });
-
   const handleConfirm = () => {
-    const idDelete = refId.current;
-    deleteMutation.mutate(idDelete);
+    deleteMutation.mutate(refId.current);
     refId.current = null;
     setOpen(false);
   };
 
-  const filteredSizes = sizes?.filter((size) =>
+  const filteredSizes = sizesData?.data?.filter((size) =>
     size.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <React.Fragment>
+    <>
       <ConfirmDelete onConfirm={handleConfirm} open={open} setOpen={setOpen} />
-      <Box sx={{ width: "100%" }}>
+      <Box
+        sx={{
+          width: "100%",
+          p: 3,
+          bgcolor: "#fff",
+          borderRadius: 3,
+          boxShadow: "0 3px 12px rgba(0,0,0,0.1)",
+        }}
+      >
         <Box
           sx={{
-            width: "100%",
-            mb: 2,
-            px: 4,
-            py: 2,
-            backgroundColor: "#fff",
+            mb: 3,
             display: "flex",
+            justifyContent: "space-between",
             alignItems: "center",
-            justifyContent: "space-between"
+            flexWrap: "wrap",
+            gap: 2,
           }}
         >
-          <Typography fontSize="24px" component="p">
+          <Typography variant="h5" fontWeight={700} color="text.primary">
             Quản lý size
           </Typography>
-          <Link to="/admin/size/create">
-            <Button sx={{ height: "55px" }} variant="outlined" color="success">
-              <FaPlus
-                style={{ marginBottom: "4px", marginRight: "5px" }}
-                fontSize="18px"
-              />
+          <Link to="/admin/size/create" style={{ textDecoration: "none" }}>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<FaPlus />}
+              sx={{ height: 45 }}
+            >
               Thêm size
             </Button>
           </Link>
         </Box>
-        <Paper sx={{ width: "100%", mb: 2 }}>
+
+        <Paper elevation={2} sx={{ borderRadius: 2, p: 2 }}>
           <EnhancedTableToolbar search={search} setSearch={setSearch} />
-          <TableContainer>
-            <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
+
+          <TableContainer sx={{ maxHeight: 520, borderRadius: 2, overflow: "auto" }}>
+            <Table stickyHeader aria-label="sizes table" size="medium">
               <EnhancedTableHead />
               <TableBody>
-                {filteredSizes &&
-                  filteredSizes.map((size, index) => {
-                    const labelId = `enhanced-table-checkbox-${index}`;
-                    return (
-                      <TableRow
-                        hover
-                        role="checkbox"
-                        tabIndex={-1}
-                        key={size.id}
-                        sx={{ cursor: "pointer" }}
-                      >
-                        <TableCell padding="checkbox"></TableCell>
-                        <TableCell
-                          sx={{ width: "30%" }}
-                          component="th"
-                          id={labelId}
-                          scope="row"
-                          padding="none"
+                {filteredSizes?.length > 0 ? (
+                  filteredSizes.map((size, index) => (
+                    <TableRow
+                      key={size.id}
+                      hover
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover": { backgroundColor: "#f9f9f9" },
+                      }}
+                    >
+                      <TableCell align="left" sx={{ fontWeight: 600 }}>
+                        {index + 1}
+                      </TableCell>
+                      <TableCell align="left">{size.name}</TableCell>
+                      <TableCell align="left">
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          onClick={() => handleDelete(size.id)}
+                          sx={{ mr: 1 }}
                         >
-                          {index + 1}
-                        </TableCell>
-                        <TableCell align="left">{size.name}</TableCell>
-                        <TableCell align="left">
-                          <Button
-                            onClick={() => handleDelete(size.id)}
-                            variant="outlined"
-                            color="error"
-                          >
-                            Xóa
+                          Xóa
+                        </Button>
+                        <Link
+                          to={`/admin/size/update/${size.id}`}
+                          style={{ textDecoration: "none" }}
+                        >
+                          <Button variant="outlined" color="primary" size="small">
+                            Sửa
                           </Button>
-                          <Link to={`/admin/size/update/${size.id}`}>
-                            <Button
-                              sx={{ ml: 1 }}
-                              variant="outlined"
-                              color="primary"
-                            >
-                              Sửa
-                            </Button>
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center" sx={{ py: 6 }}>
+                      Không tìm thấy size phù hợp
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
         </Paper>
       </Box>
-    </React.Fragment>
+    </>
   );
 }
