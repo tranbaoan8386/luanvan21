@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database/connectMysql');
-const Role = require('./Role'); 
 
 const User = sequelize.define(
   'User',
@@ -34,12 +33,17 @@ const User = sequelize.define(
     },
     roleId: {
       type: DataTypes.INTEGER,
-      allowNull: true // KHÔNG cần references ở đây
+      allowNull: true
     },
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true
+    },
+    verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   },
   {
@@ -47,6 +51,5 @@ const User = sequelize.define(
     timestamps: true
   }
 );
-
 
 module.exports = User;

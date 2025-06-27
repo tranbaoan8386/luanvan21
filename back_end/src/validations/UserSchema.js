@@ -2,6 +2,17 @@ const Joi = require('joi')
 class UserSchema {
     get updateMe() {
         return Joi.object({
+            name: Joi.string().messages({
+                'string.base': 'Họ tên phải là chuỗi',
+                'string.empty': 'Họ tên không được để trống'
+            }),
+            phone: Joi.string()
+                .pattern(/^[0-9]{9,12}$/)
+                .messages({
+                    'string.pattern.base': 'Số điện thoại không hợp lệ (chỉ chứa số, 9-12 ký tự)',
+                    'string.empty': 'Số điện thoại không được để trống',
+                    'string.base': 'Số điện thoại phải là chuỗi'
+                }),
             province: Joi.string().messages({
                 'string.base': 'Tỉnh thành phải là chuỗi',
                 'string.empty': 'Tỉnh thành không được để trống'
@@ -20,6 +31,7 @@ class UserSchema {
             })
         })
     }
+    
 
     get updatePassword() {
         return Joi.object({

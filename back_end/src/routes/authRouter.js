@@ -9,4 +9,7 @@ authRouter.post('/register', AuthController.register)
 authRouter.post('/login', AuthController.login)
 authRouter.post('/forgot-password', validatorMiddleware(AuthSchema.forgotPassword), AuthController.forgotPassword)
 authRouter.post('/reset-passwords', AuthController.resetPasswords)
+
+authRouter.post('/google-login', AuthController.googleLogin);
+
 module.exports = authRouter

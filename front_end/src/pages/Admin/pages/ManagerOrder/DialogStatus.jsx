@@ -7,27 +7,42 @@ import ListItem from "@mui/material/ListItem";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
 import { green } from "@mui/material/colors";
 import * as React from "react";
 import {
   convertUpdateStatusOrder // Chỉ dùng để hiển thị
 } from "../../../../common";
 
-// Dữ liệu lưu trong hệ thống (tiếng Anh)
 const statusList = ["shipped", "delivered", "cancelled"];
 
 export default function DialogStatus({ onClose, selectedValue, open }) {
   const handleClose = () => {
-    onClose(selectedValue); // trả về giá trị tiếng Anh
+    onClose(null); // Trả về null nếu nhấn nút đóng
   };
 
   const handleListItemClick = (value) => {
-    onClose(value); // value = "shipped" v.v.
+    onClose(value); // Trả về trạng thái được chọn
   };
 
   return (
     <Dialog onClose={handleClose} open={open}>
-      <DialogTitle>Cập nhật trạng thái đơn hàng</DialogTitle>
+      <DialogTitle sx={{ m: 0, p: 2, pr: 4 }}>
+        Cập nhật trạng thái đơn hàng
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <List sx={{ pt: 0 }}>
         {statusList.map((status) => (
           <ListItem disableGutters key={status}>
@@ -37,7 +52,6 @@ export default function DialogStatus({ onClose, selectedValue, open }) {
                   <GrUpdate />
                 </Avatar>
               </ListItemAvatar>
-              {/* Hiển thị tiếng Việt tương ứng */}
               <ListItemText primary={convertUpdateStatusOrder(status)} />
             </ListItemButton>
           </ListItem>

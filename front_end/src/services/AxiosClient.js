@@ -30,39 +30,38 @@ class AxiosClient {
 
         this.instance.interceptors.response.use(
             (response) => {
-                console.log('...')
-                const { url } = response.config
-
-                if (url === '/auth/login') {
-                    const { token, user } = response.data.data
-                    this.accessToken = token
-                    this.tempToken = token
-                    saveAccessToken(this.accessToken)
-                    setProfile(user)
-                } else if (url === '/users/logout') {
-                    console.log('logout')
-                    this.accessToken = ''
-                    cleanAccessToken()
-                    cleanProfile()
-                }
-
-                // Xử lí tát cả các response thành công
-                if (response.data.success === true && response.data.data?.message) {
-                    toast.success(response.data.data.message)
-                  }
-                  
-
-                return response.data
+              console.log('...')
+              const { url } = response.config
+          
+              if (url === '/auth/login' || url === '/auth/google-login') {
+                const { token, user } = response.data.data
+                this.accessToken = token
+                this.tempToken = token
+                saveAccessToken(this.accessToken)
+                setProfile(user)
+              } else if (url === '/users/logout') {
+                console.log('logout')
+                this.accessToken = ''
+                cleanAccessToken()
+                cleanProfile()
+              }
+          
+              // ✅ Thông báo thành công nếu có message
+              if (response.data.success === true && response.data.data?.message) {
+                toast.success(response.data.data.message)
+              }
+          
+              return response.data
             },
             (error) => {
-                if (error.response?.status == HttpStatusCode.Unauthorized) {
-                    clearLS()
-                    // có thể dùng window.location.reload() nhưng web là SPA mà realod lại trang thì không hay
-                }
-                console.log(error.response?.status)
-                return Promise.reject(error)
+              if (error.response?.status == HttpStatusCode.Unauthorized) {
+                clearLS()
+              }
+              console.log(error.response?.status)
+              return Promise.reject(error)
             }
-        )
+          )
+          
     }
 }
 

@@ -10,6 +10,9 @@ const EmailService = require('../services/EmailService')
 const ForgotToken = require('../models/mongo/ForgotToken')
 const randomBytes = require('../utils/randomBytes')
 const { env } = require('../config/env')
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client('307086193257-v5iln2iovnbrsuoe99co5scevo46qih8.apps.googleusercontent.com');
+
 class AuthController {
    
     async register(req, res, next) {
@@ -258,7 +261,93 @@ class AuthController {
   }
 }
 
-
+async googleLogin(req, res, next) {
+    try {
+      const { token } = req.body;
+      console.log('📦 Google token nhận được:', token);   
+  
+      const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: '307086193257-v5iln2iovnbrsuoe99co5scevo46qih8.apps.googleusercontent.com',
+      });
+  
+      const payload = ticket.getPayload();
+      const { email, name, picture } = payload;
+  
+      let user = await User.findOne({
+        where: { email },
+        include: {
+          model: Role,
+          as: 'role',
+          attributes: ['id', 'name'],
+        },
+      });
+  
+      // Nếu chưa có tài khoản → tạo mới
+      if (!user) {
+        user = await User.create({
+          name,
+          email,
+          password: null,
+          avatar: picture,
+          roleId: 2,        // role mặc định (user)
+          isActive: true,
+          verified: true,   // xác thực email luôn
+        });
+  
+        // Load lại user kèm role
+        user = await User.findOne({
+          where: { email },
+          include: {
+            model: Role,
+            as: 'role',
+            attributes: ['id', 'name'],
+          },
+        });
+      }
+  
+      if (!user.isActive) {
+        return ApiResponse.error(res, {
+          status: 403,
+          data: {
+            message: 'Tài khoản đã bị vô hiệu hóa',
+          },
+        });
+      }
+  
+      // Tạo JWT token
+      const accessToken = jwt.sign({ id: user.id }, env.SECRET_KEY, {
+        expiresIn: '5d',
+      });
+  
+      // Trả về user cuối
+      const userFinal = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role,
+      };
+  
+      return ApiResponse.success(res, {
+        status: 200,
+        data: {
+          message: 'Đăng nhập bằng Google thành công',
+          user: userFinal,
+          token: accessToken,
+        },
+      });
+    } catch (err) {
+      console.error('❌ Lỗi trong googleLogin:', err);
+      return ApiResponse.error(res, {
+        status: 401,
+        data: {
+          message: 'Xác thực Google không hợp lệ',
+        },
+      });
+    }
+  }
+  
 
     async verifyForgotToken(req, res, next) {
         try {

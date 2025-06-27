@@ -10,7 +10,7 @@ const userRouter = Router()
 
 userRouter.get('/me', jwtAuthMiddleware, UserController.getMe)
 userRouter.get('/', jwtAuthMiddleware, authorizedMiddleware('Admin'), UserController.getAll)
-userRouter.get('/:id', UserController.getMe)
+userRouter.get('/:id', jwtAuthMiddleware, authorizedMiddleware('Admin'), UserController.getUser)
 userRouter.patch(
     '/update',
     // form-data không validation được

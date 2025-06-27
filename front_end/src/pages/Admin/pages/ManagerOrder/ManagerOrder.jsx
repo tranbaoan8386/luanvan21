@@ -147,27 +147,42 @@ export default function ManagerOrder() {
 
   const handleClose = (value) => {
     const id = idRef.current;
+  
+    // Nếu đóng dialog mà không chọn gì => không làm gì cả
+    if (!value) {
+      setOpen(false);
+      idRef.current = null;
+      return;
+    }
+  
     const order = orders.find((o) => o.id === id);
     const currentStatus = order?.status || "";
-    const selectedStatus = value || "pending";
-
+    const selectedStatus = value;
+  
     const invalidTransition =
       (currentStatus === "cancelled" && ["shipped", "delivered"].includes(selectedStatus)) ||
       (currentStatus === "delivered" && ["shipped", "cancelled"].includes(selectedStatus)) ||
       (currentStatus === "shipped" && selectedStatus === "cancelled") ||
-      currentStatus === selectedStatus;
-
+      currentStatus === selectedStatus ||
+      (selectedStatus === "delivered" && currentStatus !== "shipped");
+  
     if (invalidTransition) {
-      toast.error("Không thể chuyển trạng thái này");
+      toast.error(
+        selectedStatus === "delivered" && currentStatus !== "shipped"
+          ? "Bạn phải giao cho vận chuyển trước khi chọn Đã giao hàng"
+          : "Không thể chuyển trạng thái này"
+      );
       idRef.current = null;
       return;
     }
-
+  
     setOpen(false);
     setSelectedValue(selectedStatus);
     updateOrderStatusMutation.mutate({ id, status: selectedStatus });
     idRef.current = null;
   };
+  
+  
 
   const handleClosePayment = (value) => {
     setOpenPayment(false);
@@ -177,6 +192,7 @@ export default function ManagerOrder() {
       idRef.current = null;
     }
   };
+  
 
   const handleSnackbarClose = () => setSuccessMessage("");
 
