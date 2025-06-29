@@ -320,41 +320,49 @@ export default function Cart() {
 
   const paypalAmount = ((totalCart - couponValue) / 30000).toFixed(2);
   const [paypalPaid, setPaypalPaid] = useState(false);
+
   const onSuccessPaypal = (details, data) => {
-    let fullAddress = `${profile?.data?.profile?.Address?.address_line}, ${profile?.data?.profile?.Address?.ward}, ${profile?.data?.profile?.Address?.district}, ${profile?.data?.profile?.Address?.city}`;
+  const addr = profile?.data?.profile?.Address;
 
-    const orderData = {
-      total: totalCart - couponValue,
-      phone:
-        profile?.data?.profile?.Address?.phone || profile?.data?.profile?.phone,
-      email: profile?.data?.profile?.email,
-      fullname: profile?.data?.profile?.name,
-      address: fullAddress,
-      orders_item: carts.map((cart) => ({
-        productItemId: cart.productItem.id,
-        quantity: quantities[cart.productItem.id] || cart.quantity,
-      })),
-      note,
-      paymentMethod,
-    };
+  if (!addr || !addr.address_line || !addr.ward || !addr.district || !addr.city) {
+    toast.error("Vui lòng thêm đầy đủ địa chỉ trước khi thanh toán");
+    return;
+  }
 
-    createOrderMutation.mutate(orderData, {
-      onSuccess: () => {
-        setPaypalPaid(true);
-        handleRefetchCart();
-        carts.forEach((cart) => {
-          deleteProductFromCartMutation.mutate({
-            productItemId: cart.productItem.id,
-          });
-        });
-        navigate("/");
-      },
-      onError: (error) => {
-        toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
-        console.error("Error creating order:", error);
-      },
-    });
+  const fullAddress = `${addr.address_line}, ${addr.ward}, ${addr.district}, ${addr.city}`;
+
+  const orderData = {
+    total: totalCart - couponValue,
+    phone: addr.phone || profile?.data?.profile?.phone,
+    email: profile?.data?.profile?.email,
+    fullname: profile?.data?.profile?.name,
+    address: fullAddress,
+    orders_item: carts.map((cart) => ({
+      productItemId: cart.productItem.id,
+      quantity: quantities[cart.productItem.id] || cart.quantity,
+    })),
+    note,
+    paymentMethod,
   };
+
+  createOrderMutation.mutate(orderData, {
+    onSuccess: () => {
+      setPaypalPaid(true);
+      handleRefetchCart();
+      carts.forEach((cart) => {
+        deleteProductFromCartMutation.mutate({
+          productItemId: cart.productItem.id,
+        });
+      });
+      navigate("/");
+    },
+    onError: (error) => {
+      toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
+      console.error("Error creating order:", error);
+    },
+  });
+};
+
 
   const addCoupon = async () => {
     if (code.trim() === "") {
