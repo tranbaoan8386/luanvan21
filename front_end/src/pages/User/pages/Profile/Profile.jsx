@@ -2,7 +2,6 @@ import {
   Avatar,
   Box,
   Button,
-  FormControl,
   Grid,
   TextField,
   Typography
@@ -14,7 +13,6 @@ import { styled } from "@mui/material/styles";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import userApi from "../../../../apis/user";
-import orderApi from "../../../../apis/order";
 import { BASE_URL_IMAGE } from "../../../../constants";
 import { AppContext } from "../../../../contexts/App";
 
@@ -46,11 +44,7 @@ export default function Profile() {
     defaultValues: {
       name: "",
       email: "",
-      phone: "",
-      province: "",
-      district: "",
-      village: "",
-      shortDescription: ""
+      phone: ""
     }
   });
 
@@ -65,11 +59,7 @@ export default function Profile() {
     if (profile) {
       setValue("name", profile.name || "");
       setValue("email", profile.email || "");
-      // setValue("phone", profile.phone || "");
-
-      //setValue("province", profile.address[0]?.province || "");
-      // setValue("district", profile.address[0]?.district || "");
-      // setValue("village", profile.address[0]?.village || "");
+      setValue("phone", profile.phone || "");
     }
   }, [profile, setValue]);
 
@@ -81,7 +71,7 @@ export default function Profile() {
     },
     onError: (error) => {
       console.error("Error updating profile:", error);
-      alert("Cập nhật thông tin thành công!");
+      alert("Cập nhật thất bại!");
     }
   });
 
@@ -89,15 +79,10 @@ export default function Profile() {
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("email", data.email);
-    // formData.append("phone", data.phone);
-    // formData.append("province", data.province);
-    // formData.append("district", data.district);
-    // formData.append("village", data.village);
-    // formData.append("shortDescription", data.shortDescription);
+    formData.append("phone", data.phone);
     if (file) {
       formData.append("avatar", file);
     }
-    console.log("data", data);
     updateProfileMutation.mutate(formData);
   });
 
@@ -163,9 +148,11 @@ export default function Profile() {
                 fullWidth
                 size="small"
               />
-              {errors.email && <span className="error">Email là bắt buộc</span>}
+              {errors.email && (
+                <span className="error">Email là bắt buộc</span>
+              )}
             </Box>
-            {/* <Box sx={{ mt: 2 }}>
+            <Box sx={{ mt: 2 }}>
               <Typography
                 sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
                 component="p"
@@ -174,7 +161,7 @@ export default function Profile() {
               </Typography>
               <TextField
                 {...register("phone", { required: true })}
-                type="phone"
+                type="tel"
                 fullWidth
                 size="small"
               />
@@ -182,84 +169,6 @@ export default function Profile() {
                 <span className="error">Số điện thoại là bắt buộc</span>
               )}
             </Box>
-            <Box sx={{ mt: 2 }}>
-              <Typography
-                sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
-                component="p"
-              >
-                Địa chỉ
-              </Typography>
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <FormControl sx={{ mt: 1 }} fullWidth>
-                  <Typography
-                    sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
-                    component="p"
-                  >
-                    Tỉnh thành
-                  </Typography>
-                  <TextField
-                    {...register("province", { required: true })}
-                    type="text"
-                    fullWidth
-                    size="small"
-                  />
-                  {errors.province && (
-                    <span className="error">Tỉnh thành là bắt buộc</span>
-                  )}
-                </FormControl>
-                <FormControl sx={{ mt: 1 }} fullWidth>
-                  <Typography
-                    sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
-                    component="p"
-                  >
-                    Quận huyện
-                  </Typography>
-                  <TextField
-                    {...register("district", { required: true })}
-                    type="text"
-                    fullWidth
-                    size="small"
-                  />
-                  {errors.district && (
-                    <span className="error">Quận huyện là bắt buộc</span>
-                  )}
-                </FormControl>
-                <FormControl sx={{ mt: 1 }} fullWidth>
-                  <Typography
-                    sx={{ fontSize: "15px", color: "#555555CC", mb: "5px" }}
-                    component="p"
-                  >
-                    Phường xã
-                  </Typography>
-                  <TextField
-                    {...register("village", { required: true })}
-                    type="text"
-                    fullWidth
-                    size="small"
-                  />
-                  {errors.village && (
-                    <span className="error">Phường xã là bắt buộc</span>
-                  )}
-                </FormControl>
-              </Box>
-            </Box> */}
-            {/* <Typography
-              sx={{ fontSize: "15px", color: "#555555CC", mb: 1, mt: 2 }}
-              component="p"
-            >
-              Số nhà, tên đường...
-            </Typography> */}
-            {/* <div className="textarea-custom">
-              <textarea
-                {...register("shortDescription", { required: true })}
-                rows={3}
-                id="note"
-                style={{ width: "100%" }}
-              />
-              {errors.shortDescription && (
-                <span className="error">Mô tả là bắt buộc</span>
-              )}
-            </div> */}
           </Box>
           <Button
             type="submit"

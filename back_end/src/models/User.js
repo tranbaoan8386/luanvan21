@@ -20,7 +20,7 @@ const User = sequelize.define(
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: true // NULL nếu dùng Google login
+      allowNull: true
     },
     phone: {
       type: DataTypes.STRING(20),
@@ -41,6 +41,11 @@ const User = sequelize.define(
       defaultValue: true
     },
     verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    isDeleted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false

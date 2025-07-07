@@ -33,6 +33,12 @@ userRouter.patch(
     jwtAuthMiddleware, 
     authorizedMiddleware('Admin'), 
     UserController.toggleUserActive
-)
+);
+userRouter.patch(
+    '/restore/:id',
+    jwtAuthMiddleware,
+    authorizedMiddleware('Admin'),
+    UserController.restoreUser
+  );
 
 module.exports = userRouter

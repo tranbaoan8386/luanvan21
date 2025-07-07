@@ -15,9 +15,11 @@ import {
   Toolbar,
   Tooltip,
   Typography,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import userApi from "../../../../apis/user";
 import { toast } from "react-toastify";
 
@@ -103,11 +105,13 @@ function EnhancedTableToolbar({ search, setSearch }) {
 
 export default function ManagerUser() {
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState(0); // 0: Người dùng, 1: Đã xoá
   const queryClient = useQueryClient();
 
+  // ✅ Gọi đúng API theo tab (deleted = true nếu tab === 1)
   const { data: usersData } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => userApi.getAll(),
+    queryKey: ["users", tab],
+    queryFn: () => userApi.getAll({ deleted: tab === 1 }),
     keepPreviousData: true,
   });
 
@@ -115,15 +119,52 @@ export default function ManagerUser() {
     mutationFn: (id) => userApi.toggleActive(id),
     onSuccess: () => {
       toast.success("Cập nhật trạng thái thành công");
-      queryClient.invalidateQueries(["users"]);
+      queryClient.invalidateQueries(["users", tab]);
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Có lỗi xảy ra");
     },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: (id) => userApi.deleteUser(id),
+    onSuccess: () => {
+      toast.success("Xóa người dùng thành công");
+      queryClient.invalidateQueries(["users", tab]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra khi xóa");
+    },
+  });
+
+  const restoreUserMutation = useMutation({
+    mutationFn: (id) => userApi.restoreUser(id),
+    onSuccess: (res) => {
+      toast.dismiss(); 
+      toast.success(res?.data?.message || "Khôi phục người dùng thành công");
+      queryClient.invalidateQueries(["users", tab]);
+    },
+    onError: (error) => {
+      toast.dismiss(); 
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra khi khôi phục");
+    },
+  });
+  
+
   const handleToggleActive = (id) => {
     toggleUserActive.mutate(id);
+  };
+
+  const handleDeleteUser = (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa người dùng này không?")) {
+      deleteUserMutation.mutate(id);
+    }
+  };
+
+  const handleRestoreUser = (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn khôi phục người dùng này không?")) {
+      restoreUserMutation.mutate(id);
+    }
   };
 
   const filteredUsers = usersData?.data?.users?.filter((user) =>
@@ -153,11 +194,16 @@ export default function ManagerUser() {
         <Typography variant="h5" fontWeight={700} color="text.primary">
           Quản lý người dùng
         </Typography>
+  
+        <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)}>
+          <Tab label="Người dùng" />
+          <Tab label="Đã xoá" />
+        </Tabs>
       </Box>
-
+  
       <Paper elevation={2} sx={{ borderRadius: 2, p: 2 }}>
         <EnhancedTableToolbar search={search} setSearch={setSearch} />
-
+  
         <TableContainer sx={{ maxHeight: 520, borderRadius: 2, overflow: "auto" }}>
           <Table stickyHeader aria-label="users table" size="medium">
             <EnhancedTableHead />
@@ -167,31 +213,64 @@ export default function ManagerUser() {
                   <TableRow
                     key={user.id}
                     hover
-                    sx={{ cursor: "pointer", "&:hover": { backgroundColor: "#f9f9f9" } }}
+                    sx={{
+                      cursor: "pointer",
+                      "&:hover": { backgroundColor: "#f9f9f9" },
+                    }}
                   >
                     <TableCell align="left" sx={{ fontWeight: 600 }}>
                       {index + 1}
                     </TableCell>
                     <TableCell align="left">{user.name}</TableCell>
                     <TableCell align="left">{user.email}</TableCell>
+  
+                    {/* ✅ Chỉ hiển thị trạng thái kích hoạt nếu chưa bị xoá */}
                     <TableCell align="left">
-                      <Button
-                        variant="outlined"
-                        color={user.isActive ? "success" : "warning"}
-                        size="small"
-                      >
-                        {user.isActive ? "Đã kích hoạt" : "Chưa kích hoạt"}
-                      </Button>
+                      {tab === 0 ? (
+                        <Button
+                          variant="outlined"
+                          color={user.isActive ? "success" : "warning"}
+                          size="small"
+                        >
+                          {user.isActive ? "Đã kích hoạt" : "Chưa kích hoạt"}
+                        </Button>
+                      ) : (
+                        "-"
+                      )}
                     </TableCell>
+  
                     <TableCell align="left">
-                      <Button
-                        variant="outlined"
-                        color={user.isActive ? "error" : "success"}
-                        size="small"
-                        onClick={() => handleToggleActive(user.id)}
-                      >
-                        {user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
-                      </Button>
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        {tab === 0 ? (
+                          <>
+                            <Button
+                              variant="outlined"
+                              color={user.isActive ? "error" : "success"}
+                              size="small"
+                              onClick={() => handleToggleActive(user.id)}
+                            >
+                              {user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              size="small"
+                              onClick={() => handleDeleteUser(user.id)}
+                            >
+                              Xóa
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="outlined"
+                            color="success"
+                            size="small"
+                            onClick={() => handleRestoreUser(user.id)}
+                          >
+                            Khôi phục
+                          </Button>
+                        )}
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))
@@ -208,4 +287,5 @@ export default function ManagerUser() {
       </Paper>
     </Box>
   );
+  
 }

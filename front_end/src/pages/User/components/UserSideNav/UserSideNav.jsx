@@ -13,10 +13,10 @@ const infoAccount = [
         title: 'Hồ sơ',
         path: '/user/profile'
     },
-    // {
-    //     title: 'Thay đổi mật khẩu',
-    //     path: '/user/password'
-    // },
+    {
+        title: 'Thay đổi mật khẩu',
+        path: '/user/password'
+    },
     // {
     //     title: 'Thay đổi mật khẩu',
     //     path: '/admin'

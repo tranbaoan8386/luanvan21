@@ -12,29 +12,37 @@ const Address = require('../models/Address')
 class UserController {
     async getAll(req, res, next) {
         try {
-            let users = await User.findAll({
-                include: [
-                    {
-                        model: Role,
-                        as: 'role',
-                        where: {
-                            name: {
-                                [Op.not]: 'Admin'
-                            }
-                        }
-                    }
-                ]
-            });
-    
-            return ApiResponse.success(res, {
-                status: 200,
-                data: { users }
-            });
+          const { deleted } = req.query;
+      
+          const isDeleted = deleted === 'true';
+      
+          const users = await User.findAll({
+            where: {
+              isDeleted, // lọc theo trạng thái xoá
+            },
+            include: [
+              {
+                model: Role,
+                as: 'role',
+                where: {
+                  name: {
+                    [Op.not]: 'Admin'
+                  }
+                }
+              }
+            ]
+          });
+      
+          return ApiResponse.success(res, {
+            status: 200,
+            data: { users }
+          });
         } catch (error) {
-            console.log("🔴 ERROR GET USERS:", error);
-            next(error);
+          console.log("🔴 ERROR GET USERS:", error);
+          next(error);
         }
-    }
+      }
+      
     async getMe(req, res, next) {
   try {
     const { id: userId } = req.user;
@@ -88,124 +96,113 @@ class UserController {
 
     async updateMe(req, res, next) {
         try {
-            const { name, phone, province, district, village, shortDescription } = req.body
-
-            const { id: userId } = req.user
-            const existedAddress = await Address.findOne({
-                where: {
-                    userId
-                }
-            })
-
-            if (existedAddress) {
-                // Cập nhật chỉ những trường có giá trị mới được nhập
-
-                existedAddress.phone = phone || existedAddress.phone
-                existedAddress.province = province || existedAddress.province
-                existedAddress.district = district || existedAddress.district
-                existedAddress.village = village || existedAddress.village
-                existedAddress.shortDescription = shortDescription || existedAddress.shortDescription
-
-                await existedAddress.save()
-            } else {
-                // Tạo mới nếu chưa có thông tin địa chỉ
-                await Address.create({
-                    userId,
-                    phone,
-                    province,
-                    district,
-                    village,
-                    shortDescription
-                })
+          const { name, phone } = req.body;
+          const { id: userId } = req.user;
+      
+          // Chuẩn bị đối tượng cập nhật
+          const updateData = {};
+      
+          if (name?.trim()) {
+            updateData.name = name.trim();
+          }
+      
+          if (phone?.trim()) {
+            updateData.phone = phone.trim();
+          }
+      
+          if (req.file) {
+            updateData.avatar = req.file.filename;
+          }
+      
+          // Nếu có dữ liệu để cập nhật thì update
+          if (Object.keys(updateData).length > 0) {
+            await User.update(updateData, {
+              where: { id: userId }
+            });
+          }
+      
+          // Lấy lại user sau khi cập nhật (loại bỏ password)
+          const user = await User.findByPk(userId, {
+            attributes: { exclude: ['password'] }
+          });
+      
+          return ApiResponse.success(res, {
+            status: 200,
+            data: {
+              profile: user, // ✅ đúng key frontend đang dùng
+              message: 'Cập nhật thông tin thành công'
             }
-            if (name !== undefined && name !== null && name !== '') {
-                await User.update(
-                    {
-                        name
-                    },
-                    {
-                        where: {
-                            id: userId
-                        }
-                    }
-                )
-            }
-
-            if (req.file) {
-                const { filename } = req.file
-                await User.update(
-                    {
-                        avatar: filename
-                    },
-                    {
-                        where: {
-                            id: userId
-                        }
-                    }
-                )
-            }
-
-            const user = await User.findByPk(userId, {
-                include: [
-                    {
-                        model: Address,
-                        as: 'address'
-                    }
-                ]
-            })
-
-            return ApiResponse.success(res, {
-                status: 200,
-                data: {
-                    user,
-                    message: 'Cập nhật thông tin thành công'
-                }
-            })
+          });
         } catch (err) {
-            next(err)
+          console.error("❌ Lỗi tại updateMe:", err);
+          next(err);
         }
-    }
+      }
+      
+      
+      
 
     async updatePassword(req, res, next) {
         try {
-            const { id: userId } = req.user
-            const { oldPassword, newPassword } = req.body
-
-            const user = await User.findByPk(userId)
-            const isMatch = bcrypt.compareSync(oldPassword, user.password)
-
+            const { id: userId } = req.user;
+            const { oldPassword, newPassword } = req.body;
+    
+            const user = await User.findByPk(userId);
+    
+            if (!user) {
+                return ApiResponse.error(res, {
+                    status: 404,
+                    data: {
+                        message: 'Không tìm thấy người dùng'
+                    }
+                });
+            }
+    
+            // Nếu không có mật khẩu trong DB (user.password null) => báo lỗi luôn
+            if (!user.password) {
+                return ApiResponse.error(res, {
+                    status: 400,
+                    data: {
+                        message: 'Người dùng chưa thiết lập mật khẩu'
+                    }
+                });
+            }
+    
+            const isMatch = bcrypt.compareSync(oldPassword, user.password);
             if (!isMatch) {
                 return ApiResponse.error(res, {
                     status: 400,
                     data: {
                         oldPassword: 'Mật khẩu cũ không chính xác'
                     }
-                })
+                });
             }
+    
             if (oldPassword === newPassword) {
                 return ApiResponse.error(res, {
                     status: 400,
                     data: {
                         newPassword: 'Mật khẩu mới phải khác mật khẩu cũ'
                     }
-                })
+                });
             }
-
-            const hashedPassword = bcrypt.hashSync(newPassword)
-
-            user.password = hashedPassword
-            await user.save()
-
+    
+            const hashedPassword = bcrypt.hashSync(newPassword);
+            user.password = hashedPassword;
+            await user.save();
+    
             return ApiResponse.success(res, {
                 status: 200,
                 data: {
                     message: 'Cập nhật mật khẩu thành công'
                 }
-            })
+            });
         } catch (err) {
-            next(err)
+            console.error("❌ updatePassword error:", err); // Ghi log chi tiết
+            next(err);
         }
     }
+    
 
     async logout(req, res, next) {
         try {
@@ -255,7 +252,8 @@ class UserController {
             }
 
             // Delete the user
-            await user.destroy();
+            user.isDeleted = true;
+            await user.save();
 
             // Return success response
             return ApiResponse.success(res, {
@@ -266,6 +264,35 @@ class UserController {
             next(err);
         }
     }
+
+    async restoreUser(req, res, next) {
+        try {
+            const { id: userId } = req.params;
+            const user = await User.findByPk(userId);
+    
+            if (!user || !user.isDeleted) {
+                return ApiResponse.error(res, {
+                    status: 404,
+                    data: {
+                        message: 'Người dùng không tồn tại hoặc chưa bị xoá'
+                    }
+                });
+            }
+    
+            user.isDeleted = false;
+            await user.save();
+    
+            return ApiResponse.success(res, {
+                status: 200,
+                data: {
+                    message: 'Khôi phục người dùng thành công'
+                }
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+    
 
     async toggleUserActive(req, res, next) {
         try {

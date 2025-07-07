@@ -2,35 +2,37 @@ const User = require('../models/User');
 const Role = require('../models/Role');
 
 const authorizedMiddleware = (...roles) => {
-    return async (req, res, next) => {
-        try {
-            const { id: userId } = req.user;
+  return async (req, res, next) => {
+    try {
+      const { id: userId } = req.user;
 
-            // ❌ Sai: thiếu include -> user.role sẽ là undefined
-            // const user = await User.findByPk(userId);
+      const user = await User.findByPk(userId, {
+        include: [{ model: Role, as: 'role' }],
+      });
 
-            // ✅ Đúng: include Role để lấy user.role.name
-            const user = await User.findByPk(userId, {
-                include: [{ model: Role, as: 'role' }]
-            });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 USER:', user?.toJSON?.());
+        console.log('🔐 Required roles:', roles);
+      }
 
-            console.log("🔍 USER:", user?.toJSON?.());
-            console.log("🔐 Required roles:", roles);
+      if (!user || !user.role) {
+        return res.status(403).json({ error: 'Không thể xác định vai trò người dùng' });
+      }
 
-            const userRoleName = user?.role?.name;
+      const userRoleName = user.role.name;
 
-            if (!user || !roles.includes(userRoleName)) {
-                console.warn("⚠️ Không có quyền:", userRoleName);
-                return res.status(403).json({ error: "Bạn không có quyền" });
-            }
+      if (!roles.includes(userRoleName)) {
+        console.warn('⚠️ Không có quyền:', userRoleName);
+        return res.status(403).json({ error: 'Bạn không có quyền thực hiện chức năng này' });
+      }
 
-            req.user.role = userRoleName; // nếu bạn cần dùng sau
-            next();
-        } catch (err) {
-            console.error("❌ Lỗi authorizedMiddleware:", err.message);
-            res.status(500).json({ error: "Lỗi phân quyền" });
-        }
-    };
+      req.user.role = userRoleName;
+      next();
+    } catch (err) {
+      console.error('❌ Lỗi authorizedMiddleware:', err.message);
+      return res.status(500).json({ error: 'Lỗi phân quyền hệ thống' });
+    }
+  };
 };
 
 module.exports = authorizedMiddleware;
