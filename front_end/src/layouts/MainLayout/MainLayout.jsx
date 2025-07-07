@@ -9,13 +9,21 @@ export default function MainLayout({ children }) {
       sx={{
         display: "flex",
         flexDirection: "column",
-        minHeight: "100vh", // ✅ quan trọng: để children (Cart) co giãn đúng
+        minHeight: "100vh", // Chiều cao tối thiểu toàn màn hình
       }}
     >
       <Header />
 
-      {/* Nội dung trang chiếm toàn bộ không gian còn lại */}
-      <Box component="main" sx={{ flex: 1 }}>
+      {/* Nội dung chính co giãn linh hoạt, không tạo khoảng trắng thừa */}
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "1px", // Ngăn flex auto kéo dài quá mức
+        }}
+      >
         {children}
       </Box>
 

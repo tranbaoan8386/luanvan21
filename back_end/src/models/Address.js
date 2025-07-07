@@ -14,10 +14,10 @@ const Address = sequelize.define(
       type: DataTypes.STRING(45),
       allowNull: true
     },
-    district: {
-      type: DataTypes.STRING(45),
-      allowNull: true
-    },
+    // district: {
+    //   type: DataTypes.STRING(45),
+    //   allowNull: true
+    // },
     city: {
       type: DataTypes.STRING(45),
       allowNull: true

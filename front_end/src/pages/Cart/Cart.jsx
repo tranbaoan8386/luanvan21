@@ -63,22 +63,22 @@ export default function Cart() {
   const [open, setOpen] = useState(false);
   const [quantities, setQuantities] = useState({});
   const [cities, setCities] = useState([]);
-  const [districts, setDistricts] = useState([]);
+  // const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
   const [selectedCity, setSelectedCity] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState("");
+  // const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedWard, setSelectedWard] = useState("");
   const [address, setAddress] = useState({});
   const [phone, setPhone] = useState("");
   const [error, setError] = useState(""); // State to store error message
   const [sdkReady, setSdkReady] = useState(false); // Define sdkReady state
-  const [districtError, setDistrictError] = useState(""); // State to store district error
+  // const [districtError, setDistrictError] = useState(""); // State to store district error
   const [wardError, setWardError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [cityError, setCityError] = useState("");
   const [currentAddress, setCurrentAddress] = useState(null);
   const [availableCoupons, setAvailableCoupons] = useState([]); // ✅ Danh sách mã có sẵn\
-  const [showCouponList, setShowCouponList] = useState(false)
+  const [showCouponList, setShowCouponList] = useState(false);
 
   useEffect(() => {
     const fetchCoupons = async () => {
@@ -93,89 +93,88 @@ export default function Cart() {
     fetchCoupons();
   }, []);
 
-  
-
   useEffect(() => {
     axios
-      .get("/provinces_2025_demo.json")
+      .get("https://vietnamlabs.com/api/vietnamprovince")
       .then((res) => {
-        setCities(res.data); // Đảm bảo res.data là mảng
+        const provinceData = res.data?.data || [];
+        const mapped = provinceData.map((item, index) => ({
+          name: item.province,
+          code: index + 1,
+          wards: item.wards,
+        }));
+        setCities(mapped);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => console.error("Lỗi tải tỉnh/thành:", err));
   }, []);
 
   const handleCityChange = (e) => {
-    const cityCode = e.target.value;
+    const cityCode = Number(e.target.value);
     console.log("🎯 Đã chọn tỉnh/thành phố:", cityCode);
 
     setSelectedCity(cityCode);
-    setSelectedDistrict("");
     setSelectedWard("");
-    setDistricts([]);
     setWards([]);
 
-    const selectedCity = cities.find(
-      (c) =>
-        String(c.code).padStart(2, "0") === String(cityCode).padStart(2, "0")
-    );
-    setAddress((prev) => ({
-      ...prev,
-      province: selectedCity?.name || "",
-    }));
+    const city = cities.find((c) => c.code === cityCode);
 
-    axios
-      .get("/districts_2025_demo.json")
-      .then((res) => {
-        console.log("✅ Danh sách quận huyện:", res.data);
-        console.log("🔍 cityCode:", cityCode);
+    if (city) {
+      setAddress((prev) => ({ ...prev, province: city.name }));
 
-        const filtered = res.data.filter(
-          (district) =>
-            String(district.idProvince).padStart(2, "0") ===
-            String(cityCode).padStart(2, "0")
-        );
-        console.log("📌 Quận huyện đã lọc:", filtered);
+      const mappedWards = city.wards.map((ward, index) => ({
+        id: index + 1,
+        name: ward.name,
+      }));
 
-        setDistricts(filtered);
-      })
-      .catch((err) => console.error(err));
+      console.log("📌 Phường/Xã đã lấy:", mappedWards); // có thể giữ
+
+      // ✅ THÊM DÒNG NÀY để gửi lại cho mình:
+      console.log(
+        "📋 Danh sách tên phường:",
+        mappedWards.map((w) => w.name)
+      );
+
+      setWards(mappedWards);
+    } else {
+      console.warn("Không tìm thấy tỉnh đã chọn trong danh sách cities");
+    }
   };
 
   //   setAddress((prev) => ({ ...prev, district: selectedDistrict.Name }));
   //   setDistrictError("");
   // };
 
-  const handleDistrictChange = (e) => {
-    const districtCode = e.target.value;
-    setSelectedDistrict(districtCode);
-    setSelectedWard("");
-    setWards([]);
+  // const handleDistrictChange = (e) => {
+  //   const districtCode = e.target.value;
+  //   setSelectedDistrict(districtCode);
+  //   setSelectedWard("");
+  //   setWards([]);
 
-    const selectedDistrict = districts.find((d) => d.id === districtCode);
-    setAddress((prev) => ({
-      ...prev,
-      district: selectedDistrict?.name || "",
-    }));
+  //   const selectedDistrict = districts.find((d) => d.id === districtCode);
+  //   setAddress((prev) => ({
+  //     ...prev,
+  //     district: selectedDistrict?.name || "",
+  //   }));
 
-    axios
-      .get("/wards_2025_demo.json")
-      .then((res) => {
-        const wardList = Array.isArray(res.data)
-          ? res.data
-          : res.data?.data || [];
-        console.log("✅ Danh sách phường/xã:", wardList);
+  //   axios
+  //     .get("/wards_2025_demo.json")
+  //     .then((res) => {
+  //       const wardList = Array.isArray(res.data)
+  //         ? res.data
+  //         : res.data?.data || [];
+  //       console.log("✅ Danh sách phường/xã:", wardList);
 
-        const filtered = wardList.filter(
-          (ward) => ward.idDistrict === districtCode
-        );
-        console.log("📌 Phường/xã đã lọc:", filtered);
-        setWards(filtered);
-      })
-      .catch((err) => console.error("Lỗi khi load phường/xã:", err));
-  };
+  //       const filtered = wardList.filter(
+  //         (ward) => ward.idDistrict === districtCode
+  //       );
+  //       console.log("📌 Phường/xã đã lọc:", filtered);
+  //       setWards(filtered);
+  //     })
+  //     .catch((err) => console.error("Lỗi khi load phường/xã:", err));
+  // };
 
   const handleWardChange = (e) => {
-    const wardId = e.target.value;
+    const wardId = Number(e.target.value);
     const selected = wards.find((w) => w.id === wardId);
     setSelectedWard(wardId);
     setAddress((prev) => ({ ...prev, village: selected?.name || "" }));
@@ -322,47 +321,52 @@ export default function Cart() {
   const [paypalPaid, setPaypalPaid] = useState(false);
 
   const onSuccessPaypal = (details, data) => {
-  const addr = profile?.data?.profile?.Address;
+    const addr = profile?.data?.profile?.Address;
 
-  if (!addr || !addr.address_line || !addr.ward || !addr.district || !addr.city) {
-    toast.error("Vui lòng thêm đầy đủ địa chỉ trước khi thanh toán");
-    return;
-  }
+    if (
+      !addr ||
+      !addr.address_line ||
+      !addr.ward ||
+      !addr.district ||
+      !addr.city
+    ) {
+      toast.error("Vui lòng thêm đầy đủ địa chỉ trước khi thanh toán");
+      return;
+    }
 
-  const fullAddress = `${addr.address_line}, ${addr.ward}, ${addr.district}, ${addr.city}`;
+    const fullAddress = `${addr.address_line}, ${addr.ward}, ${addr.city}`;
 
-  const orderData = {
-    total: totalCart - couponValue,
-    phone: addr.phone || profile?.data?.profile?.phone,
-    email: profile?.data?.profile?.email,
-    fullname: profile?.data?.profile?.name,
-    address: fullAddress,
-    orders_item: carts.map((cart) => ({
-      productItemId: cart.productItem.id,
-      quantity: quantities[cart.productItem.id] || cart.quantity,
-    })),
-    note,
-    paymentMethod,
-  };
+    const orderData = {
+      total: totalCart - couponValue,
+      phone: addr.phone || profile?.data?.profile?.phone,
+      email: profile?.data?.profile?.email,
+      fullname: profile?.data?.profile?.name,
+      address: fullAddress,
+      orders_item: carts.map((cart) => ({
+        productItemId: cart.productItem.id,
+        quantity: quantities[cart.productItem.id] || cart.quantity,
+      })),
+      note,
+      paymentMethod,
+    };
 
-  createOrderMutation.mutate(orderData, {
-    onSuccess: () => {
-      setPaypalPaid(true);
-      handleRefetchCart();
-      carts.forEach((cart) => {
-        deleteProductFromCartMutation.mutate({
-          productItemId: cart.productItem.id,
+    createOrderMutation.mutate(orderData, {
+      onSuccess: () => {
+        setPaypalPaid(true);
+        handleRefetchCart();
+        carts.forEach((cart) => {
+          deleteProductFromCartMutation.mutate({
+            productItemId: cart.productItem.id,
+          });
         });
-      });
-      navigate("/");
-    },
-    onError: (error) => {
-      toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
-      console.error("Error creating order:", error);
-    },
-  });
-};
-
+        navigate("/");
+      },
+      onError: (error) => {
+        toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
+        console.error("Error creating order:", error);
+      },
+    });
+  };
 
   const addCoupon = async () => {
     if (code.trim() === "") {
@@ -437,8 +441,7 @@ export default function Cart() {
 
   const handleOpenOrder = async () => {
     if (profile?.data?.profile?.Address) {
-      const { street, village, district, province } =
-        profile.data.profile.Address;
+      const { street, village, province } = profile.data.profile.Address;
 
       const selectedCityObj = cities.find(
         (city) => city.name?.trim() === province?.trim()
@@ -448,46 +451,34 @@ export default function Cart() {
         setSelectedCity(selectedCityObj.code);
         setAddress((prev) => ({ ...prev, province }));
 
-        try {
-          const districtRes = await axios.get("/districts_2025_demo.json"); // 🆕 local
-          const districtsData = districtRes.data.filter(
-            (d) => d.idProvince === selectedCityObj.code
+        const wardList = selectedCityObj.wards || [];
+        const selectedWardObj = wardList.find(
+          (w) => w.name?.trim() === village?.trim()
+        );
+
+        if (selectedWardObj) {
+          setSelectedWard(selectedWardObj.id);
+          setAddress((prev) => ({ ...prev, village: selectedWardObj.name }));
+        } else {
+          toast.warning(
+            "⚠️ Phường/Xã không tồn tại trong tỉnh/thành đã chọn. Vui lòng chọn lại."
           );
-
-          setDistricts(districtsData);
-
-          const selectedDistrictObj = districtsData.find(
-            (d) => d.name?.trim() === district?.trim()
-          );
-
-          if (selectedDistrictObj) {
-            setSelectedDistrict(selectedDistrictObj.id);
-            setAddress((prev) => ({ ...prev, district }));
-
-            const wardRes = await axios.get("/wards_2025_demo.json"); // 🆕 local
-            const wardsData = wardRes.data.filter(
-              (w) => w.idDistrict === selectedDistrictObj.id
-            );
-
-            setWards(wardsData);
-
-            const selectedWardObj = wardsData.find(
-              (w) => w.name?.trim() === village?.trim()
-            );
-
-            if (selectedWardObj) {
-              setSelectedWard(selectedWardObj.id);
-              setAddress((prev) => ({ ...prev, village }));
-            }
-          }
-        } catch (err) {
-          console.error("Lỗi khi load địa chỉ:", err);
+          setSelectedWard("");
+          setAddress((prev) => ({ ...prev, village: "" }));
         }
+
+        setWards(
+          wardList.map((ward, index) => ({
+            id: index + 1,
+            name: ward.name,
+          }))
+        );
       }
 
       setAddress((prev) => ({ ...prev, street }));
       setPhone(profile?.data?.profile?.Address?.phone || "");
     }
+
     setOpen(true);
   };
 
@@ -519,6 +510,7 @@ export default function Cart() {
       refetch(); // Làm mới dữ liệu profile sau khi thêm địa chỉ mới
     },
     onError: (error) => {
+      console.error("❌ Lỗi khi cập nhật địa chỉ:", error?.response?.data);
       toast.error("Lỗi khi thêm địa chỉ. Vui lòng thử lại.");
     },
   });
@@ -527,18 +519,23 @@ export default function Cart() {
     e.preventDefault();
     let hasError = false;
 
-    if (!phone) {
+    // Kiểm tra số điện thoại
+    if (!phone?.trim()) {
       setPhoneError("Số điện thoại không được bỏ trống");
       hasError = true;
     } else {
       setPhoneError("");
     }
+
+    // Kiểm tra tỉnh / thành phố
     if (!selectedCity) {
-      setCityError("Tinh/ Thanh pho khong fuoc bo trong");
+      setCityError("Tỉnh / Thành phố không được bỏ trống");
       hasError = true;
     } else {
       setCityError("");
     }
+
+    // Kiểm tra phường / xã
     if (!selectedWard) {
       setWardError("Phường / Xã không được bỏ trống");
       hasError = true;
@@ -546,27 +543,34 @@ export default function Cart() {
       setWardError("");
     }
 
-    if (!selectedDistrict) {
-      setDistrictError("Quận / Huyện không được bỏ trống");
-      hasError = true;
-    } else {
-      setDistrictError("");
-    }
-    if (!address.street) {
+    // Kiểm tra số nhà
+    if (!address.street?.trim()) {
       setError("Số nhà không thể bỏ trống");
       hasError = true;
     } else {
       setError("");
     }
+
+    // Nếu có lỗi, không gửi request
     if (hasError) {
       return;
     }
-    createAddressMutation.mutate({
+
+    // In ra dữ liệu gửi để kiểm tra
+    console.log("📤 Dữ liệu gửi:", {
       address_line: address.street,
       ward: address.village,
-      district: address.district,
       city: address.province,
       phone: phone,
+      name: profile?.data?.profile?.name || "Khách hàng",
+    });
+
+    // Gửi request
+    createAddressMutation.mutate({
+      address_line: address.street?.trim() || "",
+      ward: address.village?.trim() || "",
+      city: address.province?.trim() || "",
+      phone: phone?.trim() || "",
       name: profile?.data?.profile?.name || "Khách hàng",
     });
   };
@@ -575,18 +579,20 @@ export default function Cart() {
     e.preventDefault();
     let hasError = false;
 
-    if (!phone) {
+    if (!phone?.trim()) {
       setPhoneError("Số điện thoại không được bỏ trống");
       hasError = true;
     } else {
       setPhoneError("");
     }
+
     if (!selectedCity) {
-      setCityError("Tỉnh/ Thành phố không được bỏ trống");
+      setCityError("Tỉnh / Thành phố không được bỏ trống");
       hasError = true;
     } else {
       setCityError("");
     }
+
     if (!selectedWard) {
       setWardError("Phường / Xã không được bỏ trống");
       hasError = true;
@@ -594,28 +600,31 @@ export default function Cart() {
       setWardError("");
     }
 
-    if (!selectedDistrict) {
-      setDistrictError("Quận / Huyện không được bỏ trống");
-      hasError = true;
-    } else {
-      setDistrictError("");
-    }
-    if (!address.street) {
+    if (!address.street?.trim()) {
       setError("Số nhà không thể bỏ trống");
       hasError = true;
     } else {
       setError("");
     }
+
     if (hasError) {
       return;
     }
 
-    updateAddressMutation.mutate({
+    // In dữ liệu gửi (giúp debug nếu cần)
+    console.log("📤 Dữ liệu cập nhật:", {
       address_line: address.street,
       ward: address.village,
-      district: address.district,
       city: address.province,
       phone: phone,
+      name: profile?.data?.profile?.name || "Khách hàng",
+    });
+
+    updateAddressMutation.mutate({
+      address_line: address.street?.trim() || "",
+      ward: address.village?.trim() || "",
+      city: address.province?.trim() || "",
+      phone: phone?.trim() || "",
       name: profile?.data?.profile?.name || "Khách hàng",
     });
   };
@@ -628,8 +637,7 @@ export default function Cart() {
     if (
       !profile?.data?.profile?.Address?.address_line ||
       !profile?.data?.profile?.Address?.ward ||
-      !profile?.data?.profile?.Address?.city ||
-      !profile?.data?.profile?.Address?.district
+      !profile?.data?.profile?.Address?.city
     ) {
       toast.error("Vui lòng thêm địa chỉ trước khi đặt hàng.");
       return;
@@ -722,645 +730,622 @@ export default function Cart() {
   };
 
   return (
-  <Box
-  sx={{
-    display: "flex",
-    flexDirection: "column",
-    minHeight: carts?.length > 0 ? "100vh" : "auto", // 🔥 Tự điều chỉnh theo giỏ hàng
-    flex: 1,
-  }}
->
-
-
     <Box
       sx={{
-        flex: 1,                        
-        width: "100%",
-        mt: 2,
-        maxWidth: "1300px",
-        mx: "auto",
-        px: 3,
+        display: "flex",
+        flexDirection: "column",
+        minHeight: carts?.length > 0 ? "100vh" : "auto", // 🔥 Tự điều chỉnh theo giỏ hàng
+        flex: 1,
       }}
     >
-
-      {/* <Breadcrumb page="Giỏ hàng" /> */}
-      {error && <Alert severity="error">{error}</Alert>}
-      <Box  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", md: "row" }, // responsive
-                    gap: 3,
-                    alignItems: "flex-start",
-                    mt: 5,
-                  }}
-                >
-        <TableContainer sx={{ mt: 5, height: "100%" }} component={Paper}>
-          <Table sx={{ minWidth: 800 }} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Sản phẩm</TableCell>
-                <TableCell align="right">Số lượng</TableCell>
-                <TableCell align="right">Đơn giá</TableCell>
-                <TableCell align="right">Tổng&nbsp;(VND)</TableCell>
-                <TableCell>Xóa</TableCell>
-              </TableRow>
-            </TableHead>
-            {carts && carts.length > 0 ? (
-              <TableBody>
-                {carts.map((cart) => (
-                  <TableRow
-                    key={cart.id}
-                    sx={{
-                      height: "100px",
-                      "&:last-child td, &:last-child th": { border: 0 },
-                    }}
-                  >
-                    <TableCell width="500px" component="th" scope="row">
-                      <div className="cart-product">
-                        <img
-                          src={
-                            BASE_URL_IMAGE + cart.productItem.product?.avatar
-                          }
-                          alt={
-                            cart.productItem.product?.name || "Product Image"
-                          }
-                        />
-                        <div className="cart-product-content">
-                          <span className="cart-product-name">
-                            {cart.productItem?.product?.name || "Product Name"}
-                          </span>
-                          <div className="cart-product-color">
-                            <div style={{ color: "#c50e0e" }}>Màu sắc:</div>
-                            {cart.productItem.color && (
-                              <Typography
-                                sx={{
-                                  backgroundColor:
-                                    cart.productItem.color.colorCode,
-                                  width: "20px",
-                                  height: "20px",
-                                  borderRadius: "50%",
-                                  border: "1px solid #ddd",
-                                  display: "inline-block",
-                                  marginTop: "0px",
-                                  marginLeft: "5px",
-                                }}
-                              ></Typography>
-                            )}
-                          </div>
-
-                          <div className="cart-product-size">
-                            Size: {cart.productItem.size?.name}
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <div className="quantity">
-                        <div
-                          style={{
-                            pointerEvents:
-                              cart.quantity <= 1 || updateCartMutation.isPending
-                                ? "none"
-                                : "auto",
-                            opacity:
-                              cart.quantity <= 1 || updateCartMutation.isPending
-                                ? 0.5
-                                : 1,
-                          }}
-                          onClick={() => handleDecrement(cart.productItem.id)}
-                          className="quantity-decrement"
-                        >
-                          <RemoveIcon />
-                        </div>
-                        <input
-                          onChange={(e) =>
-                            handleQuantityChange(
-                              cart.productItem.id,
-                              e.target.value
-                            )
-                          }
-                          value={
-                            quantities[cart.productItem.id] || cart.quantity
-                          }
-                          min={1}
-                          type="text"
-                        />
-                        <div
-                          style={{
-                            pointerEvents: updateCartMutation.isPending
-                              ? "none"
-                              : "auto",
-                            opacity: updateCartMutation.isPending ? 0.5 : 1,
-                          }}
-                          onClick={() => handleIncrement(cart.productItem.id)}
-                          className="quantity-increment"
-                        >
-                          <AddIcon />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell align="right">
-                      {formatCurrency(Number(cart.price))}
-                    </TableCell>
-                    <TableCell align="right">
-                      {formatCurrency(
-                        Number(cart.price) *
-                          (quantities[cart.productItem.id] || cart.quantity)
-                      )}
-                    </TableCell>
-                    <TableCell align="right">
-                      <Button
-                        onClick={() => confirmDelete(cart.productItem.id)}
-                      >
-                        <DeleteSweepIcon
-                          sx={{ width: "25px", height: "25px" }}
-                          color="error"
-                        />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            ) : (
-              <TableBody>
-                <TableRow>
-                  <TableCell sx={{ textAlign: "center" }} colSpan={5}>
-                    <img
-                      width={180}
-                      height={180}
-                      src={emptyCart}
-                      alt="empty-cart"
-                    />
-                    <Link
-                      style={{ textAlign: "center", display: "block" }}
-                      to="/"
-                    >
-                      <Button
-                        sx={{ mt: 2 }}
-                        variant="contained"
-                        color="primary"
-                      >
-                        Tiếp tục mua sắm
-                      </Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            )}
-          </Table>
-        </TableContainer>
-
-        
-
-        {carts && carts.length > 0 && (
-          <Box
-            sx={{
-              mt: 9,
-              mb: 2,
-              marginLeft: "30px",
-              padding: "10px 0px",
-              width: "499px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 4,
-              minHeight: "100%", // ✅ Kích hoạt căn chiều cao đầy đủ theo cha
-              height: "auto", // ✅ Đảm bảo co giãn đúng
-              "@media screen and (max-width: 600px)": {
-                width: "100%",
-              },
-            }}
-          >
-            {/* PHẦN ĐỊA CHỈ - căn trái */}
-            <Box sx={{ textAlign: "left", fontSize: "16px", width: "100%" }}>
-              {profile?.data?.profile?.Address ? (
-                <Box
-                  sx={{
-                    backgroundColor: "#fffefa",
-                    border: "1px solid #f0d9b5",
-                    borderRadius: "10px",
-                    padding: "16px",
-                    lineHeight: 2,
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                  }}
-                >
-                  {[
-                    ["Người nhận", profile?.data?.profile?.name],
-                    ["Số điện thoại", profile?.data?.profile?.Address?.phone],
-                    ["Tỉnh/Thành phố", profile?.data?.profile?.Address?.city],
-                    ["Quận/Huyện", profile?.data?.profile?.Address?.district],
-                    ["Phường/Xã", profile?.data?.profile?.Address?.ward],
-                    ["Số nhà", profile?.data?.profile?.Address?.address_line],
-                  ].map(([label, value]) => (
-                    <Box key={label} sx={{ display: "flex" }}>
-                      <Box sx={{ width: "140px", fontWeight: "bold" }}>
-                        {label}:
-                      </Box>
-                      <Box>{value || "Chưa có"}</Box>
-                    </Box>
-                  ))}
-
-                  <Box
-                    sx={{ display: "flex", justifyContent: "center", mt: 2 }}
-                  >
-                    <Box
-                      onClick={handleOpenOrder}
-                      sx={{
-                        fontSize: "14px",
-                        color: "#1677ff",
-                        fontWeight: 500,
-                        border: "1px solid #1677ff",
-                        borderRadius: "4px",
-                        padding: "4px 10px",
-                        cursor: "pointer",
-                        "&:hover": {
-                          backgroundColor: "#e6f0ff",
-                        },
-                      }}
-                    >
-                      Thay đổi địa chỉ
-                    </Box>
-                  </Box>
-                </Box>
-              ) : (
-                <Box
-                  sx={{
-                    fontSize: "14px",
-                    color: "#1677ff",
-                    cursor: "pointer",
-                    marginTop: "8px",
-                  }}
-                  onClick={handleOpenOrder}
-                >
-                  Thêm mới địa chỉ
-                </Box>
-              )}
-            </Box>
-
-            {/* PHẦN CÒN LẠI - căn giữa */}
-            <Box sx={{ textAlign: "center", width: "100%" }}>
-
-            <Box sx={{ mt: 2 }}>
-    <Button
-      variant="outlined"
-      size="small"
-      onClick={() => setShowCouponList(!showCouponList)}
-      sx={{ mb: 2 }}
-    >
-      {showCouponList ? "Ẩn mã khuyến mãi" : "Áp dụng mã khuyến mãi"}
-    </Button>
-
-    {showCouponList && (
-      <>
-        {availableCoupons.length > 0 ? (
-          availableCoupons.map((coupon) => {
-            const isEligible = totalCart >= (coupon.minimumAmount || 0);
-
-            return (
-              <Box
-                key={coupon.id}
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  background: "#f4f4f4",
-                  borderRadius: "6px",
-                  padding: "10px",
-                  mb: 1,
-                  border: "1px solid #ccc",
-                  opacity: isEligible ? 1 : 0.5, // 👈 Làm mờ nếu không đủ điều kiện
-                  pointerEvents: isEligible ? "auto" : "none", // 👈 Vô hiệu hóa click
-                }}
-              >
-                <Box>
-                  <Typography fontWeight={600}>{coupon.code}</Typography>
-                  <Typography fontSize="14px" color="red">
-                    Giảm {formatCurrency(coupon.price)} VND cho đơn từ{" "}
-                    {formatCurrency(coupon.minimumAmount || 0)} VND
-                  </Typography>
-                </Box>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  disabled={!isEligible} // 👈 Tùy chọn: disable nút thay vì dùng pointerEvents
-                  onClick={() => {
-                    setCode(coupon.code);
-                    addCoupon(); // Gọi hàm áp mã
-                  }}
-                >
-                  Áp dụng
-                </Button>
-              </Box>
-            );
-          })
-        ) : (
-          <Typography fontSize="14px" color="GrayText">
-            Không có mã nào khả dụng
-          </Typography>
-        )}
-      </>
-    )}
-  </Box>
-
-
-              {/* ✅ Sửa thành Box căn giữa */}
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: 1,
-                  mt: 2,
-                }}
-              >
-                <TextField
-                  size="small"
-                  placeholder="Nhập mã khuyến mãi"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  sx={{ width: "60%" }}
-                />
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={addCoupon}
-                  sx={{ height: "40px" }}
-                >
-                  Xác nhận
-                </Button>
-              </Box>
-
-              <Box
-                sx={{
-                  mt: 4,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                  width: "100%",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Typography fontSize="14px" color="GrayText">
-                    Tổng giỏ hàng
-                  </Typography>
-                  <Typography color="Highlight">
-                    {formatCurrency(totalCart) + " VND"}
-                  </Typography>
-                </Box>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Typography fontSize="14px" color="GrayText">
-                    Khuyến mãi
-                  </Typography>
-                  <Typography color="error">
-                    {couponValue
-                      ? formatCurrency(couponValue) + " VND"
-                      : "Chưa áp dụng"}
-                  </Typography>
-                </Box>
-
-                <Divider sx={{ mt: 3, mb: 1 }} />
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Typography
-                    fontWeight="500"
-                    fontSize="25px"
-                    color="#000000CC"
-                    component="span"
-                  >
-                    TỔNG
-                  </Typography>
-                  <Typography
-                    fontWeight="800"
-                    fontSize="25px"
-                    color="#000000CC"
-                    component="span"
-                  >
-                    {formatCurrency(totalCart - (couponValue || 0)) + " VND"}
-                  </Typography>
-                </Box>
-
-                <ButtonCustom onClick={handlePayment} sx={{ mt: 2, mb: 3 }}>
-                  Đặt hàng
-                </ButtonCustom>
-
-                {paymentMethod === "paypal" &&
-                  sdkReady &&
-                  handlePaypalPayment() && (
-                    <PayPalButton
-                      amount={paypalAmount}
-                      onSuccess={onSuccessPaypal}
-                      onError={() => {
-                        toast.error("Lỗi trong quá trình thanh toán PayPal");
-                      }}
-                    />
-                  )}
-              </Box>
-            </Box>
-          </Box>
-        )}
-      </Box>
-      {carts && carts.length > 0 && (
-        <RadioGroup
-          row
-          aria-labelledby="demo-row-radio-buttons-group-label"
-          name="row-radio-buttons-group"
-          value={paymentMethod}
-          onChange={(e) => setPaymentMethod(e.target.value)}
-        >
-          <FormControlLabel
-            value="cash"
-            control={<Radio />}
-            label="Thanh toán khi nhận hàng"
-          />
-          <FormControlLabel
-            value="paypal"
-            control={<Radio />}
-            label="Thanh toán bằng PAYPAL"
-          />
-        </RadioGroup>
-      )}
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>
-          {profile?.data?.profile?.Address
-            ? "Cập nhật địa chỉ"
-            : "Thêm địa chỉ"}
-        </DialogTitle>
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
+      <Box
+        sx={{
+          flex: 1,
+          width: "100%",
+          mt: 2,
+          maxWidth: "1300px",
+          mx: "auto",
+          px: 3,
+        }}
+      >
+        {/* <Breadcrumb page="Giỏ hàng" /> */}
+        {error && <Alert severity="error">{error}</Alert>}
+        <Box
           sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" }, // responsive
+            gap: 3,
+            alignItems: "flex-start",
+            mt: 5,
           }}
         >
-          <CloseIcon />
-        </IconButton>
-        <DialogContent>
-          <Box
-            onSubmit={
-              profile?.data?.profile?.Address
-                ? handleUpdateAddress
-                : handleAddAddress
-            }
-            method="POST"
-            component="form"
-          >
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="city-label">Tỉnh / Thành phố</InputLabel>
-              <Select
-                labelId="city-label"
-                value={selectedCity || ""}
-                onChange={handleCityChange}
-              >
-                <MenuItem value="">
-                  <em>Chọn Tỉnh / Thành phố</em>
-                </MenuItem>
-                {cities.map((city) => (
-                  <MenuItem key={city.code} value={city.code}>
-                    {city.name}
-                  </MenuItem>
-                ))}
-              </Select>
+          <TableContainer sx={{ mt: 5, height: "100%" }} component={Paper}>
+            <Table sx={{ minWidth: 800 }} aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Sản phẩm</TableCell>
+                  <TableCell align="right">Số lượng</TableCell>
+                  <TableCell align="right">Đơn giá</TableCell>
+                  <TableCell align="right">Tổng&nbsp;(VND)</TableCell>
+                  <TableCell>Xóa</TableCell>
+                </TableRow>
+              </TableHead>
+              {carts && carts.length > 0 ? (
+                <TableBody>
+                  {carts.map((cart) => (
+                    <TableRow
+                      key={cart.id}
+                      sx={{
+                        height: "100px",
+                        "&:last-child td, &:last-child th": { border: 0 },
+                      }}
+                    >
+                      <TableCell width="500px" component="th" scope="row">
+                        <div className="cart-product">
+                          <img
+                            src={
+                              BASE_URL_IMAGE + cart.productItem.product?.avatar
+                            }
+                            alt={
+                              cart.productItem.product?.name || "Product Image"
+                            }
+                          />
+                          <div className="cart-product-content">
+                            <span className="cart-product-name">
+                              {cart.productItem?.product?.name ||
+                                "Product Name"}
+                            </span>
+                            <div className="cart-product-color">
+                              <div style={{ color: "#c50e0e" }}>Màu sắc:</div>
+                              {cart.productItem.color && (
+                                <Typography
+                                  sx={{
+                                    backgroundColor:
+                                      cart.productItem.color.colorCode,
+                                    width: "20px",
+                                    height: "20px",
+                                    borderRadius: "50%",
+                                    border: "1px solid #ddd",
+                                    display: "inline-block",
+                                    marginTop: "0px",
+                                    marginLeft: "5px",
+                                  }}
+                                ></Typography>
+                              )}
+                            </div>
 
-              {cityError && <Alert severity="error">{cityError}</Alert>}
-            </FormControl>
-            <FormControl fullWidth margin="normal" disabled={!selectedCity}>
-              <InputLabel id="district-label">Quận / Huyện</InputLabel>
-              <Select
-                labelId="district-label"
-                value={selectedDistrict || ""}
-                onChange={handleDistrictChange}
-              >
-                <MenuItem value="">
-                  <em>Chọn Quận / Huyện</em>
-                </MenuItem>
+                            <div className="cart-product-size">
+                              Size: {cart.productItem.size?.name}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
 
-                {districts && districts.length > 0 ? (
-                  districts.map((district) => (
-                    <MenuItem key={district.id} value={district.id}>
-                      {district.name}
-                    </MenuItem>
-                  ))
+                      <TableCell align="right">
+                        <div className="quantity">
+                          <div
+                            style={{
+                              pointerEvents:
+                                cart.quantity <= 1 ||
+                                updateCartMutation.isPending
+                                  ? "none"
+                                  : "auto",
+                              opacity:
+                                cart.quantity <= 1 ||
+                                updateCartMutation.isPending
+                                  ? 0.5
+                                  : 1,
+                            }}
+                            onClick={() => handleDecrement(cart.productItem.id)}
+                            className="quantity-decrement"
+                          >
+                            <RemoveIcon />
+                          </div>
+                          <input
+                            onChange={(e) =>
+                              handleQuantityChange(
+                                cart.productItem.id,
+                                e.target.value
+                              )
+                            }
+                            value={
+                              quantities[cart.productItem.id] || cart.quantity
+                            }
+                            min={1}
+                            type="text"
+                          />
+                          <div
+                            style={{
+                              pointerEvents: updateCartMutation.isPending
+                                ? "none"
+                                : "auto",
+                              opacity: updateCartMutation.isPending ? 0.5 : 1,
+                            }}
+                            onClick={() => handleIncrement(cart.productItem.id)}
+                            className="quantity-increment"
+                          >
+                            <AddIcon />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatCurrency(Number(cart.price))}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatCurrency(
+                          Number(cart.price) *
+                            (quantities[cart.productItem.id] || cart.quantity)
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Button
+                          onClick={() => confirmDelete(cart.productItem.id)}
+                        >
+                          <DeleteSweepIcon
+                            sx={{ width: "25px", height: "25px" }}
+                            color="error"
+                          />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              ) : (
+                <TableBody>
+                  <TableRow>
+                    <TableCell sx={{ textAlign: "center" }} colSpan={5}>
+                      <img
+                        width={180}
+                        height={180}
+                        src={emptyCart}
+                        alt="empty-cart"
+                      />
+                      <Link
+                        style={{ textAlign: "center", display: "block" }}
+                        to="/"
+                      >
+                        <Button
+                          sx={{ mt: 2 }}
+                          variant="contained"
+                          color="primary"
+                        >
+                          Tiếp tục mua sắm
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              )}
+            </Table>
+          </TableContainer>
+
+          {carts && carts.length > 0 && (
+            <Box
+              sx={{
+                mt: 9,
+                mb: 2,
+                marginLeft: "30px",
+                padding: "10px 0px",
+                width: "499px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+                minHeight: "100%", // ✅ Kích hoạt căn chiều cao đầy đủ theo cha
+                height: "auto", // ✅ Đảm bảo co giãn đúng
+                "@media screen and (max-width: 600px)": {
+                  width: "100%",
+                },
+              }}
+            >
+              {/* PHẦN ĐỊA CHỈ - căn trái */}
+              <Box sx={{ textAlign: "left", fontSize: "16px", width: "100%" }}>
+                {profile?.data?.profile?.Address ? (
+                  <Box
+                    sx={{
+                      backgroundColor: "#fffefa",
+                      border: "1px solid #f0d9b5",
+                      borderRadius: "10px",
+                      padding: "16px",
+                      lineHeight: 2,
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    {[
+                      ["Người nhận", profile?.data?.profile?.name],
+                      ["Số điện thoại", profile?.data?.profile?.Address?.phone],
+                      ["Tỉnh/Thành phố", profile?.data?.profile?.Address?.city],
+                      // ["Quận/Huyện", profile?.data?.profile?.Address?.district],
+                      ["Phường/Xã", profile?.data?.profile?.Address?.ward],
+                      ["Số nhà", profile?.data?.profile?.Address?.address_line],
+                    ].map(([label, value]) => (
+                      <Box key={label} sx={{ display: "flex" }}>
+                        <Box sx={{ width: "140px", fontWeight: "bold" }}>
+                          {label}:
+                        </Box>
+                        <Box>{value || "Chưa có"}</Box>
+                      </Box>
+                    ))}
+
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", mt: 2 }}
+                    >
+                      <Box
+                        onClick={handleOpenOrder}
+                        sx={{
+                          fontSize: "14px",
+                          color: "#1677ff",
+                          fontWeight: 500,
+                          border: "1px solid #1677ff",
+                          borderRadius: "4px",
+                          padding: "4px 10px",
+                          cursor: "pointer",
+                          "&:hover": {
+                            backgroundColor: "#e6f0ff",
+                          },
+                        }}
+                      >
+                        Thay đổi địa chỉ
+                      </Box>
+                    </Box>
+                  </Box>
                 ) : (
-                  <MenuItem disabled>
-                    <em>Không có quận/huyện</em>
-                  </MenuItem>
+                  <Box
+                    sx={{
+                      fontSize: "14px",
+                      color: "#1677ff",
+                      cursor: "pointer",
+                      marginTop: "8px",
+                    }}
+                    onClick={handleOpenOrder}
+                  >
+                    Thêm mới địa chỉ
+                  </Box>
                 )}
-              </Select>
+              </Box>
 
-              {districtError && <Alert severity="error">{districtError}</Alert>}
-            </FormControl>
-            {selectedDistrict && (
+              {/* PHẦN CÒN LẠI - căn giữa */}
+              <Box sx={{ textAlign: "center", width: "100%" }}>
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setShowCouponList(!showCouponList)}
+                    sx={{ mb: 2 }}
+                  >
+                    {showCouponList
+                      ? "Ẩn mã khuyến mãi"
+                      : "Áp dụng mã khuyến mãi"}
+                  </Button>
+
+                  {showCouponList && (
+                    <>
+                      {availableCoupons.length > 0 ? (
+                        availableCoupons.map((coupon) => {
+                          const isEligible =
+                            totalCart >= (coupon.minimumAmount || 0);
+
+                          return (
+                            <Box
+                              key={coupon.id}
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                background: "#f4f4f4",
+                                borderRadius: "6px",
+                                padding: "10px",
+                                mb: 1,
+                                border: "1px solid #ccc",
+                                opacity: isEligible ? 1 : 0.5, // 👈 Làm mờ nếu không đủ điều kiện
+                                pointerEvents: isEligible ? "auto" : "none", // 👈 Vô hiệu hóa click
+                              }}
+                            >
+                              <Box>
+                                <Typography fontWeight={600}>
+                                  {coupon.code}
+                                </Typography>
+                                <Typography fontSize="14px" color="red">
+                                  Giảm {formatCurrency(coupon.price)} VND cho
+                                  đơn từ{" "}
+                                  {formatCurrency(coupon.minimumAmount || 0)}{" "}
+                                  VND
+                                </Typography>
+                              </Box>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={!isEligible} // 👈 Tùy chọn: disable nút thay vì dùng pointerEvents
+                                onClick={() => {
+                                  setCode(coupon.code);
+                                  addCoupon(); // Gọi hàm áp mã
+                                }}
+                              >
+                                Áp dụng
+                              </Button>
+                            </Box>
+                          );
+                        })
+                      ) : (
+                        <Typography fontSize="14px" color="GrayText">
+                          Không có mã nào khả dụng
+                        </Typography>
+                      )}
+                    </>
+                  )}
+                </Box>
+
+                {/* ✅ Sửa thành Box căn giữa */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: 1,
+                    mt: 2,
+                  }}
+                >
+                  <TextField
+                    size="small"
+                    placeholder="Nhập mã khuyến mãi"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    sx={{ width: "60%" }}
+                  />
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={addCoupon}
+                    sx={{ height: "40px" }}
+                  >
+                    Xác nhận
+                  </Button>
+                </Box>
+
+                <Box
+                  sx={{
+                    mt: 4,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                    width: "100%",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Typography fontSize="14px" color="GrayText">
+                      Tổng giỏ hàng
+                    </Typography>
+                    <Typography color="Highlight">
+                      {formatCurrency(totalCart) + " VND"}
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Typography fontSize="14px" color="GrayText">
+                      Khuyến mãi
+                    </Typography>
+                    <Typography color="error">
+                      {couponValue
+                        ? formatCurrency(couponValue) + " VND"
+                        : "Chưa áp dụng"}
+                    </Typography>
+                  </Box>
+
+                  <Divider sx={{ mt: 3, mb: 1 }} />
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Typography
+                      fontWeight="500"
+                      fontSize="25px"
+                      color="#000000CC"
+                      component="span"
+                    >
+                      TỔNG
+                    </Typography>
+                    <Typography
+                      fontWeight="800"
+                      fontSize="25px"
+                      color="#000000CC"
+                      component="span"
+                    >
+                      {formatCurrency(totalCart - (couponValue || 0)) + " VND"}
+                    </Typography>
+                  </Box>
+
+                  <ButtonCustom onClick={handlePayment} sx={{ mt: 2, mb: 3 }}>
+                    Đặt hàng
+                  </ButtonCustom>
+
+                  {paymentMethod === "paypal" &&
+                    sdkReady &&
+                    handlePaypalPayment() && (
+                      <PayPalButton
+                        amount={paypalAmount}
+                        onSuccess={onSuccessPaypal}
+                        onError={() => {
+                          toast.error("Lỗi trong quá trình thanh toán PayPal");
+                        }}
+                      />
+                    )}
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </Box>
+        {carts && carts.length > 0 && (
+          <RadioGroup
+            row
+            aria-labelledby="demo-row-radio-buttons-group-label"
+            name="row-radio-buttons-group"
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+          >
+            <FormControlLabel
+              value="cash"
+              control={<Radio />}
+              label="Thanh toán khi nhận hàng"
+            />
+            <FormControlLabel
+              value="paypal"
+              control={<Radio />}
+              label="Thanh toán bằng PAYPAL"
+            />
+          </RadioGroup>
+        )}
+        <Dialog open={open} onClose={handleClose}>
+          <DialogTitle>
+            {profile?.data?.profile?.Address
+              ? "Cập nhật địa chỉ"
+              : "Thêm địa chỉ"}
+          </DialogTitle>
+          <IconButton
+            aria-label="close"
+            onClick={handleClose}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          <DialogContent>
+            <Box
+              onSubmit={
+                profile?.data?.profile?.Address
+                  ? handleUpdateAddress
+                  : handleAddAddress
+              }
+              method="POST"
+              component="form"
+            >
               <FormControl fullWidth margin="normal">
-                <InputLabel id="ward-label">Phường / Xã</InputLabel>
+                <InputLabel id="city-label">Tỉnh / Thành phố</InputLabel>
                 <Select
-                  labelId="ward-label"
-                  value={selectedWard || ""}
-                  onChange={handleWardChange}
+                  labelId="city-label"
+                  value={selectedCity}
+                  onChange={handleCityChange}
                 >
                   <MenuItem value="">
-                    <em>Chọn Phường / Xã</em>
+                    <em>Chọn Tỉnh / Thành phố</em>
                   </MenuItem>
-                  {wards.map((ward) => (
-                    <MenuItem key={ward.id} value={ward.id}>
-                      {ward.name}
+                  {cities.map((city) => (
+                    <MenuItem key={city.code} value={city.code}>
+                      {city.name}
                     </MenuItem>
                   ))}
                 </Select>
-
-                {wardError && <Alert severity="error">{wardError}</Alert>}
+                {cityError && <Alert severity="error">{cityError}</Alert>}
               </FormControl>
-            )}
 
-            <TextField
-              sx={{ mt: 3 }}
-              fullWidth
-              id="outlined-helperText"
-              label="Số nhà, tên đường..."
-              inputProps={{
-                readOnly: false,
-              }}
-              value={address.street ?? ""}
-              onChange={handleStreetChange}
-            />
-            {error && <Alert severity="error">{error}</Alert>}
-            <TextField
-              sx={{ mt: 3 }}
-              fullWidth
-              id="outlined-helperText"
-              label="Số điện thoại"
-              inputProps={{
-                readOnly: false,
-              }}
-              value={phone ?? ""}
-              onChange={handlePhoneChange}
-            />
-            {phoneError && <Alert severity="error">{phoneError}</Alert>}
+              {selectedCity && (
+                <FormControl fullWidth margin="normal">
+                  <InputLabel id="ward-label">Phường / Xã</InputLabel>
+                  <Select
+                    labelId="ward-label"
+                    value={selectedWard || ""}
+                    onChange={handleWardChange}
+                  >
+                    <MenuItem value="">
+                      <em>Chọn Phường / Xã</em>
+                    </MenuItem>
+                    {wards.map((ward) => (
+                      <MenuItem key={ward.id} value={ward.id}>
+                        {ward.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {wardError && <Alert severity="error">{wardError}</Alert>}
+                </FormControl>
+              )}
 
-            <FormLabel
-              sx={{ fontSize: "14px", color: "#00000099", mt: 2, ml: 2 }}
-              id="demo-row-radio-buttons-group-label"
-            >
-              Hình thức thanh toán
-            </FormLabel>
-            {paymentMethod === "paypal" && sdkReady ? (
-              <PayPalButton
-                amount={paypalAmount}
-                onSuccess={onSuccessPaypal}
-                onError={() => {
-                  alert("ERRO");
+              <TextField
+                sx={{ mt: 3 }}
+                fullWidth
+                id="outlined-helperText"
+                label="Số nhà, tên đường..."
+                inputProps={{
+                  readOnly: false,
                 }}
-                key={"TEST"}
+                value={address.street ?? ""}
+                onChange={handleStreetChange}
               />
-            ) : (
-              <MyButton
-                type="submit"
-                onClick={
-                  profile?.data?.profile?.Address
-                    ? handleUpdateAddress
-                    : handleAddAddress
-                }
-                mt="20px"
-                height="40px"
-                fontSize="16px"
-                width="100%"
+              {error && <Alert severity="error">{error}</Alert>}
+              <TextField
+                sx={{ mt: 3 }}
+                fullWidth
+                id="outlined-helperText"
+                label="Số điện thoại"
+                inputProps={{
+                  readOnly: false,
+                }}
+                value={phone ?? ""}
+                onChange={handlePhoneChange}
+              />
+              {phoneError && <Alert severity="error">{phoneError}</Alert>}
+
+              <FormLabel
+                sx={{ fontSize: "14px", color: "#00000099", mt: 2, ml: 2 }}
+                id="demo-row-radio-buttons-group-label"
               >
-                {profile?.data?.profile?.Address
-                  ? "Cập nhật địa chỉ"
-                  : "Thêm địa chỉ"}
-              </MyButton>
-            )}
-            <Typography
-              sx={{
-                textAlign: "right",
-                my: 3,
-                fontSize: "20px",
-                fontWeight: "500",
-                color: "#ee4d2d",
-              }}
-            >
-              Tổng cộng: {formatCurrency(totalCart - couponValue) + " VND"}
-            </Typography>
-          </Box>
-        </DialogContent>
-      </Dialog>
+                Hình thức thanh toán
+              </FormLabel>
+              {paymentMethod === "paypal" && sdkReady ? (
+                <PayPalButton
+                  amount={paypalAmount}
+                  onSuccess={onSuccessPaypal}
+                  onError={() => {
+                    alert("ERRO");
+                  }}
+                  key={"TEST"}
+                />
+              ) : (
+                <MyButton
+                  type="submit"
+                  onClick={
+                    profile?.data?.profile?.Address
+                      ? handleUpdateAddress
+                      : handleAddAddress
+                  }
+                  mt="20px"
+                  height="40px"
+                  fontSize="16px"
+                  width="100%"
+                >
+                  {profile?.data?.profile?.Address
+                    ? "Cập nhật địa chỉ"
+                    : "Thêm địa chỉ"}
+                </MyButton>
+              )}
+              <Typography
+                sx={{
+                  textAlign: "right",
+                  my: 3,
+                  fontSize: "20px",
+                  fontWeight: "500",
+                  color: "#ee4d2d",
+                }}
+              >
+                Tổng cộng: {formatCurrency(totalCart - couponValue) + " VND"}
+              </Typography>
+            </Box>
+          </DialogContent>
+        </Dialog>
+      </Box>
     </Box>
-    </Box> 
   );
 }

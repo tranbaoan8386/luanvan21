@@ -5,7 +5,7 @@ import Slider from './modules/Slider'
 
 export default function Home() {
     return (
-        <Box sx={{ mb: 20 }}>
+        <Box sx={{ mb: 3 }}>
             <Slider />
             <Container>
                 <ProductList />
