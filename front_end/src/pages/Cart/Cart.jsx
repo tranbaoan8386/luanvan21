@@ -633,39 +633,37 @@ export default function Cart() {
 
   const handlePayment = async (e) => {
     e.preventDefault();
-    // Kiểm tra nếu user chưa có địa chỉ
-    if (
-      !profile?.data?.profile?.Address?.address_line ||
-      !profile?.data?.profile?.Address?.ward ||
-      !profile?.data?.profile?.Address?.city
-    ) {
+  
+    const addr = profile?.data?.profile?.Address;
+  
+    // ✅ Kiểm tra địa chỉ
+    if (!addr?.address_line || !addr?.ward || !addr?.city) {
       toast.error("Vui lòng thêm địa chỉ trước khi đặt hàng.");
       return;
     }
+  
+    // ✅ Kiểm tra PayPal nếu cần
     if (paymentMethod === "paypal" && !paypalPaid) {
-      toast.error(
-        "Vui lòng hoàn tất thanh toán bằng PayPal trước khi đặt hàng."
-      );
+      toast.error("Vui lòng hoàn tất thanh toán bằng PayPal trước khi đặt hàng.");
       return;
     }
-
+  
+    // ✅ Gửi mã giảm giá nếu có
     if (code) {
       addCouponMutation.mutate({ codeCoupon: code });
     }
-    let fullAddress = `${profile?.data?.profile?.Address?.address_line}, ${profile?.data?.profile?.Address?.ward}, ${profile?.data?.profile?.Address?.district}, ${profile?.data?.profile?.Address?.city}`;
-
+  
+    const fullAddress = `${addr.address_line}, ${addr.ward}, ${addr.district}, ${addr.city}`;
+    const discount = couponValue || 0;
+    const total = totalCart;
+    const totalPayable = total - discount;
+  
     try {
-      const discount = couponValue || 0;
-      const total = totalCart;
-      const totalPayable = total - discount;
-
-      await createOrderMutation.mutateAsync({
+      const res = await createOrderMutation.mutateAsync({
         total,
         total_discount: discount,
         total_payable: totalPayable,
-        phone:
-          profile?.data?.profile?.Address?.phone ||
-          profile?.data?.profile?.phone,
+        phone: addr.phone || profile?.data?.profile?.phone,
         email: profile?.data?.profile?.email,
         fullname: profile?.data?.profile?.name,
         address: fullAddress,
@@ -676,30 +674,31 @@ export default function Cart() {
         note,
         paymentMethod,
       });
-
-      // ✅ Không để việc xóa giỏ ảnh hưởng toast chính
+  
+      // ✅ Hiển thị thông báo duy nhất từ backend
+      toast.dismiss();
+      toast.success(res?.data?.data?.message || "Đặt hàng thành công!");
+  
+      // ✅ Xoá giỏ hàng từng item
       for (const cart of carts) {
         try {
           await deleteProductFromCartMutation.mutateAsync({
             productItemId: cart.productItem.id,
           });
         } catch (err) {
-          console.warn(
-            `⚠️ Không thể xoá sản phẩm ID ${cart.productItem.id}:`,
-            err
-          );
+          console.warn(`⚠️ Không thể xoá sản phẩm ID ${cart.productItem.id}:`, err);
         }
       }
-      //Cập nhật lại giao diện giỏ hàng
+  
       await handleRefetchCart();
-      toast.success("Đặt hàng thành công!"); // ✅ Đặt ở đây
       navigate("/");
     } catch (error) {
       toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
+    } finally {
+      setOpen(false); // ✅ Đóng dialog dù thành công hay thất bại
     }
-
-    setOpen(false);
   };
+  
 
   const handleClose = () => {
     setOpen(false);

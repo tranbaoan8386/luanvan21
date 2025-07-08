@@ -400,54 +400,55 @@ async createOrder(req, res, next) {
 }
 
 
-    async cancelOrderById(req, res, next) {
-        try {
-            const { id: userId, role } = req.user;
-            const { id: orderId } = req.params;
+async cancelOrderById(req, res, next) {
+    try {
+        const { id: userId, role } = req.user;
+        const { id: orderId } = req.params;
 
+        console.log("🧑‍💻 req.user =", req.user);
+        console.log("📦 orderId =", orderId);
 
-            // Tìm đơn hàng theo ID
-            const order = await Order.findOne({
-                where: {
-                    id: orderId
-                }
+        const order = await Order.findOne({
+            where: { id: orderId }
+        });
+
+        if (!order) {
+            return ApiResponse.error(res, {
+                status: 404,
+                data: { message: 'Không tìm thấy đơn hàng' }
             });
-
-            // Kiểm tra xem đơn hàng có tồn tại không
-            if (!order) {
-                return ApiResponse.error(res, {
-                    status: 404,
-                    data: {
-                        message: 'Không tìm thấy đơn hàng'
-                    }
-                });
-            }
-
-            // Kiểm tra quyền của người dùng
-            if (role === 'Customer' && userId !== order.userId) {
-                return ApiResponse.error(res, {
-                    status: 403,
-                    data: {
-                        message: 'Bạn không có quyền hủy đơn hàng của người khác'
-                    }
-                });
-            }
-
-            // Cập nhật trạng thái đơn hàng
-            order.status = 'cancelled';
-            await order.save();
-
-            // Trả về phản hồi thành công
-            return ApiResponse.success(res, {
-                status: 200,
-                data: {
-                    message: 'Cập nhật đơn hàng thành công'
-                }
-            });
-        } catch (err) {
-            next(err);
         }
+
+        console.log("🔍 Order found:", order);
+
+        if (role === 'Customer' && userId !== order.userId) {
+            return ApiResponse.error(res, {
+                status: 403,
+                data: { message: 'Bạn không có quyền hủy đơn hàng của người khác' }
+            });
+        }
+
+        // Nếu trạng thái đơn không phải pending thì không cho huỷ
+        if (!['pending', 'đã đặt hàng'].includes(order.status?.toLowerCase())) {
+            return ApiResponse.error(res, {
+                status: 400,
+                data: { message: 'Chỉ có thể hủy đơn hàng khi đang chờ xác nhận' }
+            });
+        }
+
+        order.status = 'cancelled';
+        await order.save();
+
+        return ApiResponse.success(res, {
+            status: 200,
+            data: { message: 'Đã huỷ đơn hàng thành công' }
+        });
+    } catch (err) {
+        console.error("❌ Lỗi khi hủy đơn:", err);
+        next(err);
     }
+}
+
     async setShipperOrder(req, res, next) {
         try {
             const { id: orderId } = req.params;
