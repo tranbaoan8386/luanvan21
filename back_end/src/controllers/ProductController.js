@@ -421,16 +421,14 @@ class ProductController {
     }
 
     if (name) {
-      const keywords = name.trim().split(/\s+/);
-      whereProduct[Op.and] = keywords.map((word) => ({
-        [Op.or]: [
-          { name: { [Op.like]: `%${word}%` } },
-          Sequelize.where(Sequelize.col('category.name'), {
-            [Op.like]: `%${word}%`
-          })
-        ]
-      }));
-    }
+  const keywords = name.trim().split(/\s+/); // tách "áo nam" → ["áo", "nam"]
+
+  whereProduct[Op.and] = keywords.map((word) => ({
+    name: { [Op.like]: `%${word}%` }
+  }));
+}
+
+
 
     if (price_min && price_max) {
       whereItem.price = {

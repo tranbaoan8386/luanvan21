@@ -7,25 +7,33 @@ import AsideItem from "../../../../../../components/AsideItem/AsideItem";
 import LineAside from "../../../../../../components/LineAside/LineAside";
 import FilterPriceRange from "../FilterPriceRange";
 import MyButton from "../../../../../../components/MyButton";
-export default function AsideCategory({ queryConfig, categories, brands, colors}) {
-  // queryConfig vì nếu đang sort bán chạy mà chọn danh mục và thương hiệu thì phải lọc theo danh mục và thương hiệu đó và bán chạy
+import { Box, Paper, Typography } from "@mui/material";
+
+export default function AsideCategory({ queryConfig, categories, brands, colors }) {
   const navigate = useNavigate();
+
   const handleRemoveFilterAll = () => {
     navigate({
       pathname: "/",
       search: createSearchParams(
-        omit(
-          {
-            ...queryConfig
-          },
-          ["price_min", "price_max", "category", "brand", "color"]
-        )
+        omit({ ...queryConfig }, ["price_min", "price_max", "category", "brand", "color"])
       ).toString()
     });
   };
 
   return (
-    <Fragment>
+    <Paper elevation={2} sx={{ p: 2, borderRadius: 2, backgroundColor: "#fff" }}>
+      <Typography
+        variant="h6"
+        fontWeight={600}
+        textTransform="uppercase"
+        gutterBottom
+        sx={{ display: "flex", alignItems: "center", mb: 2 }}
+      >
+        <BiCategory style={{ marginRight: 8 }} />
+        Bộ lọc tìm kiếm
+      </Typography>
+
       <AsideItem
         data={categories}
         queryConfig={queryConfig}
@@ -46,14 +54,16 @@ export default function AsideCategory({ queryConfig, categories, brands, colors}
 
       <FilterPriceRange queryConfig={queryConfig} />
 
-      <MyButton
-        onClick={handleRemoveFilterAll}
-        mt="8px"
-        height="35px"
-        width="100%"
-      >
-        Xóa tất cả
-      </MyButton>
-    </Fragment>
+      <Box mt={2}>
+        <MyButton
+          onClick={handleRemoveFilterAll}
+          mt="8px"
+          height="35px"
+          width="100%"
+        >
+          Xóa tất cả
+        </MyButton>
+      </Box>
+    </Paper>
   );
 }

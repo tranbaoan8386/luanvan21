@@ -75,7 +75,7 @@ export default function ProductList() {
           fontWeight="600"
           component="p"
         >
-          Bộ lọc tìm kiếm
+          {/* //Bộ lọc tìm kiếm */}
         </Typography>
         <div className="filter">
           <Aside queryConfig={queryConfig} categories={categories} brands={brands} />

@@ -24,10 +24,10 @@ export default function Contact() {
           <img
             className="
 img-fluid"
-            src="https://invietnhat.vn/wp-content/uploads/2023/08/logo-shop-thoi-trang-nu-6.jpg"
+            src="https://insacmau.com/wp-content/uploads/2024/11/logo-shop-quan-ao-nam-1.jpg"
             alt="logo Áo Khoác Store"
-            width="134"
-            height="45"
+            width="180"
+            height="90"
           />
         </Grid>
 

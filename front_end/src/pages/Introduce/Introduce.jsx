@@ -2,72 +2,88 @@ import React from "react";
 import {
   Box,
   Container,
-  Grid,
   Typography,
+  Grid,
+  Paper,
   List,
   ListItem,
   ListItemIcon,
   ListItemText
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { AiOutlineShopping } from "react-icons/ai";
-import './Introduce.css';
 
 export default function Introduce() {
   return (
-    <Container className="intro-container">
-      <Grid container direction="column" spacing={3}>
-        <Grid item>
-          <Typography className="intro-title">
-            🧥 Cửa hàng Áo Khoác Store
-          </Typography>
-        </Grid>
+    <>
+      {/* Banner hình ảnh lớn */}
+      <Container sx={{ mt: 2 }}>
+  <Box
+    sx={{
+      backgroundImage: `url("https://maymacthuongtin.com/wp-content/uploads/2018/06/banner-ao-may-theo-mau.jpg")`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      height: { xs: "200px", md: "400px" },
+      borderRadius: 2,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: "#fff",
+      textShadow: "1px 1px 4px rgba(0,0,0,0.7)"
+    }}
+  >
+    <Typography variant="h4" fontWeight="bold">
+      🧥 Áo Khoác Store
+    </Typography>
+  </Box>
+</Container>
 
-        <Grid item>
-          <Typography className="intro-highlight">
-            Áo Khoác Store - Sản phẩm chất lượng, dịch vụ hoàn hảo, xu hướng thời trang mới mẻ và tinh tế!
-          </Typography>
-        </Grid>
 
-        <Grid item>
-          <Typography className="intro-section">
-            <strong>Áo Khoác Store</strong> là cửa hàng thời trang cung cấp các sản phẩm chất lượng bao gồm:
-            <br />– Thời trang nam
-            <br />– Thời trang nữ
-            <br />– Các phụ kiện thời trang
+      {/* Nội dung giới thiệu */}
+      <Container sx={{ py: 5 }}>
+        {/* Section 1 */}
+        <Paper elevation={2} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
+          <Typography variant="h5" fontWeight={600} mb={2}>
+            🎯 Về Chúng Tôi
           </Typography>
-        </Grid>
+          <Typography>
+            <strong>Áo Khoác Store</strong> là cửa hàng chuyên cung cấp:
+            <br />– Thời trang nam, nữ
+            <br />– Các mẫu áo khoác hot trend
+            <br />– Phụ kiện thời trang chất lượng
+          </Typography>
+        </Paper>
 
-        <Grid item>
-          <Typography className="intro-note">
-            🛍️ An tâm mua sắm tại Áo Khoác Store
-          </Typography>
-          <Typography className="intro-section">
-            Khách hàng ghé thăm chúng tôi có thể hoàn toàn an tâm bởi giá trị và chất lượng sản phẩm mà chúng tôi cung cấp. Không chỉ đẹp, độc, lạ – mà còn bền và chỉn chu đến từng đường may.
-          </Typography>
+        {/* Section 2 */}
+        <Grid container spacing={4}>
+          <Grid item xs={12} md={6}>
+            <img
+              src="https://hoangphuconline.vn/media/wysiwyg/_768x446_Cate_banner_Ao_khoac.png"
+              alt="Store Info"
+              style={{ width: "100%", borderRadius: "12px", objectFit: "cover" }}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Typography variant="h5" fontWeight={600} mb={2}>
+              🛍️ Tại sao chọn chúng tôi?
+            </Typography>
+            <List>
+              {[
+                "Chính sách đổi trả linh hoạt",
+                "Đóng gói sản phẩm cẩn thận",
+                "Thiết kế áo độc quyền, đa dạng",
+                "Tư vấn nhanh chóng – nhiệt tình"
+              ].map((item, index) => (
+                <ListItem key={index}>
+                  <ListItemIcon>
+                    <CheckCircleIcon color="success" />
+                  </ListItemIcon>
+                  <ListItemText primary={item} />
+                </ListItem>
+              ))}
+            </List>
+          </Grid>
         </Grid>
-
-        <Grid item>
-          <Typography className="intro-highlight" sx={{ fontSize: 18 }}>
-            Khi đến với Áo Khoác Store, bạn sẽ nhận được:
-          </Typography>
-          <List className="intro-list">
-            {[
-              "Chính sách bảo hành và đổi trả linh hoạt",
-              "Đóng gói kỹ lưỡng khi vận chuyển xa",
-              "Mẫu mã thiết kế độc đáo và đa dạng",
-              "Tư vấn chi tiết về sản phẩm, màu sắc và kích thước"
-            ].map((text, idx) => (
-              <ListItem key={idx}>
-                <ListItemIcon>
-                  <CheckCircleIcon />
-                </ListItemIcon>
-                <ListItemText primary={text} />
-              </ListItem>
-            ))}
-          </List>
-        </Grid>
-      </Grid>
-    </Container>
+      </Container>
+    </>
   );
 }

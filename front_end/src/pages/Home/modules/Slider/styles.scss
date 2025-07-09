@@ -1,41 +1,37 @@
 .swiper {
-    width: 100%;
-    height: 100%;
-    border-radius: 15px;
+  width: 100%;
+  height: 450px;            // 👈 Chiều cao cố định
+  border-radius: 15px;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden;
 }
 
 .swiper-slide {
-    text-align: center;
-    font-size: 18px;
-    background: transparent;
-
-
-    /* Center slide text vertically */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 18px;
+  background: transparent;
 }
 
 .swiper-slide img {
-    display: block;
-    width: 100%;
-    border-radius: 15px;
-    overflow: hidden;
-    height: 450px;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;       // 👈 Không cắt ảnh, co vào vừa khung
+  border-radius: 15px;
+  overflow: hidden;
 
-    @media (max-width: 767px) {
-        height: 260px;
-    }
+  @media (max-width: 767px) {
+    height: 260px;
+  }
 
-    @media (max-width: 480px) {
-        height: 200px;
-    }
+  @media (max-width: 480px) {
+    height: 200px;
+  }
 
-    object-fit: cover;
-}
-
-
-.swiper {
-    margin-left: auto;
-    margin-right: auto;
+  // Tuỳ chọn: đổ bóng nhẹ cho ảnh
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
