@@ -305,51 +305,6 @@ class ProductController {
 }
 
     
-    // async deleteProduct(req, res, next) {
-    //     try {
-    //         const { id: productId } = req.params;
-    
-    //         // Kiểm tra sản phẩm có tồn tại không
-    //         const product = await Product.findByPk(productId);
-    //         if (!product) {
-    //             return ApiResponse.error(res, {
-    //                 status: 404,
-    //                 message: 'Không tìm thấy sản phẩm'
-    //             });
-    //         }
-    
-    //         // Lấy danh sách tất cả các product item liên quan
-    //         const productItems = await ProductItem.findAll({
-    //             where: { products_id: productId }
-    //         });
-    
-    //         // Xóa ảnh liên quan đến từng product item
-    //         for (const item of productItems) {
-    //             await ProductImage.destroy({
-    //                 where: { products_item_id: item.id }
-    //             });
-    //         }
-    
-    //         // Xóa các product item
-    //         await ProductItem.destroy({
-    //             where: { products_id: productId }
-    //         });
-    
-    //         // Xóa sản phẩm chính
-    //         await product.destroy();
-    
-    //         return ApiResponse.success(res, {
-    //             status: 200,
-    //             data: {
-    //                 product,
-    //                 message: 'Xóa sản phẩm thành công'
-    //             }
-    //         });
-    //     } catch (err) {
-    //         next(err);
-    //     }
-    // }
-    
   async deleteProduct(req, res, next) {
       try {
         const { id: productId } = req.params;

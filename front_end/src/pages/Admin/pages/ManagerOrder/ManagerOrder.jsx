@@ -1,5 +1,5 @@
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { Button, TextField, Snackbar } from "@mui/material";
+import { Button, TextField, Snackbar, Tab } from "@mui/material";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
@@ -15,6 +15,7 @@ import Typography from "@mui/material/Typography";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import Collapse from '@mui/material/Collapse';
+import { useState } from "react";
 
 import {
   convertUpdateStatusOrder,
@@ -37,6 +38,7 @@ const headCells = [
   { id: "address", label: "Địa chỉ" },
   { id: "action", label: "Hành động" }
 ];
+
 
 function EnhancedTableHead() {
   return (
@@ -126,7 +128,7 @@ export default function ManagerOrder() {
         case "delivered":
           await Promise.all([
             orderApi.setDeliveredOrder(updateData.id),
-            orderApi.setPaymentOrder(updateData.id, { statusPayment: "paid" })
+            orderApi.setPaymentOrder(updateData.id, { statusPayment: "Đã thanh toán" })
           ]);
           break;
         case "payment":
@@ -205,6 +207,17 @@ export default function ManagerOrder() {
     }
   };
 
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
   return (
     <>
       <DialogStatus selectedValue={selectedValue} open={open} onClose={handleClose} />
@@ -222,7 +235,7 @@ export default function ManagerOrder() {
                   return (
                     <React.Fragment key={order.id}>
                       <TableRow>
-                        <TableCell>{order.id}</TableCell>
+                        <TableCell>{order.id}</TableCell>  
                         <TableCell>
                           <Button
                             variant="outlined"
@@ -231,6 +244,7 @@ export default function ManagerOrder() {
                             {convertUpdateStatuspayment(order?.statusPayment)}
                           </Button>
                         </TableCell>
+
                         <TableCell>{order?.user?.name}</TableCell>
                         <TableCell>{order?.user?.email}</TableCell>
                         <TableCell>{order?.phone}</TableCell>

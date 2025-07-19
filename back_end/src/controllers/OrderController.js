@@ -12,10 +12,13 @@ const Size = require('../models/Size')
 const Cart = require('../models/Cart');
 const CartItem = require('../models/CartItem')
 const { Op } = require('sequelize');
-const Address = require('../models/Address'); // 👈 THÊM DÒNG NÀY
+const Address = require('../models/Address'); 
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
 
-
-
+dayjs.extend(utc);
+dayjs.extend(timezone); 
 class OrderController {
 
     async getAllOrder(req, res, next) {
@@ -274,7 +277,7 @@ async createOrder(req, res, next) {
     const fullname = userAddress.name;
     const phone = userAddress.phone;
 
-    // ✅ TÍNH LẠI total từ DB
+    // TÍNH LẠI total từ DB
     let total = 0;
     const createdOrderItems = [];
 
@@ -304,7 +307,7 @@ async createOrder(req, res, next) {
       });
 
       const orderItem = await OrderItem.create({
-        orderId: null, // tạm để null, gán lại sau khi tạo order
+        orderId: null, 
         productItemId,
         quantity
       });
@@ -314,7 +317,7 @@ async createOrder(req, res, next) {
 
     const total_payable = total - total_discount;
 
-    // ✅ Tạo đơn hàng sau khi tính total
+    // Tạo đơn hàng sau khi tính total
     const order = await Order.create({
       total,
       total_discount,
@@ -330,12 +333,12 @@ async createOrder(req, res, next) {
       note
     });
 
-    // ✅ Gán orderId cho các OrderItem đã tạo
+    // Cập nhật orderId cho từng OrderItem
     for (const item of createdOrderItems) {
       await item.update({ orderId: order.id });
     }
-    
-    // ✅ Xoá CartItem đã mua
+
+    // Xoá CartItem đã mua
     const cart = await Cart.findOne({ where: { users_id: userId, isPaid: false } });
     if (cart) {
       const productIds = orders_item.map(i => i.productItemId);
@@ -579,7 +582,7 @@ async cancelOrderById(req, res, next) {
                     error: 'Không tìm thấy đơn hàng'
                 });
             }
-            order.statusPayment = 'paid';
+            order.statusPayment = 'paid';// Update the order status to 'paid'
             await order.save();
 
             // Return success response

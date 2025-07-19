@@ -23,11 +23,11 @@ class CouponController {
     }
   }
 
-  // Áp mã giảm giá (theo code, dùng ở FE/cart)
+  // Áp mã giảm giá 
   async getCoupon(req, res, next) {
     try {
       const currentDate = new Date();
-      const { id: code } = req.params; // mã giảm giá: /check/S50
+      const { id: code } = req.params;      
       const { totalCart } = req.query;
   
       const validCoupon = await Coupon.findOne({
@@ -45,7 +45,7 @@ class CouponController {
         });
       }
   
-      // ✅ Kiểm tra đơn hàng có đạt điều kiện tối thiểu
+      // Kiểm tra đơn hàng có đạt điều kiện tối thiểu
       if (
         validCoupon.minimumAmount &&
         Number(totalCart) < validCoupon.minimumAmount

@@ -5,7 +5,7 @@ const sequelize = new Sequelize(env.MYSQL_DATABASE, env.MYSQL_USER, env.MYSQL_PA
     logging: false,
     host: env.MYSQL_HOST,
     port: env.MYSQL_PORT,
-    dialect: env.SEQUELIZE_DIALECT
+    dialect: env.SEQUELIZE_DIALECT,
 })
 
 module.exports = sequelize

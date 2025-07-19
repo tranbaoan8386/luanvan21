@@ -38,7 +38,7 @@ class UserController {
             data: { users }
           });
         } catch (error) {
-          console.log("🔴 ERROR GET USERS:", error);
+          console.log("🚨 ERROR GET USERS:", error);
           next(error);
         }
       }
@@ -67,8 +67,8 @@ class UserController {
       }
     });
   } catch (err) {
-    // ✅ In lỗi chi tiết ra console để debug lỗi 500
-    console.error('❌ Lỗi tại getMe:', err);
+    // In lỗi chi tiết ra console để debug lỗi 500
+    console.error(' Lỗi tại getMe:', err);
     next(err);
   }
 }
@@ -129,12 +129,12 @@ class UserController {
           return ApiResponse.success(res, {
             status: 200,
             data: {
-              profile: user, // ✅ đúng key frontend đang dùng
+              profile: user, // đúng key frontend đang dùng
               message: 'Cập nhật thông tin thành công'
             }
           });
         } catch (err) {
-          console.error("❌ Lỗi tại updateMe:", err);
+          console.error(" Lỗi tại updateMe:", err);
           next(err);
         }
       }
@@ -198,7 +198,7 @@ class UserController {
                 }
             });
         } catch (err) {
-            console.error("❌ updatePassword error:", err); // Ghi log chi tiết
+            console.error(" updatePassword error:", err); // Ghi log chi tiết
             next(err);
         }
     }

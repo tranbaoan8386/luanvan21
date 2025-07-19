@@ -15,6 +15,7 @@ import {
   Toolbar,
   Tooltip,
   Typography,
+  Pagination,
 } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as React from "react";
@@ -110,6 +111,9 @@ export default function ManagerCategory() {
   const refId = React.useRef(null);
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [page, setPage] = React.useState(1);
+  const [limit] = React.useState(5); // Số lượng bản ghi hien thi tren 1 trang
+
   const { data: categoriesData, refetch } = useQuery({
     queryKey: ["categories"],
     queryFn: () => categoryApi.getAllCategory(),
@@ -143,6 +147,20 @@ export default function ManagerCategory() {
   const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Cắt mảng để phân trang
+  const totalPages = Math.ceil(filteredCategories.length / limit);
+  const paginatedCategories = filteredCategories.slice(
+    (page - 1) * limit,
+    page * limit
+  );
+
+
+
+  React.useEffect(() => {
+    // Reset về page 1 khi search thay đổi
+    setPage(1);
+  }, [searchQuery]);
 
   return (
     <>
@@ -193,8 +211,8 @@ export default function ManagerCategory() {
             <Table stickyHeader aria-label="categories table" size="medium">
               <EnhancedTableHead />
               <TableBody>
-                {filteredCategories.length > 0 ? (
-                  filteredCategories.map((category, index) => (
+                {paginatedCategories.length > 0 ? (
+                  paginatedCategories.map((category, index) => (
                     <TableRow
                       key={category.id}
                       hover
@@ -204,7 +222,7 @@ export default function ManagerCategory() {
                       }}
                     >
                       <TableCell align="left" sx={{ fontWeight: 600 }}>
-                        {index + 1}
+                        {(page - 1) * limit + index + 1}
                       </TableCell>
                       <TableCell align="left">{category.name}</TableCell>
                       <TableCell align="left">
@@ -238,6 +256,18 @@ export default function ManagerCategory() {
               </TableBody>
             </Table>
           </TableContainer>
+
+          {/* PHÂN TRANG */}
+          {totalPages > 1 && (
+            <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(e, value) => setPage(value)}
+                color="primary"
+              />
+            </Box>
+          )}
         </Paper>
       </Box>
     </>

@@ -1,0 +1,40 @@
+
+const isNewOrder = (createDate) => {
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000); // 1 giờ gần đây
+  return new Date(createDate) > oneHourAgo;
+};
+
+
+<TableCell>
+  {order.id}
+  {isNewOrder(order.createDate) && (
+    <span style={{ color: "red", marginLeft: 6 }}>●</span>
+  )}
+</TableCell>
+
+===================
+const [readOrders, setReadOrders] = useState([]);
+
+const handleOrderClick = (orderId) => {
+  setReadOrders((prev) => [...new Set([...prev, orderId])]);
+};
+
+<TableCell onClick={() => handleOrderClick(order.id)} style={{ cursor: "pointer" }}>
+  {order.id}
+  {isNewOrder(order.createDate) && !readOrders.includes(order.id) && (
+    <span style={{ color: "red", marginLeft: 6 }}>●</span>
+  )}
+</TableCell>
+
+
+====================
+const newOrderCount = filteredOrders.filter(order => isNewOrder(order.createDate)).length;
+
+<Typography variant="h6" fontWeight="bold">
+  Danh sách đơn hàng{" "}
+  {newOrderCount > 0 && (
+    <span style={{ color: "red", fontSize: 18 }}>
+      ● {newOrderCount} đơn mới
+    </span>
+  )}
+</Typography>

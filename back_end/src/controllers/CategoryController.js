@@ -5,18 +5,35 @@ const { Op } = require("sequelize");
 
 
 class CategoryController {
-    async getAllCategory(req, res, next) {
-        try {
-            const categories = await Category.findAll({})
+async getAllCategory(req, res, next) {
+  try {
+    let { page = 1, limit = 10 } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    const offset = (page - 1) * limit;
 
-            return new ApiResponse(res, {
-                status: 200,
-                data: categories
-            })
-        } catch (err) {
-            next(err)
-        }
-    }
+    const { count, rows: categories } = await Category.findAndCountAll({
+      offset,
+      limit,
+      order: [['id', 'DESC']],
+    });
+
+    return new ApiResponse(res, {
+      status: 200,
+      message: 'Lấy danh sách danh mục thành công',
+      data: categories,
+      pagination: {
+        total: count,
+        page,
+        limit,
+        totalPage: Math.ceil(count / limit),
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 
     async getCategory(req, res, next) {
         try {

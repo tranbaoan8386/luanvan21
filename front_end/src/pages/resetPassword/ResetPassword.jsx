@@ -5,6 +5,8 @@ import { Button, Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import authApi from "../../apis/auth";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
 const FormComponent = () => {
   const {
     register,
@@ -19,11 +21,11 @@ const FormComponent = () => {
   const onSubmit = async (data) => {
     try {
       await authApi.resetPasswords(data);
-      alert("Mật khẩu đã được thay đổi thành công.");
+      toast.success("Mật khẩu đã được thay đổi thành công.");
       navigate("/login");
     } catch (error) {
       console.error(error);
-      alert("Mã xác thực sai!");
+      toast.error("Mã xác thực sai hoặc đã hết hạn!"); 
     }
   };
 
@@ -52,7 +54,7 @@ const FormComponent = () => {
           errors={errors}
           name="newPassword"
           label="Mật khẩu mới"
-          type="newPassword"
+          type="password"
           {...register("newPassword", { required: "Mật khẩu là bắt buộc" })}
           sx={{ marginBottom: "40px" }}
         />

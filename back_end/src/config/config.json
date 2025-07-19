@@ -5,7 +5,8 @@
     "database": "luanvann1",
     "host": "localhost",
     "dialect": "mysql",
-    "logging": true
+    "logging": true,
+    "timezone": "+07:00"
   },
   "test": {
     "username": "root",

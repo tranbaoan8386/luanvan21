@@ -169,7 +169,7 @@ export default function Dashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+       {/*  <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Tổng đơn hàng"
             value={statistics.totalOrders}
@@ -194,7 +194,7 @@ export default function Dashboard() {
             color="#f44336"
             icon={<CancelIcon fontSize="inherit" />}
           />
-        </Grid>
+        </Grid> */}
       </Grid>
 
       <Paper

@@ -67,7 +67,7 @@ class ReviewController {
         data: reviews
       });
     } catch (err) {
-      console.error('❌ Lỗi khi lấy đánh giá sản phẩm:', err);
+      console.error(' Lỗi khi lấy đánh giá sản phẩm:', err);
       next(err);
     }
   }
@@ -134,7 +134,7 @@ class ReviewController {
         data: review
       });
     } catch (err) {
-      console.error('❌ Lỗi tạo review:', err);
+      console.error(' Lỗi tạo review:', err);
       return ApiResponse.error(res, {
         status: 500,
         message: "Có lỗi xảy ra khi tạo đánh giá"
@@ -175,7 +175,7 @@ class ReviewController {
         data: { reply }
       });
     } catch (err) {
-      console.error('❌ Lỗi tạo phản hồi:', err);
+      console.error(' Lỗi tạo phản hồi:', err);
       next(err);
     }
   }

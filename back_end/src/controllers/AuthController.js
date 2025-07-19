@@ -34,6 +34,7 @@ class AuthController {
             }
     
             // Băm mật khẩu với salt 10 rounds
+            //
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
     
@@ -66,13 +67,13 @@ class AuthController {
         try {
         const { email, password } = req.body;
 
-        // ✅ Lấy user kèm role
+        // Lấy user kèm role
         const user = await User.findOne({
             where: { email },
             include: {
     model: Role,
     as: 'role',
-    attributes: ['id', 'name'] // ✅ Chỉ lấy các cột có thật
+    attributes: ['id', 'name'] 
     }
 
         });
@@ -105,7 +106,7 @@ class AuthController {
             });
         }
 
-        // ✅ Token chứa ID
+        // Token chứa ID
         const token = jwt.sign(
             {
             id: user.id
@@ -116,13 +117,13 @@ class AuthController {
             }
         );
 
-        // ✅ Trả về role đầy đủ
+        // Trả về role đầy đủ
         const userFinal = {
             id: user.id,
             name: user.name,
             email: user.email,
             avatar: user.avatar,
-            role: user.role // 👈 Trả về object: { id, name }
+            role: user.role // Trả về object: { id, name }
         };
 
         return ApiResponse.success(res, {
@@ -134,7 +135,7 @@ class AuthController {
             }
         });
         } catch (err) {
-        console.error('🔥 Lỗi trong login():', err); // ✅ In log rõ ràng
+        console.error('Lỗi trong login():', err); 
         next(err);
         }
     }
@@ -176,33 +177,43 @@ class AuthController {
     }
 
     async resendOtp(req, res, next) {
-        try {
-            const { email } = req.body
-            await RegisterOtp.deleteOne({ email })
+    try {
+        const { email } = req.body;
+        console.log('[resendOtp] Email nhận:', email);
 
-            // Gửi lại mã
-            const otp = generateOtp()
-            const registerOtp = new RegisterOtp({
-                email,
-                otp
-            })
-            await Promise.all([
-                registerOtp.save()
-                // Gửi email
-                // EmailService.sendMail({
-                //     to: email,
-                //     subject: 'Yêu cầu gửi lại mã xác thực',
-                //     html: `Mã xác thực mới của bạn là: ${otp}`
-                // })
-            ])
-            return new ApiResponse(res, {
-                status: 200,
-                message: 'Gửi lại mã xác thực thành công'
-            })
-        } catch (err) {
-            next(err)
-        }
+        // Xoá mã cũ nếu có
+        const deleteResult = await RegisterOtp.deleteOne({ email });
+        console.log('[resendOtp] Kết quả xoá OTP cũ:', deleteResult);
+
+        // Tạo mã mới
+        const otp = generateOtp();
+        console.log('[resendOtp] Mã OTP mới:', otp);
+
+        const registerOtp = new RegisterOtp({ email, otp });
+
+        // Lưu vào DB và gửi mail song song
+        const [savedOtp, mailResult] = await Promise.all([
+        registerOtp.save(),
+        EmailService.sendMail({
+            to: email,
+            subject: 'Yêu cầu gửi lại mã xác thực',
+            html: `Mã xác thực mới của bạn là: <b>${otp}</b>`
+        })
+        ]);
+
+        console.log('[resendOtp] Đã lưu OTP:', savedOtp);
+        console.log('[resendOtp] Kết quả gửi email:', mailResult);
+
+        return new ApiResponse(res, {
+        status: 200,
+        message: 'Gửi lại mã xác thực thành công'
+        });
+    } catch (err) {
+        console.error('[resendOtp] Lỗi:', err);
+        next(err);
     }
+    }
+
 
     async forgotPassword(req, res, next) {
   try {
@@ -215,16 +226,16 @@ class AuthController {
       throw new ErrorResponse(404, 'Người dùng không tồn tại trong hệ thống');
     }
 
-    // 🔄 Nếu đã tồn tại token → xóa đi để tạo mới
+    // Nếu đã tồn tại token → xóa đi để tạo mới
     const existedToken = await ForgotToken.findOne({ email });
     console.log(`Kết quả kiểm tra token hiện tại: ${existedToken}`);
 
     if (existedToken) {
-      await ForgotToken.deleteOne({ email }); // ✅ XÓA token cũ
+      await ForgotToken.deleteOne({ email }); //XÓA token cũ
       console.log('Đã xóa token cũ để tạo mới.');
     }
 
-    // ✅ Tạo mã xác nhận gồm 4 chữ số
+    // Tạo mã xác nhận gồm 4 chữ số
     const code = Math.floor(1000 + Math.random() * 9000);
     console.log(`Mã xác nhận đã tạo: ${code}`);
 
@@ -264,7 +275,7 @@ class AuthController {
 async googleLogin(req, res, next) {
     try {
       const { token } = req.body;
-      console.log('📦 Google token nhận được:', token);   
+      console.log('📦Google token nhận được:', token);   
   
       const ticket = await client.verifyIdToken({
         idToken: token,
@@ -338,7 +349,7 @@ async googleLogin(req, res, next) {
         },
       });
     } catch (err) {
-      console.error('❌ Lỗi trong googleLogin:', err);
+      console.error('Lỗi trong googleLogin:', err);
       return ApiResponse.error(res, {
         status: 401,
         data: {

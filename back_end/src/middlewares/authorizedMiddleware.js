@@ -11,8 +11,8 @@ const authorizedMiddleware = (...roles) => {
       });
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 USER:', user?.toJSON?.());
-        console.log('🔐 Required roles:', roles);
+        console.log('USER:', user?.toJSON?.());
+        console.log('Required roles:', roles);
       }
 
       if (!user || !user.role) {
@@ -22,14 +22,14 @@ const authorizedMiddleware = (...roles) => {
       const userRoleName = user.role.name;
 
       if (!roles.includes(userRoleName)) {
-        console.warn('⚠️ Không có quyền:', userRoleName);
+        console.warn('Không có quyền:', userRoleName);
         return res.status(403).json({ error: 'Bạn không có quyền thực hiện chức năng này' });
       }
 
       req.user.role = userRoleName;
       next();
     } catch (err) {
-      console.error('❌ Lỗi authorizedMiddleware:', err.message);
+      console.error('Lỗi authorizedMiddleware:', err.message);
       return res.status(500).json({ error: 'Lỗi phân quyền hệ thống' });
     }
   };

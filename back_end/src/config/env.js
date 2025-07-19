@@ -5,7 +5,7 @@ exports.env = {
     CLIENT_ID: process.env.CLIENT_ID || 'AZD3dlJ0PJwZlq4KOZ4D9CWX0ZuCgQ5LmfHpae9XT8jNcyc66bniHDHJnQoseyQNU8ZyWixnkxaronxA',
     EXPIRED_IN: process.env.EXPIRED_IN || 86400,
     SECRET_KEY: process.env.SECRET_KEY || 'baoan',
-    EXPIRE_AFTER_SECONDS: process.env.EXPIRE_AFTER_SECONDS || 900,
+    EXPIRE_AFTER_SECONDS: process.env.EXPIRE_AFTER_SECONDS || 900,//thời gian hết hạn của token
     MONGO_HOST: process.env.MONGO_HOST || 'localhost',
     MONGO_PORT: process.env.MONGO_PORT || 27017,
     MONGO_DATABASE: process.env.MONGO_DATABASE,
@@ -17,12 +17,12 @@ exports.env = {
     MYSQL_PORT: process.env.MYSQL_PORT || 3306,
     MYSQL_USER: process.env.MYSQL_USER || 'root',
     MYSQL_PASSWORD: process.env.MYSQL_PASSWORD || '',
-    MYSQL_DATABASE: process.env.MYSQL_DATABASE || 'luanvann',
+    MYSQL_DATABASE: process.env.MYSQL_DATABASE || 'luanvann12',
 
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || 'baoan',
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || 'baoan',
     GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN || 'baoan',
-    GOOGLE_TEST_EMAIL: process.env.GOOGLE_TEST_EMAIL || 'tranbaoan20102002@gmail.com',
+    GOOGLE_TEST_EMAIL: process.env.GOOGLE_TEST_EMAIL || 'baoantiem@gmail.com',
     EMAIL_SECURE: 'false',
     FILE_LIMIT: process.env.FILE_LIMIT || 5, // 5MB
     MAIL_MAILER: 'smtp',
