@@ -33,10 +33,11 @@ class CartController {
           },
           attributes: ['id', 'quantity', 'price'],
           include: [
-            {
-              model: ProductItem,
-              as: 'productItem',
-              attributes: ['id', 'price'],
+  {
+    model: ProductItem,
+    as: 'productItem',
+    attributes: ['id', 'price', 'unitInStock'], // ✅ thêm dòng này
+
               include: [
                 {
                   model: Product,

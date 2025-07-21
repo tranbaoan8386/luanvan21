@@ -7,68 +7,68 @@ const sequelize = require('../database/connectMysql');
 // Định nghĩa model ProductItem, tương ứng với bảng `products_item`
 const ProductItem = sequelize.define('ProductItem', {
   id: {
-    type: DataTypes.INTEGER,       // Trường kiểu số nguyên
-    autoIncrement: true,           // Tự động tăng
-    primaryKey: true               // Là khóa chính
+    type: DataTypes.INTEGER,       
+    autoIncrement: true,           
+    primaryKey: true               
   },
   unitInStock: {
-    type: DataTypes.INTEGER,       // Số lượng tồn kho
-    allowNull: true,               // Cho phép để trống
-    defaultValue: null,            // Giá trị mặc định là null
-    field: 'unitInStock'           // Tên trường trong CSDL là `unitInStock` (nếu khác với key JS)
+    type: DataTypes.INTEGER,      
+    allowNull: true,               
+    defaultValue: null,            
+    field: 'unitInStock'           
   },
   products_id: {
-    type: DataTypes.INTEGER,       // Liên kết với bảng `products`
+    type: DataTypes.INTEGER,       
     allowNull: true,
     references: {
-      model: 'products',           // 👈 tên bảng trong database
-      key: 'id'                    // Trường liên kết (khóa chính bên bảng products)
+      model: 'products',          
+      key: 'id'                   
     }
   },
   coupons_id: {
-    type: DataTypes.INTEGER,       // ID mã giảm giá
+    type: DataTypes.INTEGER,       
     allowNull: true,
     references: {
-      model: 'coupons',            // Bảng coupons
+      model: 'coupons',            
       key: 'id'
     }
   },
   price: {
-    type: DataTypes.INTEGER,       // Giá tiền
+    type: DataTypes.INTEGER,      
     allowNull: true,
-    defaultValue: 0                // Mặc định là 0 nếu không có
+    defaultValue: 0                
   },
   sold: {
-    type: DataTypes.INTEGER,       // Số lượng đã bán
-    allowNull: true                // Có thể null
+    type: DataTypes.INTEGER,      
+    allowNull: true               
   },
   color_id: {
-    type: DataTypes.INTEGER,       // Màu sắc
+    type: DataTypes.INTEGER,       
     allowNull: true,
     references: {
-      model: 'colors',             // Bảng `colors`
+      model: 'colors',            
       key: 'id'
     }
   },
   size_id: {
-    type: DataTypes.INTEGER,       // Kích thước
+    type: DataTypes.INTEGER,      
     allowNull: true,
     references: {
-      model: 'sizes',              // Bảng `sizes`
+      model: 'sizes',             
       key: 'id'
     }
   },
   materials_id: {
-    type: DataTypes.INTEGER,       // Chất liệu
+    type: DataTypes.INTEGER,      
     allowNull: true,
     references: {
-      model: 'materials',          // Bảng `materials`
+      model: 'materials',          
       key: 'id'
     }
   }
 }, {
-  timestamps: false,               // Không tự động tạo trường createdAt, updatedAt
-  tableName: 'products_item'       // Tên bảng thật trong database
+  timestamps: false,               
+  tableName: 'products_item'       
 });
 
 // Xuất model để sử dụng ở controller hoặc associations

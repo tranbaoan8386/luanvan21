@@ -160,82 +160,58 @@ export default function MyOrder() {
           </TableHead>
           <TableBody>
             {filteredOrders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell>{order.id}</TableCell>
-                <TableCell>{formatDate(order.createDate)}</TableCell>
-                <TableCell>{formatCurrency(order.total)} VND</TableCell>
-                <TableCell>{convertStatusOrder(order.status)}</TableCell>
-                <TableCell>{convertUpdateStatuspayment(order.statusPayment)}</TableCell>
-                <TableCell>
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      sx={{ color: "blue" }}
-                      onClick={() => handleOrderDetails(order.id)}
-                    >
-                      Xem chi tiết
-                    </Button>
-                    {["pending", "đã đặt hàng"].includes(order.status?.toLowerCase()) && (
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        color="error"
-                        onClick={() => handleCancelOrder(order)}
-                      >
-                        Hủy đơn
-                      </Button>
-                    )}
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredOrders.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  Không tìm thấy đơn hàng phù hợp
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+  <React.Fragment key={order.id}>
+    <TableRow>
+      <TableCell>{order.id}</TableCell>
+      <TableCell>{formatDate(order.createDate)}</TableCell>
+      <TableCell>{formatCurrency(order.total)} VND</TableCell>
+      <TableCell>{convertStatusOrder(order.status)}</TableCell>
+      <TableCell>{convertUpdateStatuspayment(order.statusPayment)}</TableCell>
+      <TableCell>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            sx={{ color: "blue" }}
+            onClick={() => handleOrderDetails(order.id)}
+          >
+            Xem chi tiết
+          </Button>
+          {["pending", "đã đặt hàng"].includes(order.status?.toLowerCase()) && (
+            <Button
+              variant="outlined"
+              size="small"
+              color="error"
+              onClick={() => handleCancelOrder(order)}
+            >
+              Hủy đơn
+            </Button>
+          )}
+        </Box>
+      </TableCell>
+    </TableRow>
 
-      {/* Chi tiết đơn hàng */}
-      {selectedOrder && (
-        <Box sx={{ mt: 4, p: 4, backgroundColor: "#f5f5f5" }}>
-          <Typography variant="h5" gutterBottom>
-            Chi tiết đơn hàng
-          </Typography>
-          <Typography gutterBottom>
-            <strong>Mã đơn:</strong> {selectedOrder.id}
-          </Typography>
-          <Typography gutterBottom>
-            <strong>Ngày đặt:</strong> {formatDate(selectedOrder.createDate)}
-          </Typography>
-          <Typography gutterBottom>
-            <strong>Tổng tiền:</strong>{" "}
-            {formatCurrency(
+    {/* 👉 Chi tiết đơn ngay bên dưới */}
+    {selectedOrder?.id === order.id && (
+      <TableRow>
+        <TableCell colSpan={6}>
+          <Box sx={{ mt: 2, p: 2, backgroundColor: "#f5f5f5" }}>
+            <Typography variant="h6" gutterBottom>Chi tiết đơn hàng</Typography>
+            <Typography><strong>Mã đơn:</strong> {selectedOrder.id}</Typography>
+            <Typography><strong>Ngày đặt:</strong> {formatDate(selectedOrder.createDate)}</Typography>
+            <Typography><strong>Tổng tiền:</strong> {formatCurrency(
               selectedOrder.items.reduce(
                 (acc, item) => acc + item.productItem.price * item.quantity,
                 0
               )
-            )}{" "}
-            VND
-          </Typography>
-          <Typography gutterBottom>
-            <strong>Trạng thái:</strong> {convertStatusOrder(selectedOrder.status)}
-          </Typography>
-          <Typography gutterBottom>
-            <strong>Trạng thái thanh toán:</strong>{" "}
-            {convertUpdateStatuspayment(selectedOrder.statusPayment)}
-          </Typography>
-          <Typography gutterBottom>
-            <strong>Địa chỉ:</strong> {selectedOrder.address}
-          </Typography>
+            )} VND</Typography>
+            <Typography><strong>Trạng thái:</strong> {convertStatusOrder(selectedOrder.status)}</Typography>
+            <Typography><strong>Trạng thái thanh toán:</strong> {convertUpdateStatuspayment(selectedOrder.statusPayment)}</Typography>
+            <Typography><strong>Địa chỉ:</strong> {selectedOrder.address}</Typography>
+            <Typography><strong>Số điện thoại:</strong> {selectedOrder.phone}</Typography>
 
-          <TableContainer component={Paper}>
-            <Table>
+
+            <Table size="small" sx={{ mt: 2 }}>
               <TableHead>
                 <TableRow>
                   <TableCell>Sản phẩm</TableCell>
@@ -251,46 +227,50 @@ export default function MyOrder() {
                   <TableRow key={item.id}>
                     <TableCell>{item.productItem.product.name}</TableCell>
                     <TableCell align="center">
-                      <Box
-                        sx={{
-                          backgroundColor: item.productItem.color.colorCode,
-                          width: 20,
-                          height: 20,
-                          borderRadius: "50%",
-                          border: "1px solid #ccc",
-                          display: "inline-block"
-                        }}
-                      />
+                      <Box sx={{
+                        backgroundColor: item.productItem.color.colorCode,
+                        width: 20, height: 20, borderRadius: "50%",
+                        border: "1px solid #ccc", display: "inline-block"
+                      }} />
                     </TableCell>
                     <TableCell align="center">{item.productItem.size.name}</TableCell>
                     <TableCell align="center">{item.quantity}</TableCell>
-                    <TableCell align="center">
-                      {formatCurrency(item.productItem.price)} VND
-                    </TableCell>
-                    <TableCell align="right">
-                      {formatCurrency(item.productItem.price * item.quantity)} VND
-                    </TableCell>
+                    <TableCell align="center">{formatCurrency(item.productItem.price)} VND</TableCell>
+                    <TableCell align="right">{formatCurrency(item.productItem.price * item.quantity)} VND</TableCell>
                   </TableRow>
                 ))}
                 <TableRow>
                   <TableCell colSpan={6} align="right" sx={{ color: "#D70018" }}>
                     <strong>
-                      Tổng cộng:{" "}
-                      {formatCurrency(
+                      Tổng cộng: {formatCurrency(
                         selectedOrder.items.reduce(
                           (acc, item) => acc + item.productItem.price * item.quantity,
                           0
                         )
-                      )}{" "}
-                      VND
+                      )} VND
                     </strong>
                   </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
-          </TableContainer>
-        </Box>
-      )}
+          </Box>
+        </TableCell>
+      </TableRow>
+    )}
+  </React.Fragment>
+))}
+
+            {filteredOrders.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  Không tìm thấy đơn hàng phù hợp
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
 
       {/* Dialog xác nhận hủy đơn */}
       <Dialog open={openCancelDialog} onClose={() => setOpenCancelDialog(false)}>

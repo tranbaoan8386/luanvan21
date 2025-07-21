@@ -192,6 +192,7 @@ class OrderController {
             if (!order) {
                 throw new ErrorResponse(404, 'Không tìm thấy đơn hàng');
             }
+            
 
             return new ApiResponse(res, {
                 status: 200,
@@ -269,11 +270,17 @@ async createOrder(req, res, next) {
 
     // Lấy địa chỉ
     const userAddress = await Address.findOne({ where: { users_id: userId } });
+    console.log("📦 userAddress:", userAddress);
     if (!userAddress) {
       throw new Error('Không tìm thấy địa chỉ của người dùng');
     }
 
-    const fullAddress = `${userAddress.address_line}, ${userAddress.ward}, ${userAddress.district}, ${userAddress.city}`;
+    const fullAddress = [
+  userAddress.address_line,
+  userAddress.ward,
+  userAddress.city
+].filter(Boolean).join(", ");
+
     const fullname = userAddress.name;
     const phone = userAddress.phone;
 

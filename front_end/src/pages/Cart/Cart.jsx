@@ -77,7 +77,7 @@ export default function Cart() {
   const [phoneError, setPhoneError] = useState("");
   const [cityError, setCityError] = useState("");
   const [currentAddress, setCurrentAddress] = useState(null);
-const [availableCoupons, setAvailableCoupons] = useState([]); // ✅ Danh sách mã có sẵn\
+  const [availableCoupons, setAvailableCoupons] = useState([]); // ✅ Danh sách mã có sẵn\
   const [showCouponList, setShowCouponList] = useState(false);
 
   useEffect(() => {
@@ -175,7 +175,7 @@ const [availableCoupons, setAvailableCoupons] = useState([]); // ✅ Danh sách 
 
   const handleWardChange = (e) => {
     const wardId = Number(e.target.value);
-const selected = wards.find((w) => w.id === wardId);
+    const selected = wards.find((w) => w.id === wardId);
     setSelectedWard(wardId);
     setAddress((prev) => ({ ...prev, village: selected?.name || "" }));
     setWardError("");
@@ -242,38 +242,53 @@ const selected = wards.find((w) => w.id === wardId);
   const handleQuantityChange = (productItemId, newQuantity) => {
     const productItem = carts.find(
       (cart) => cart.productItem.id === productItemId
-    ).productItem;
-    if (Number(newQuantity) > productItem.unitInStock) {
+    )?.productItem;
+
+    const parsedQuantity = Number(newQuantity);
+
+    if (!parsedQuantity || parsedQuantity < 1) {
+      setError("Số lượng phải là số nguyên dương.");
+      return;
+    }
+
+    if (parsedQuantity > productItem.unitInStock) {
       setError(
         `Số lượng sản phẩm vượt quá số lượng tồn kho. Tồn kho hiện tại: ${productItem.unitInStock}`
       );
       return;
     }
-    if (!Number(newQuantity) || newQuantity < 1) {
-      setError("Số lượng phải là số dương.");
-      return;
-    }
+
+    setError(""); // Xóa lỗi cũ nếu nhập hợp lệ
+
     setQuantities((prevQuantities) => ({
       ...prevQuantities,
-      [productItemId]: newQuantity,
+      [productItemId]: parsedQuantity,
     }));
-    updateCartMutation.mutate({ productItemId, quantity: newQuantity });
+
+    updateCartMutation.mutate({ productItemId, quantity: parsedQuantity });
   };
 
   const handleIncrement = (productItemId) => {
     const productItem = carts.find(
       (cart) => cart.productItem.id === productItemId
-    ).productItem;
-    if (quantities[productItemId] + 1 > productItem.unitInStock) {
-      setError(
-        `Số lượng sản phẩm vượt quá số lượng tồn kho. Tồn kho hiện tại: ${productItem.unitInStock}`
-      );
-      return;
-    }
-setQuantities((prevQuantities) => {
-      const currentQuantity = prevQuantities[productItemId] || 1;
+    )?.productItem;
+
+    if (!productItem) return;
+
+    setQuantities((prevQuantities) => {
+      const currentQuantity = prevQuantities[productItemId] ?? 1;
       const newQuantity = currentQuantity + 1;
-      updateCartMutation.mutate({ productItemId, quantity: newQuantity });
+
+      if (newQuantity > productItem.unitInStock) {
+        setError(`Số lượng vượt quá tồn kho (${productItem.unitInStock})`);
+        return prevQuantities; // ❌ Không cập nhật
+      }
+
+      updateCartMutation.mutate({
+        productItemId,
+        quantity: newQuantity,
+      });
+
       return {
         ...prevQuantities,
         [productItemId]: newQuantity,
@@ -323,11 +338,7 @@ setQuantities((prevQuantities) => {
   const onSuccessPaypal = (details, data) => {
     const addr = profile?.data?.profile?.Address;
 
-    if (
-  !addr?.address_line ||
-  !addr?.ward ||
-  !addr?.city
-    ) {
+    if (!addr?.address_line || !addr?.ward || !addr?.city) {
       toast.error("Vui lòng thêm đầy đủ địa chỉ trước khi thanh toán");
       return;
     }
@@ -362,7 +373,7 @@ setQuantities((prevQuantities) => {
       onError: (error) => {
         toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
         console.error("Error creating order:", error);
-},
+      },
     });
   };
 
@@ -472,7 +483,7 @@ setQuantities((prevQuantities) => {
           }))
         );
       }
-setAddress((prev) => ({ ...prev, street }));
+      setAddress((prev) => ({ ...prev, street }));
       setPhone(profile?.data?.profile?.Address?.phone || "");
     }
 
@@ -490,10 +501,10 @@ setAddress((prev) => ({ ...prev, street }));
   const createAddressMutation = useMutation({
     mutationFn: (body) => addressApi.createAddress(body),
     onSuccess: async () => {
-  toast.success("Địa chỉ mới đã được thêm!");
-  await refetch(); // ✅ Đợi refetch hoàn tất
-  setOpen(false);  // ✅ Rồi mới đóng dialog
-},
+      toast.success("Địa chỉ mới đã được thêm!");
+      await refetch(); // ✅ Đợi refetch hoàn tất
+      setOpen(false); // ✅ Rồi mới đóng dialog
+    },
 
     onError: (error) => {
       toast.error("Lỗi khi thêm địa chỉ. Vui lòng thử lại.");
@@ -502,11 +513,11 @@ setAddress((prev) => ({ ...prev, street }));
 
   const updateAddressMutation = useMutation({
     mutationFn: (body) => addressApi.createAddress(body),
-   onSuccess: async () => {
-  toast.success("Địa chỉ mới đã được cập nhật!");
-  await refetch(); // ✅ chờ lấy dữ liệu profile mới
-  setOpen(false);  // ✅ rồi mới đóng form
-},
+    onSuccess: async () => {
+      toast.success("Địa chỉ mới đã được cập nhật!");
+      await refetch(); // ✅ chờ lấy dữ liệu profile mới
+      setOpen(false); // ✅ rồi mới đóng form
+    },
     onError: (error) => {
       console.error("❌ Lỗi khi cập nhật địa chỉ:", error?.response?.data);
       toast.error("Lỗi khi thêm địa chỉ. Vui lòng thử lại.");
@@ -585,7 +596,7 @@ setAddress((prev) => ({ ...prev, street }));
     }
 
     if (!selectedCity) {
-setCityError("Tỉnh / Thành phố không được bỏ trống");
+      setCityError("Tỉnh / Thành phố không được bỏ trống");
       hasError = true;
     } else {
       setCityError("");
@@ -631,31 +642,33 @@ setCityError("Tỉnh / Thành phố không được bỏ trống");
 
   const handlePayment = async (e) => {
     e.preventDefault();
-  
+
     const addr = profile?.data?.profile?.Address;
-  
+
     // ✅ Kiểm tra địa chỉ
     if (!addr?.address_line || !addr?.ward || !addr?.city) {
       toast.error("Vui lòng thêm địa chỉ trước khi đặt hàng.");
       return;
     }
-  
+
     // ✅ Kiểm tra PayPal nếu cần
     if (paymentMethod === "paypal" && !paypalPaid) {
-      toast.error("Vui lòng hoàn tất thanh toán bằng PayPal trước khi đặt hàng.");
+      toast.error(
+        "Vui lòng hoàn tất thanh toán bằng PayPal trước khi đặt hàng."
+      );
       return;
     }
-  
+
     // ✅ Gửi mã giảm giá nếu có
     if (code) {
       addCouponMutation.mutate({ codeCoupon: code });
     }
-  
+
     const fullAddress = `${addr.address_line}, ${addr.ward}, ${addr.district}, ${addr.city}`;
     const discount = couponValue || 0;
     const total = totalCart;
     const totalPayable = total - discount;
-  
+
     try {
       const res = await createOrderMutation.mutateAsync({
         total,
@@ -672,11 +685,11 @@ setCityError("Tỉnh / Thành phố không được bỏ trống");
         note,
         paymentMethod,
       });
-  
+
       // ✅ Hiển thị thông báo duy nhất từ backend
       toast.dismiss();
       toast.success(res?.data?.data?.message || "Đặt hàng thành công!");
-  
+
       // ✅ Xoá giỏ hàng từng item
       for (const cart of carts) {
         try {
@@ -684,19 +697,21 @@ setCityError("Tỉnh / Thành phố không được bỏ trống");
             productItemId: cart.productItem.id,
           });
         } catch (err) {
-          console.warn(`⚠️ Không thể xoá sản phẩm ID ${cart.productItem.id}:`, err);
+          console.warn(
+            `⚠️ Không thể xoá sản phẩm ID ${cart.productItem.id}:`,
+            err
+          );
         }
       }
-  
+
       await handleRefetchCart();
-navigate("/");
+      navigate("/");
     } catch (error) {
       toast.error("Lỗi khi tạo đơn hàng. Vui lòng thử lại.");
     } finally {
       setOpen(false); // ✅ Đóng dialog dù thành công hay thất bại
     }
   };
-  
 
   const handleClose = () => {
     setOpen(false);
@@ -739,7 +754,7 @@ navigate("/");
         sx={{
           flex: 1,
           width: "100%",
-          mt: 2,
+          mt: "30px",
           maxWidth: "1300px",
           mx: "auto",
           px: 3,
@@ -787,7 +802,7 @@ navigate("/");
                               cart.productItem.product?.name || "Product Image"
                             }
                           />
-<div className="cart-product-content">
+                          <div className="cart-product-content">
                             <span className="cart-product-name">
                               {cart.productItem?.product?.name ||
                                 "Product Name"}
@@ -851,14 +866,30 @@ navigate("/");
                             min={1}
                             type="text"
                           />
-<div
+                          <div
                             style={{
-                              pointerEvents: updateCartMutation.isPending
-                                ? "none"
-                                : "auto",
-                              opacity: updateCartMutation.isPending ? 0.5 : 1,
+                              pointerEvents:
+                                updateCartMutation.isPending ||
+                                quantities[cart.productItem.id] >=
+                                  cart.productItem.unitInStock
+                                  ? "none"
+                                  : "auto",
+                              opacity:
+                                updateCartMutation.isPending ||
+                                quantities[cart.productItem.id] >=
+                                  cart.productItem.unitInStock
+                                  ? 0.5
+                                  : 1,
+                              transition: "opacity 0.2s ease", // ✅ THÊM DÒNG NÀY
                             }}
-                            onClick={() => handleIncrement(cart.productItem.id)}
+                            onClick={() => {
+                              if (
+                                quantities[cart.productItem.id] <
+                                cart.productItem.unitInStock
+                              ) {
+                                handleIncrement(cart.productItem.id);
+                              }
+                            }}
                             className="quantity-increment"
                           >
                             <AddIcon />
@@ -928,7 +959,7 @@ navigate("/");
                 flexDirection: "column",
                 gap: 4,
                 minHeight: "100%", // ✅ Kích hoạt căn chiều cao đầy đủ theo cha
-height: "auto", // ✅ Đảm bảo co giãn đúng
+                height: "auto", // ✅ Đảm bảo co giãn đúng
                 "@media screen and (max-width: 600px)": {
                   width: "100%",
                 },
@@ -951,7 +982,7 @@ height: "auto", // ✅ Đảm bảo co giãn đúng
                       ["Người nhận", profile?.data?.profile?.name],
                       ["Số điện thoại", profile?.data?.profile?.Address?.phone],
                       ["Tỉnh/Thành phố", profile?.data?.profile?.Address?.city],
-                     
+
                       ["Phường/Xã", profile?.data?.profile?.Address?.ward],
                       ["Số nhà", profile?.data?.profile?.Address?.address_line],
                     ].map(([label, value]) => (
@@ -1003,7 +1034,7 @@ height: "auto", // ✅ Đảm bảo co giãn đúng
               {}
               <Box sx={{ textAlign: "center", width: "100%" }}>
                 <Box sx={{ mt: 2 }}>
-<Button
+                  <Button
                     variant="outlined"
                     size="small"
                     onClick={() => setShowCouponList(!showCouponList)}
@@ -1067,7 +1098,7 @@ height: "auto", // ✅ Đảm bảo co giãn đúng
                           Không có mã nào khả dụng
                         </Typography>
                       )}
-</>
+                    </>
                   )}
                 </Box>
 
@@ -1158,7 +1189,7 @@ height: "auto", // ✅ Đảm bảo co giãn đúng
                       color="#000000CC"
                       component="span"
                     >
-{formatCurrency(totalCart - (couponValue || 0)) + " VND"}
+                      {formatCurrency(totalCart - (couponValue || 0)) + " VND"}
                     </Typography>
                   </Box>
 
@@ -1246,7 +1277,7 @@ height: "auto", // ✅ Đảm bảo co giãn đúng
                     </MenuItem>
                   ))}
                 </Select>
-{cityError && <Alert severity="error">{cityError}</Alert>}
+                {cityError && <Alert severity="error">{cityError}</Alert>}
               </FormControl>
 
               {selectedCity && (
@@ -1301,62 +1332,65 @@ height: "auto", // ✅ Đảm bảo co giãn đúng
               >
                 Hình thức thanh toán
               </FormLabel>
-             {paymentMethod === "paypal" && sdkReady ? (
-  <PayPalButton
-    amount={paypalAmount}
-    createOrder={(data, actions) => {
-      const selectedCityName =
-        cities.find((c) => c.code === Number(selectedCity))?.name || "";
-      const selectedWardName =
-        wards.find((w) => w.id === Number(selectedWard))?.name || "";
+              {paymentMethod === "paypal" && sdkReady ? (
+                <PayPalButton
+                  amount={paypalAmount}
+                  createOrder={(data, actions) => {
+                    const selectedCityName =
+                      cities.find((c) => c.code === Number(selectedCity))
+                        ?.name || "";
+                    const selectedWardName =
+                      wards.find((w) => w.id === Number(selectedWard))?.name ||
+                      "";
 
-      return actions.order.create({
-        purchase_units: [
-          {
-            amount: {
-              value: paypalAmount.toString(),
-              currency_code: "USD"
-            },
-            shipping: {
-              name: {
-                full_name: profile?.data?.profile?.name || "Khách hàng"
-              },
-              address: {
-                address_line_1: address.street || "",
-                admin_area_2: selectedWardName,
-                admin_area_1: selectedCityName,
-                postal_code: "700000",
-                country_code: "VN"
-              }
-            }
-          }
-        ]
-});
-    }}
-    onSuccess={onSuccessPaypal}
-    onError={() => {
-      toast.error("Lỗi trong quá trình thanh toán PayPal");
-    }}
-    key={"TEST"}
-  />
-) : (
-  <MyButton
-    type="submit"
-    onClick={
-      profile?.data?.profile?.Address
-        ? handleUpdateAddress
-        : handleAddAddress
-    }
-    mt="20px"
-    height="40px"
-    fontSize="16px"
-    width="100%"
-  >
-    {profile?.data?.profile?.Address
-      ? "Cập nhật địa chỉ"
-      : "Thêm địa chỉ"}
-  </MyButton>
-)}
+                    return actions.order.create({
+                      purchase_units: [
+                        {
+                          amount: {
+                            value: paypalAmount.toString(),
+                            currency_code: "USD",
+                          },
+                          shipping: {
+                            name: {
+                              full_name:
+                                profile?.data?.profile?.name || "Khách hàng",
+                            },
+                            address: {
+                              address_line_1: address.street || "",
+                              admin_area_2: selectedWardName,
+                              admin_area_1: selectedCityName,
+                              postal_code: "700000",
+                              country_code: "VN",
+                            },
+                          },
+                        },
+                      ],
+                    });
+                  }}
+                  onSuccess={onSuccessPaypal}
+                  onError={() => {
+                    toast.error("Lỗi trong quá trình thanh toán PayPal");
+                  }}
+                  key={"TEST"}
+                />
+              ) : (
+                <MyButton
+                  type="submit"
+                  onClick={
+                    profile?.data?.profile?.Address
+                      ? handleUpdateAddress
+                      : handleAddAddress
+                  }
+                  mt="20px"
+                  height="40px"
+                  fontSize="16px"
+                  width="100%"
+                >
+                  {profile?.data?.profile?.Address
+                    ? "Cập nhật địa chỉ"
+                    : "Thêm địa chỉ"}
+                </MyButton>
+              )}
 
               <Typography
                 sx={{
