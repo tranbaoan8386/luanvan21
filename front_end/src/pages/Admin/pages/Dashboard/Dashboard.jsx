@@ -11,17 +11,16 @@ import {
   Typography,
   Paper,
 } from "@mui/material";
-import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
 } from "chart.js";
+import { Bar } from "react-chartjs-2";
 import orderApi from "../../../../apis/order";
 import { formatCurrency } from "../../../../common";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
@@ -32,8 +31,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend
@@ -49,12 +47,10 @@ export default function Dashboard() {
     cancelledOrders: 0,
   });
 
-  // Chỉ chạy khi thay đổi displayType
   useEffect(() => {
     fetchData(displayType);
   }, [displayType]);
 
-  // Chỉ chạy 1 lần khi mount component
   useEffect(() => {
     fetchStatistics();
   }, []);
@@ -109,12 +105,9 @@ export default function Dashboard() {
       {
         label: "Doanh thu",
         data: revenueData.map((item) => item.totalRevenue),
+        backgroundColor: "rgba(76, 175, 80, 0.6)",
         borderColor: "#4caf50",
-        backgroundColor: "rgba(76, 175, 80, 0.2)",
-        fill: true,
-        tension: 0.3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        borderWidth: 1,
       },
     ],
   };
@@ -169,7 +162,7 @@ export default function Dashboard() {
           />
         </Grid>
 
-       {/*  <Grid item xs={12} sm={6} md={3}>
+{/*         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Tổng đơn hàng"
             value={statistics.totalOrders}
@@ -204,9 +197,9 @@ export default function Dashboard() {
           boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
           backgroundColor: "#fff",
           height: 400,
-          width: "100%", // hoặc ví dụ: "1200px"
-          maxWidth: "100%", // giới hạn không vượt layout cha
-          overflowX: "auto", // nếu nội dung rộng quá
+          width: "100%",
+          maxWidth: "100%",
+          overflowX: "auto",
         }}
         elevation={3}
       >
@@ -228,12 +221,12 @@ export default function Dashboard() {
         </Box>
 
         {chartData.labels.length > 0 ? (
-          <Line
+          <Bar
             data={chartData}
             options={{
               responsive: true,
-              maintainAspectRatio: false, 
-              animation: { duration: 0 }, 
+              maintainAspectRatio: false,
+              animation: { duration: 0 },
               plugins: {
                 legend: {
                   position: "top",

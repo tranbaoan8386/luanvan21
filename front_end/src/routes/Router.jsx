@@ -39,6 +39,9 @@ import DeletedProduct from "../pages/Admin/pages/ManagerProduct/modules/DeletedP
 import ManagerCoupon from "../pages/Admin/pages/ManagerCoupon";
 import CreateCoupon from "../pages/Admin/pages/ManagerCoupon/modules/CouponCreate";
 import UpdateCoupon from "../pages/Admin/pages/ManagerCoupon/modules/CouponUpdate";
+import ManagerInventory from "../pages/Admin/pages/ManagerInventory";
+
+
 
 
 
@@ -332,10 +335,18 @@ export default function routerElements() {
           )
         },
         {
+          path: "admin/inventory",
+          element: (
+            <AdminLayout>
+              <ManagerInventory/>
+            </AdminLayout>
+          )
+        },
+        {
           path: "admin/users",
           element: (
             <AdminLayout>
-              <ManagerUser />
+              <ManagerUser/>
             </AdminLayout>
           )
         }

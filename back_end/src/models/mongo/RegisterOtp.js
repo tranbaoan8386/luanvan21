@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+/* const mongoose = require('mongoose')
 const { env } = require('../../config/env')
 
 const RegisterOtp = new mongoose.Schema(
@@ -21,3 +21,4 @@ const RegisterOtp = new mongoose.Schema(
 RegisterOtp.index({ createdAt: 1 }, { expireAfterSeconds: env.EXPIRE_AFTER_SECONDS })
 
 module.exports = mongoose.model('register_otp', RegisterOtp)
+ */

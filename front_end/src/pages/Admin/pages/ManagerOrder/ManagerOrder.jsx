@@ -216,6 +216,17 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit'
   });
+};   
+
+const [readOrders, setReadOrders] = useState([]);
+
+const handleOrderClick = (orderId) => {
+  setReadOrders((prev) => [...new Set([...prev, orderId])]);
+};
+
+const isNewOrder = (createDate) => {
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000); 
+  return new Date(createDate) > oneHourAgo;
 };
 
   return (
@@ -235,7 +246,12 @@ const formatDate = (dateString) => {
                   return (
                     <React.Fragment key={order.id}>
                       <TableRow>
-                        <TableCell>{order.id}</TableCell>  
+                      <TableCell onClick={() => handleOrderClick(order.id)} style={{ cursor: "pointer" }}>
+                        {order.id}
+                        {isNewOrder(order.createDate) && !readOrders.includes(order.id) && (
+                          <span style={{ color: "red", marginLeft: 6 }}>●</span>
+                        )}
+                      </TableCell> 
                         <TableCell>
                           <Button
                             variant="outlined"

@@ -38,3 +38,8 @@ const newOrderCount = filteredOrders.filter(order => isNewOrder(order.createDate
     </span>
   )}
 </Typography>
+
+
+    // Mã hóa OTP
+    const salt = await bcrypt.genSalt(10);
+    const hashedOtp = await bcrypt.hash(code, salt);

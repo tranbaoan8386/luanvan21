@@ -503,8 +503,39 @@ if (sort_by === 'price' || sort_by === 'sold') {
   }
 }
 
+// ProductController.js
+async getInventory(req, res, next) {
+  try {
+    const items = await ProductItem.findAll({
+      include: [
+        { model: Product, as: 'product', attributes: ['name','avatar'] },
+        { model: Color, as: 'color', attributes: ['name'] },
+        { model: Size, as: 'size', attributes: ['name'] },
+      ],
+      attributes: ['id', 'unitInStock', 'price', 'sold']
+    });
+
+    res.json(items);
+  } catch (error) {
+    console.error("Lỗi khi lấy tồn kho:", error);
+    res.status(500).json({ error: "Lỗi server khi lấy tồn kho" });
+  }
+};
 
 
+
+async updateStock(req, res, next) {
+  const { id: productItemId } = req.params;
+  const { unitInStock } = req.body;
+
+  const productItem = await ProductItem.findByPk(productItemId);
+  if (!productItem) return res.status(404).json({ message: 'Sản phẩm không tìm thấy' });
+
+  productItem.unitInStock = unitInStock;
+  await productItem.save();
+
+  return res.status(200).json(productItem);
+}
       
   async getDetailProduct(req, res, next) {
   try {

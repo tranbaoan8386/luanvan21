@@ -44,6 +44,9 @@ const navConfig = [
   { title: "Quản lý đơn hàng", path: "/admin/order", icon: <MdShoppingCart /> },
   { title: "Quản lý người dùng", path: "/admin/users", icon: <MdPeople /> },
   { title: "Quản lý mã khuyến mãi", path: "/admin/coupon", icon: <MdDiscount /> },
+  { title: "Quản lý tồn kho", path: "/admin/inventory", icon: <MdDashboard /> },
+
+
 ];
 
 export default function Nav({ openNav, onCloseNav }) {

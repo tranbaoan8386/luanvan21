@@ -1,4 +1,4 @@
-
+/* 
 const { default: mongoose } = require('mongoose')
 const { env } = require('../../config/env')
 
@@ -23,3 +23,4 @@ const ForgotToken = new mongoose.Schema(
 ForgotToken.index({ createdAt: 1 }, { expireAfterSeconds: env.EXPIRE_AFTER_SECONDS })
 
 module.exports = mongoose.model('forgot_token', ForgotToken)
+ */

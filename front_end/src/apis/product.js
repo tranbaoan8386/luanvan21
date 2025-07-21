@@ -26,9 +26,14 @@ const productApi = {
 
     deleteProduct: (id) => axiosClient.delete(`/products/${id}`),
 
-    // ✅ THÊM MỚI:
     getDeletedProducts: () => axiosClient.get('/products/deleted'),
-    restoreProduct: (id) => axiosClient.patch(`/products/restore/${id}`)
+
+    restoreProduct: (id) => axiosClient.patch(`/products/restore/${id}`),
+
+    getInventory: () => axiosClient.get('/products/inventory'),
+    updateInventory: (id, unitInStock) =>
+    axiosClient.patch(`/products/inventory/${id}`, { unitInStock }),
+
 }
 
 export default productApi

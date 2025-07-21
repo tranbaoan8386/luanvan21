@@ -26,7 +26,7 @@
     wrap-ansi "^8.1.0"
     wrap-ansi-cjs "npm:wrap-ansi@^7.0.0"
 
-"@mongodb-js/saslprep@^1.1.0", "@mongodb-js/saslprep@^1.1.5":
+"@mongodb-js/saslprep@^1.1.5":
   version "1.1.7"
   resolved "https://registry.npmjs.org/@mongodb-js/saslprep/-/saslprep-1.1.7.tgz"
   integrity sha512-dCHW/oEX0KJ4NjDULBo3JiOaK5+6axtpBbS+ao2ZInoAL9/YRQLhXzSNAFz7hP4nzLkIqsfYAK/PDE3+XHny0Q==
@@ -99,14 +99,6 @@
   resolved "https://registry.npmjs.org/@types/whatwg-url/-/whatwg-url-11.0.5.tgz"
   integrity sha512-coYR071JRaHa+xoEvvYqvnIHaVqaYrLPbsufM9BF63HkwI5Lgmy2QR8Q5K/lYDYo5AK82wOvSOS0UsLTpTG7uQ==
   dependencies:
-    "@types/webidl-conversions" "*"
-
-"@types/whatwg-url@^8.2.1":
-  version "8.2.2"
-  resolved "https://registry.npmjs.org/@types/whatwg-url/-/whatwg-url-8.2.2.tgz"
-  integrity sha512-FtQu10RWgn3D9U4aazdwIE2yzphmTJREDqNdODHrbrZmmMqI0vMheC/6NE/J1Yveaj8H+ela+YwWTjq5PGmuhA==
-  dependencies:
-    "@types/node" "*"
     "@types/webidl-conversions" "*"
 
 abbrev@^2.0.0:
@@ -263,7 +255,7 @@ braces@~3.0.2:
   dependencies:
     fill-range "^7.0.1"
 
-bson@^6.2.0, bson@^6.7.0:
+bson@^6.7.0:
   version "6.7.0"
   resolved "https://registry.npmjs.org/bson/-/bson-6.7.0.tgz"
   integrity sha512-w2IquM5mYzYZv6rs3uN2DZTOBe2a0zXLj53TGDqwF4l6Sz/XsISrisXOJihArF9+BZ6Cq/GjVht7Sjfmri7ytQ==
@@ -457,13 +449,6 @@ debug@4:
   version "4.3.5"
   resolved "https://registry.npmjs.org/debug/-/debug-4.3.5.tgz"
   integrity sha512-pt0bNEmneDIvdL1Xsd9oDQ/wrQRkXDT4AUWlNZNPKvW5x/jyO9VFXkJUP07vQ2upmw5PlaITaPKc31jK13V+jg==
-  dependencies:
-    ms "2.1.2"
-
-debug@4.x:
-  version "4.3.4"
-  resolved "https://registry.npmjs.org/debug/-/debug-4.3.4.tgz"
-  integrity sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==
   dependencies:
     ms "2.1.2"
 
@@ -1184,11 +1169,6 @@ jwt-decode@^4.0.0:
   resolved "https://registry.npmjs.org/jwt-decode/-/jwt-decode-4.0.0.tgz"
   integrity sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==
 
-kareem@2.5.1:
-  version "2.5.1"
-  resolved "https://registry.npmjs.org/kareem/-/kareem-2.5.1.tgz"
-  integrity sha512-7jFxRVm+jD+rkq3kY0iZDJfsO2/t4BBPeEb2qKn2lR/9KhuksYk5hxzfRYWMPV8P/x2d0kHD306YyWLzjjH+uA==
-
 lodash.includes@^4.3.0:
   version "4.3.0"
   resolved "https://registry.npmjs.org/lodash.includes/-/lodash.includes-4.3.0.tgz"
@@ -1364,14 +1344,6 @@ moment@^2.29.4:
   resolved "https://registry.npmjs.org/moment/-/moment-2.29.4.tgz"
   integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
 
-mongodb-connection-string-url@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.npmjs.org/mongodb-connection-string-url/-/mongodb-connection-string-url-2.6.0.tgz"
-  integrity sha512-WvTZlI9ab0QYtTYnuMLgobULWhokRjtC7db9LtcVfJ+Hsnyr5eo6ZtNAt3Ly24XZScGMelOcGtm7lSn0332tPQ==
-  dependencies:
-    "@types/whatwg-url" "^8.2.1"
-    whatwg-url "^11.0.0"
-
 mongodb-connection-string-url@^3.0.0:
   version "3.0.1"
   resolved "https://registry.npmjs.org/mongodb-connection-string-url/-/mongodb-connection-string-url-3.0.1.tgz"
@@ -1389,28 +1361,6 @@ mongodb@^6.7.0:
     bson "^6.7.0"
     mongodb-connection-string-url "^3.0.0"
 
-mongodb@6.2.0:
-  version "6.2.0"
-  resolved "https://registry.npmjs.org/mongodb/-/mongodb-6.2.0.tgz"
-  integrity sha512-d7OSuGjGWDZ5usZPqfvb36laQ9CPhnWkAGHT61x5P95p/8nMVeH8asloMwW6GcYFeB0Vj4CB/1wOTDG2RA9BFA==
-  dependencies:
-    "@mongodb-js/saslprep" "^1.1.0"
-    bson "^6.2.0"
-    mongodb-connection-string-url "^2.6.0"
-
-mongoose@^8.0.1:
-  version "8.0.2"
-  resolved "https://registry.npmjs.org/mongoose/-/mongoose-8.0.2.tgz"
-  integrity sha512-Vsi9GzTXjdBVzheT1HZOZ2jHNzzR9Xwb5OyLz/FvDEAhlwrRnXnuqJf0QHINUOQSm7aoyvnPks0q85HJkd6yDw==
-  dependencies:
-    bson "^6.2.0"
-    kareem "2.5.1"
-    mongodb "6.2.0"
-    mpath "0.9.0"
-    mquery "5.0.0"
-    ms "2.1.3"
-    sift "16.0.1"
-
 morgan@^1.10.0:
   version "1.10.0"
   resolved "https://registry.npmjs.org/morgan/-/morgan-1.10.0.tgz"
@@ -1421,18 +1371,6 @@ morgan@^1.10.0:
     depd "~2.0.0"
     on-finished "~2.3.0"
     on-headers "~1.0.2"
-
-mpath@0.9.0:
-  version "0.9.0"
-  resolved "https://registry.npmjs.org/mpath/-/mpath-0.9.0.tgz"
-  integrity sha512-ikJRQTk8hw5DEoFVxHG1Gn9T/xcjtdnOKIU1JTmGjZZlg9LST2mBLmcX3/ICIbgJydT2GOc15RnNy5mHmzfSew==
-
-mquery@5.0.0:
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/mquery/-/mquery-5.0.0.tgz"
-  integrity sha512-iQMncpmEK8R8ncT8HJGsGc9Dsp8xcgYMVSbs5jgnm1lFHTZqMJTUWTDx1LBO8+mK3tPNZWFLBghQEIOULSTHZg==
-  dependencies:
-    debug "4.x"
 
 ms@^2.1.1, ms@2.1.3:
   version "2.1.3"
@@ -1662,7 +1600,7 @@ pstree.remy@^1.1.8:
   resolved "https://registry.npmjs.org/pstree.remy/-/pstree.remy-1.1.8.tgz"
   integrity sha512-77DZwxQmxKnu3aR542U+X8FypNzbfJ+C5XQDk3uWjWxn6151aIMGthWYRXTqT1E5oJvg+ljaa2OJi+VfvCOQ8w==
 
-punycode@^2.1.0, punycode@^2.1.1, punycode@^2.3.0, punycode@^2.3.1:
+punycode@^2.1.0, punycode@^2.3.0, punycode@^2.3.1:
   version "2.3.1"
   resolved "https://registry.npmjs.org/punycode/-/punycode-2.3.1.tgz"
   integrity sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==
@@ -1899,11 +1837,6 @@ side-channel@^1.0.4:
     get-intrinsic "^1.0.2"
     object-inspect "^1.9.0"
 
-sift@16.0.1:
-  version "16.0.1"
-  resolved "https://registry.npmjs.org/sift/-/sift-16.0.1.tgz"
-  integrity sha512-Wv6BjQ5zbhW7VFefWusVP33T/EM0vYikCaQ2qR8yULbsilAT8/wQaXvuQ3ptGLpoKx+lihJE3y2UTgKDyyNHZQ==
-
 signal-exit@^4.0.1:
   version "4.1.0"
   resolved "https://registry.npmjs.org/signal-exit/-/signal-exit-4.1.0.tgz"
@@ -2052,13 +1985,6 @@ touch@^3.1.0:
   dependencies:
     nopt "~1.0.10"
 
-tr46@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.npmjs.org/tr46/-/tr46-3.0.0.tgz"
-  integrity sha512-l7FvfAHlcmulp8kr+flpQZmVwtu7nfRV7NZujtN0OqES8EL4O4e0qqzL0DC5gAvx/ZC/9lk6rhcUwYvkBnBnYA==
-  dependencies:
-    punycode "^2.1.1"
-
 tr46@^4.1.1:
   version "4.1.1"
   resolved "https://registry.npmjs.org/tr46/-/tr46-4.1.1.tgz"
@@ -2177,14 +2103,6 @@ webidl-conversions@^7.0.0:
   version "7.0.0"
   resolved "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-7.0.0.tgz"
   integrity sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==
-
-whatwg-url@^11.0.0:
-  version "11.0.0"
-  resolved "https://registry.npmjs.org/whatwg-url/-/whatwg-url-11.0.0.tgz"
-  integrity sha512-RKT8HExMpoYx4igMiVMY83lN6UeITKJlBQ+vR/8ZJ8OCdSiN3RwCq+9gH0+Xzj0+5IrM6i4j/6LuvzbZIQgEcQ==
-  dependencies:
-    tr46 "^3.0.0"
-    webidl-conversions "^7.0.0"
 
 whatwg-url@^13.0.0:
   version "13.0.0"

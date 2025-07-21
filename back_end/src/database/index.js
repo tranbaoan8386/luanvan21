@@ -1,5 +1,4 @@
 const sequelize = require('./connectMysql');
-const connectMongo = require('./connectMongo');
 
 const connectToMysql = async () => {
     try {
@@ -10,18 +9,8 @@ const connectToMysql = async () => {
     }
 };
 
-const connectToMongo = async () => {
-    try {
-        await connectMongo();
-        console.log('✅ Connected to MongoDB');
-    } catch (err) {
-        console.error('❌ Failed to connect to MongoDB:', err.message);
-    }
-};
-
 const connectDatabases = async () => {
     await connectToMysql();
-    await connectToMongo();
 };
 
 connectDatabases();

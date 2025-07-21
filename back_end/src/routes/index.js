@@ -14,6 +14,7 @@ const addressRouter = require('./addressRouter')
 const paymentRouter = require('./paymentRouter')
 const brandRouter = require('./brandRouter')
 const materialRouter = require('./materialRouter');
+const otpRouter = require('./otpRouter')
 
 const handleRouters = (app) => {
     app.use('/api/v1/carts', cartRouter)
@@ -31,6 +32,7 @@ const handleRouters = (app) => {
     app.use('/api/v1/address', addressRouter)
     app.use('/api/v1/brands', brandRouter)
     app.use('/api/v1/materials', materialRouter)
+    app.use('/api/v1/otp', otpRouter)
 }
 
 module.exports = handleRouters
