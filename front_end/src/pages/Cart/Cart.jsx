@@ -740,7 +740,7 @@ export default function Cart() {
 
     return true;
   };
-
+  //chỉnh sửa thông báo bị che
   return (
     <Box
       sx={{
@@ -754,7 +754,7 @@ export default function Cart() {
         sx={{
           flex: 1,
           width: "100%",
-          mt: "30px",
+          mt: "15px",
           maxWidth: "1300px",
           mx: "auto",
           px: 3,
@@ -950,7 +950,7 @@ export default function Cart() {
           {carts && carts.length > 0 && (
             <Box
               sx={{
-                mt: 9,
+                mt: 0,
                 mb: 2,
                 marginLeft: "30px",
                 padding: "10px 0px",
@@ -958,8 +958,8 @@ export default function Cart() {
                 display: "flex",
                 flexDirection: "column",
                 gap: 4,
-                minHeight: "100%", // ✅ Kích hoạt căn chiều cao đầy đủ theo cha
-                height: "auto", // ✅ Đảm bảo co giãn đúng
+                minHeight: "100%",
+                height: "auto",
                 "@media screen and (max-width: 600px)": {
                   width: "100%",
                 },
@@ -982,14 +982,20 @@ export default function Cart() {
                       ["Người nhận", profile?.data?.profile?.name],
                       ["Số điện thoại", profile?.data?.profile?.Address?.phone],
                       ["Tỉnh/Thành phố", profile?.data?.profile?.Address?.city],
-
                       ["Phường/Xã", profile?.data?.profile?.Address?.ward],
                       ["Số nhà", profile?.data?.profile?.Address?.address_line],
                     ].map(([label, value]) => (
-                      <Box key={label} sx={{ display: "flex" }}>
-                        <Box sx={{ width: "140px", fontWeight: "bold" }}>
-                          {label}:
-                        </Box>
+                      <Box
+                        key={label}
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: "140px 10px 1fr", // 3 cột: label | dấu ":" | giá trị
+                          alignItems: "start",
+                          mb: 0.5,
+                        }}
+                      >
+                        <Box sx={{ fontWeight: "bold" }}>{label}</Box>
+                        <Box>:</Box>
                         <Box>{value || "Chưa có"}</Box>
                       </Box>
                     ))}
