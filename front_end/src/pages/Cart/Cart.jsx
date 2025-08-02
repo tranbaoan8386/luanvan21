@@ -140,39 +140,7 @@ export default function Cart() {
     }
   };
 
-  //   setAddress((prev) => ({ ...prev, district: selectedDistrict.Name }));
-  //   setDistrictError("");
-  // };
-
-  // const handleDistrictChange = (e) => {
-  //   const districtCode = e.target.value;
-  //   setSelectedDistrict(districtCode);
-  //   setSelectedWard("");
-  //   setWards([]);
-
-  //   const selectedDistrict = districts.find((d) => d.id === districtCode);
-  //   setAddress((prev) => ({
-  //     ...prev,
-  //     district: selectedDistrict?.name || "",
-  //   }));
-
-  //   axios
-  //     .get("/wards_2025_demo.json")
-  //     .then((res) => {
-  //       const wardList = Array.isArray(res.data)
-  //         ? res.data
-  //         : res.data?.data || [];
-  //       console.log("✅ Danh sách phường/xã:", wardList);
-
-  //       const filtered = wardList.filter(
-  //         (ward) => ward.idDistrict === districtCode
-  //       );
-  //       console.log("📌 Phường/xã đã lọc:", filtered);
-  //       setWards(filtered);
-  //     })
-  //     .catch((err) => console.error("Lỗi khi load phường/xã:", err));
-  // };
-
+ 
   const handleWardChange = (e) => {
     const wardId = Number(e.target.value);
     const selected = wards.find((w) => w.id === wardId);
@@ -215,6 +183,8 @@ export default function Cart() {
     },
   });
 
+
+  // Thông báo khi xoá sản phẩm
   const deleteProductFromCartMutation = useMutation({
     mutationFn: (body) => cartApi.deleteProductCart(body),
     onSuccess: (data) => {
@@ -366,6 +336,7 @@ export default function Cart() {
         carts.forEach((cart) => {
           deleteProductFromCartMutation.mutate({
             productItemId: cart.productItem.id,
+            showToast: true
           });
         });
         navigate("/");
@@ -502,8 +473,8 @@ export default function Cart() {
     mutationFn: (body) => addressApi.createAddress(body),
     onSuccess: async () => {
       toast.success("Địa chỉ mới đã được thêm!");
-      await refetch(); // ✅ Đợi refetch hoàn tất
-      setOpen(false); // ✅ Rồi mới đóng dialog
+      await refetch(); 
+      setOpen(false);
     },
 
     onError: (error) => {
@@ -515,8 +486,8 @@ export default function Cart() {
     mutationFn: (body) => addressApi.createAddress(body),
     onSuccess: async () => {
       toast.success("Địa chỉ mới đã được cập nhật!");
-      await refetch(); // ✅ chờ lấy dữ liệu profile mới
-      setOpen(false); // ✅ rồi mới đóng form
+      await refetch();
+      setOpen(false); 
     },
     onError: (error) => {
       console.error(" Lỗi khi cập nhật địa chỉ:", error?.response?.data);
