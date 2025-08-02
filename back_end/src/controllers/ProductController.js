@@ -407,40 +407,61 @@ if (sort_by === 'price' || sort_by === 'sold') {
 
 
     const products = await Product.findAll({
-      where: whereProduct,
+  where: whereProduct,
+  attributes: {
+    include: [
+      // 👇 Thêm tổng sold nếu sort_by === 'sold'
+      ...(sort_by === 'sold'
+        ? [
+            [
+              Sequelize.literal(`(
+                SELECT SUM(pi.sold)
+                FROM products_item AS pi
+                WHERE pi.products_id = Product.id
+              )`),
+              'totalSold'
+            ]
+          ]
+        : [])
+    ]
+  },
+  include: [
+    {
+      model: ProductItem,
+      as: 'productItems',
+      required: false,
+      attributes: ['id', 'price', 'sold'],
+      ...(Object.keys(whereItem).length ? { where: whereItem } : {}),
       include: [
         {
-          model: ProductItem,
-          as: 'productItems',
-          required: false,
-          attributes: ['id', 'price', 'sold'],
-          ...(Object.keys(whereItem).length ? { where: whereItem } : {}),
-          include: [
-            {
-              model: ProductImage,
-              as: 'images',
-              attributes: ['url'],
-              required: false
-            }
-          ]
-        },
-        {
-          model: Category,
-          as: 'category',
-          attributes: ['name'],
-          required: name ? true : false // để WHERE hoạt động đúng khi có lọc theo category.name
-        },
-        {
-          model: Brand,
-          as: 'brand',
-          attributes: ['name']
+          model: ProductImage,
+          as: 'images',
+          attributes: ['url'],
+          required: false
         }
-      ],
-      order: orderArray,
-      offset: (page - 1) * limit,
-      limit: parseInt(limit),
-      paranoid: true
-    });
+      ]
+    },
+    {
+      model: Category,
+      as: 'category',
+      attributes: ['name'],
+      required: name ? true : false
+    },
+    {
+      model: Brand,
+      as: 'brand',
+      attributes: ['name']
+    }
+  ],
+  order:
+    sort_by === 'sold'
+      ? [[Sequelize.literal('totalSold'), order]]
+      : orderArray,
+  offset: (page - 1) * limit,
+  limit: parseInt(limit),
+  paranoid: true
+});
+
 
     const mappedProducts = products.map((product) => {
       const productData = product.toJSON();

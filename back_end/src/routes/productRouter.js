@@ -12,8 +12,6 @@ const productRouter = Router();
 // Lấy danh sách tồn kho theo màu/size (Admin)
 productRouter.get(
   '/inventory',
-/*   jwtAuthMiddleware,
-  authorizedMiddleware('Admin'), */
   ProductController.getInventory
 );
 
@@ -21,8 +19,6 @@ productRouter.get(
 //Cập nhật số lượng tồn kho của 1 sản phẩm item (Admin)
 productRouter.patch(
   '/inventory/:id',
-  // jwtAuthMiddleware,
-  // authorizedMiddleware('Admin'),
   ProductController.updateStock
 );
 

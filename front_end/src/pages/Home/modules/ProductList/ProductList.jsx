@@ -18,12 +18,15 @@ const BASE_API_URL = "http://localhost:8000";
 export default function ProductList() {
   const queryConfig = useQuertConfig();
 
+
+  
   const { data: producstData } = useQuery({
     queryKey: ["products", queryConfig],
     queryFn: () => productApi.getAllProduct(queryConfig),
-    keepPreviousData: true,
+    keepPreviousData: true,//giữ giá trị cũ trong khi đang tải dữ liệu mới
   });
 
+  
   const pageSize = producstData?.data.pagination.page_size;
 
   const { data: categoriesData } = useQuery({
@@ -54,7 +57,7 @@ export default function ProductList() {
     price: firstItem?.price ?? null,
     promotionPrice: null,
     rating: product.rating ?? 0,
-    sold: product.productItems?.reduce((sum, pi) => sum + (pi.sold || 0), 0) ?? 0, // ✅ Sửa ở đây
+    sold: product.productItems?.reduce((sum, pi) => sum + (pi.sold || 0), 0) ?? 0, 
     weight: product.weight ?? null,
   };
 }) ?? [];

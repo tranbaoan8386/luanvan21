@@ -519,7 +519,7 @@ export default function Cart() {
       setOpen(false); // ✅ rồi mới đóng form
     },
     onError: (error) => {
-      console.error("❌ Lỗi khi cập nhật địa chỉ:", error?.response?.data);
+      console.error(" Lỗi khi cập nhật địa chỉ:", error?.response?.data);
       toast.error("Lỗi khi thêm địa chỉ. Vui lòng thử lại.");
     },
   });

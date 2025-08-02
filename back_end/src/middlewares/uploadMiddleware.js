@@ -1,4 +1,4 @@
-const multer = require('multer');
+const multer = require('multer');//thư viện multer để xử lý upload file
 const path = require('path');
 const { env } = require('../config/env');
 

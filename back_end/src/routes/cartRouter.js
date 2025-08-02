@@ -28,7 +28,7 @@ cartRouter.delete(
   '/',
   jwtAuthMiddleware,
   authorizedMiddleware('Customer'),
-  CartController.deleteProductFromCart // ✅ tạm bỏ validator
+  CartController.deleteProductFromCart 
 );
 
 // Xoá sản phẩm giỏ hàng khi đặt hàng
@@ -36,7 +36,7 @@ cartRouter.delete(
   '/carts',
   jwtAuthMiddleware,
   authorizedMiddleware('Customer'),
-  CartController.deleteProductCart // ✅ tạm bỏ validator
+  CartController.deleteProductCart 
 );
 
 // Cập nhật số lượng hoặc tổng
@@ -44,7 +44,7 @@ cartRouter.patch(
   '/',
   jwtAuthMiddleware,
   authorizedMiddleware('Customer'),
-  CartController.updateCartItemTotalPrice // ✅ tạm bỏ validator
+  CartController.updateCartItemTotalPrice 
 );
 
 module.exports = cartRouter;
