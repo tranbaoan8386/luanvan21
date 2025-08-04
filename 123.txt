@@ -43,3 +43,95 @@ const newOrderCount = filteredOrders.filter(order => isNewOrder(order.createDate
     // Mã hóa OTP
     const salt = await bcrypt.genSalt(10);
     const hashedOtp = await bcrypt.hash(code, salt);
+
+    //✅  sửa cái nút lưu số lượng tropng kho 
+   ----------------------- ✅ BE:-------------------
+  async updateStock(req, res, next) {
+  const { id: productItemId } = req.params;
+  const { unitInStock } = req.body;
+
+  const productItem = await ProductItem.findByPk(productItemId);
+  if (!productItem) return res.status(404).json({ message: 'Sản phẩm không tìm thấy' });
+  //sửa chỗ này
+ ============================================================= productItem.unitInStock += parseInt(unitInStock); ✅ 
+  await productItem.save();
+
+  return res.status(200).json(productItem);
+}
+-----------------✅ FE--------------
+{ id: "addStock", label: "Thêm vào kho" }, --------------------them này  ✅ 
+--------------------------
+                  <TableCell align="center">
+                    {item.unitInStock ?? 0}✅ 
+                  </TableCell>
+
+                  ---------------------
+
+                     <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() =>{
+                          updateInventoryMutation.mutate({
+                          id: item.id,
+                          unitInStock: Number(editStock[item.id]),
+                        })
+                                                              setEditStock((prev) => ({✅ 
+                                                                ...prev,✅ 
+                                                                [item.id]: undefined,✅ 
+                                                              }))✅ 
+                      } 
+                      }
+                    >
+                      Lưu
+                    </Button>
+
+                    ---------------------sửa này để ô nhập luôn là = 0
+                                          value={editStock[item.id] ?? ""} ✅ 
+
+
+//////////////////////////mã hết hạn
+
+// ⚙️ controllers/CouponController.js
+
+async getAllCoupon(req, res, next) {
+  try {
+    const currentDate = new Date();
+    const allCoupons = await Coupon.findAll();
+
+    const couponsWithStatus = allCoupons.map((coupon) => {
+      const isExpired = new Date(coupon.endDate) < currentDate;
+      return {
+        ...coupon.toJSON(),
+        expired: isExpired
+      };
+    });
+
+    return new ApiResponse(res, {
+      status: 200,
+      data: couponsWithStatus
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+const headCells = [
+  { id: "stt", label: "STT", width: "5%" },
+  { id: "code", label: "Mã khuyến mãi", width: "20%" },
+  { id: "price", label: "Giá trị (VND)", width: "15%" },
+  { id: "start", label: "Ngày bắt đầu", width: "15%" },
+  { id: "end", label: "Ngày kết thúc", width: "15%" },
+  { id: "status", label: "Trạng thái", width: "15%" }, // ✅ thêm dòng này
+  { id: "action", label: "Hành động", width: "15%" },
+];
+
+
+
+<TableCell align="left">
+  {coupon.expired ? (
+    <span style={{ color: "red", fontWeight: "bold" }}>Đã hết hạn</span>
+  ) : (
+    <span style={{ color: "green" }}>Còn hạn</span>
+  )}
+</TableCell>

@@ -35,8 +35,7 @@ class AuthController {
                 });
             }
     
-            // Băm mật khẩu với salt 10 rounds
-            //
+            
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
     
@@ -151,15 +150,16 @@ async forgotPassword(req, res, next) {
       throw new ErrorResponse(404, 'Người dùng không tồn tại trong hệ thống');
     }
 
-    // Nếu đã tồn tại mã OTP → xóa đi để tạo mới
+
     const existedOtp = await Otp.findOne({ where: { email } });
     if (existedOtp) {
       await Otp.destroy({ where: { email } });
     }
 
-    // Tạo mã xác nhận gồm 4 chữ số (1000 - 9999)
+
     const code = Math.floor(1000 + Math.random() * 9000);
 
+    
     
     await Otp.create({
       email,

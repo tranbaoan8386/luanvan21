@@ -180,7 +180,9 @@ export default function ManagerCoupon() {
         <Paper elevation={2} sx={{ borderRadius: 2, p: 2 }}>
           <EnhancedTableToolbar search={search} setSearch={setSearch} />
 
-          <TableContainer sx={{ maxHeight: 520, borderRadius: 2, overflow: "auto" }}>
+          <TableContainer
+            sx={{ maxHeight: 520, borderRadius: 2, overflow: "auto" }}
+          >
             <Table stickyHeader aria-label="coupons table" size="medium">
               <EnhancedTableHead />
               <TableBody>
@@ -198,7 +200,9 @@ export default function ManagerCoupon() {
                         {index + 1}
                       </TableCell>
                       <TableCell align="left">{coupon.code}</TableCell>
-                      <TableCell align="left">{coupon.price.toLocaleString()}</TableCell>
+                      <TableCell align="left">
+                        {coupon.price.toLocaleString()}
+                      </TableCell>
                       <TableCell align="left">
                         {coupon.startDate
                           ? new Date(coupon.startDate).toLocaleDateString()
@@ -223,7 +227,11 @@ export default function ManagerCoupon() {
                           to={`/admin/coupon/update/${coupon.id}`}
                           style={{ textDecoration: "none" }}
                         >
-                          <Button variant="outlined" color="primary" size="small">
+                          <Button
+                            variant="outlined"
+                            color="primary"
+                            size="small"
+                          >
                             Sửa
                           </Button>
                         </Link>
